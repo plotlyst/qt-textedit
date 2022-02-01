@@ -9,6 +9,7 @@ with (HERE / 'README.md').open('rt') as fh:
 REQUIREMENTS: dict = {
     'core': [
         'qtpy',
+        'qtawesome',
     ],
     'test': [
         'pytest==6.2.4',
@@ -22,7 +23,7 @@ REQUIREMENTS: dict = {
 }
 
 setup(
-    name='',
+    name='qt-textedit',
     version='0.1.0',
 
     author='Zsolt Kovari',

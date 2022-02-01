@@ -9,8 +9,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pyqt: ['PyQt5', 'PySide2']
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        pyqt: [ 'PyQt5', 'PySide2' ]
+        python-version: [ '3.7', '3.8', '3.9', '3.10' ]
     
     steps:
       - uses: actions/checkout@v2
@@ -28,10 +28,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest-xvfb
           pip install -e .[dev]
+          pip install git+https://github.com/plotlyst/qt-anim.git
           pip install ${{ matrix.pyqt }}
       - name: Test with pytest
         run: |
-          ./test.sh
+          ./tst.sh
 
   qa:
     runs-on: ubuntu-latest
