@@ -1,4 +1,3 @@
-import qtanim
 import qtawesome
 from qtpy import QtGui
 from qtpy.QtCore import QMimeData
@@ -118,18 +117,18 @@ class EnhancedTextEdit(QTextEdit):
             self.setFontUnderline(not self.fontUnderline())
         super(EnhancedTextEdit, self).keyPressEvent(event)
 
-    def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
-        super(EnhancedTextEdit, self).mouseDoubleClickEvent(event)
-        text = self.textCursor().selectedText()
-        if text:
-            x = event.pos().x() - self._quickFormatPopup.width() // 2
-            if x < 0:
-                x = 0
-            y = event.pos().y() + self.fontPointSize()
-            self._quickFormatPopup.setGeometry(x, y,
-                                               self._quickFormatPopup.width(),
-                                               self._quickFormatPopup.height())
-            qtanim.fade_in(self._quickFormatPopup, duration=150)
+    # def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
+    #     super(EnhancedTextEdit, self).mouseDoubleClickEvent(event)
+    #     text = self.textCursor().selectedText()
+    #     if text:
+    #         x = event.pos().x() - self._quickFormatPopup.width() // 2
+    #         if x < 0:
+    #             x = 0
+    #         y = event.pos().y() + self.fontPointSize()
+    #         self._quickFormatPopup.setGeometry(x, y,
+    #                                            self._quickFormatPopup.width(),
+    #                                            self._quickFormatPopup.height())
+    #         qtanim.fade_in(self._quickFormatPopup, duration=150)
 
     def setFormat(self, lineSpacing: int = 100, textIndent: int = 0):
         blockFmt = QTextBlockFormat()
