@@ -1,10 +1,10 @@
 import qtanim
 import qtawesome
-from PyQt5.QtCore import QMimeData
-from PyQt5.QtGui import QContextMenuEvent, QFont, QTextBlockFormat, QTextCursor
-from PyQt5.QtWidgets import QMenu, QWidget, QHBoxLayout, QToolButton
 from qtpy import QtGui
+from qtpy.QtCore import QMimeData
 from qtpy.QtCore import Qt
+from qtpy.QtGui import QContextMenuEvent, QFont, QTextBlockFormat, QTextCursor
+from qtpy.QtWidgets import QMenu, QWidget, QHBoxLayout, QToolButton
 from qtpy.QtWidgets import QTextEdit
 
 
