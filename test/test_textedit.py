@@ -12,4 +12,4 @@ def test_enhanced_textedit(qtbot):
     textedit.show()
     type_text(qtbot, textedit, 'test')
 
-    assert textedit.toPlainText() == 'test'
+    assert textedit.toPlainText() == 'Test'

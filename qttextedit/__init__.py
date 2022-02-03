@@ -115,6 +115,9 @@ class EnhancedTextEdit(QTextEdit):
             self.setFontWeight(QFont.Bold if self.fontWeight() == QFont.Normal else QFont.Normal)
         if event.key() == Qt.Key_U and event.modifiers() & Qt.ControlModifier:
             self.setFontUnderline(not self.fontUnderline())
+        if event.text().isalpha() and self._atSentenceStart(cursor):
+            self.textCursor().insertText(event.text().upper())
+            return
         super(EnhancedTextEdit, self).keyPressEvent(event)
 
     # def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -151,3 +154,21 @@ class EnhancedTextEdit(QTextEdit):
     def _toggleQuickFormatPopup(self):
         if not self.textCursor().hasSelection():
             self._quickFormatPopup.setHidden(True)
+
+    def _atSentenceStart(self, cursor: QTextCursor) -> bool:
+        if cursor.atBlockStart():
+            return True
+
+        cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+        if cursor.selectedText() == '.':
+            return True
+        if cursor.atBlockStart() and cursor.selectedText() == '"':
+            return True
+        if cursor.positionInBlock() == 1:
+            return False
+        elif cursor.selectedText() == ' ' or cursor.selectedText() == '"':
+            cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+            if cursor.selectedText().startswith('.'):
+                return True
+
+        return False
