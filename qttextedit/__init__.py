@@ -227,9 +227,9 @@ class RichTextEditor(QWidget):
         self.btnBold = _button('fa5s.bold', 'Bold', shortcut=QKeySequence.StandardKey.Bold)
         self.btnBold.clicked.connect(lambda x: self.textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
         self.btnItalic = _button('fa5s.italic', 'Italic', shortcut=QKeySequence.StandardKey.Italic)
-        self.btnItalic.clicked.connect(self.textEdit.setFontItalic)
+        self.btnItalic.clicked.connect(lambda x: self.textEdit.setFontItalic(x))
         self.btnUnderline = _button('fa5s.underline', 'Underline', shortcut=QKeySequence.StandardKey.Underline)
-        self.btnUnderline.clicked.connect(self.textEdit.setFontUnderline)
+        self.btnUnderline.clicked.connect(lambda x: self.textEdit.setFontUnderline(x))
         self.btnStrikethrough = _button('fa5s.strikethrough', 'Strikethrough')
         self.btnStrikethrough.clicked.connect(self.textEdit.setStrikethrough)
 

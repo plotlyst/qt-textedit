@@ -1,8 +1,8 @@
 import sys
 
-from PyQt5.QtWidgets import QTextEdit
 from qthandy import hbox
 from qtpy.QtWidgets import QMainWindow, QApplication, QWidget
+from qtpy.QtWidgets import QTextEdit
 
 from qttextedit import RichTextEditor
 
@@ -30,4 +30,4 @@ if __name__ == '__main__':
 
     window.show()
 
-    app.exec()
+    app.exec_()
