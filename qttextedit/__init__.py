@@ -124,11 +124,11 @@ class EnhancedTextEdit(QTextEdit):
                     list_.setFormat(new_format)
                     cursor.endEditBlock()
                 return
-        if event.key() == Qt.Key.Key_I and event.modifiers() & Qt.KeyboardModifiers.ControlModifier:
+        if event.key() == Qt.Key.Key_I and event.modifiers() & Qt.ControlModifier:
             self.setFontItalic(not self.fontItalic())
-        if event.key() == Qt.Key.Key_B and event.modifiers() & Qt.KeyboardModifiers.ControlModifier:
+        if event.key() == Qt.Key.Key_B and event.modifiers() & Qt.ControlModifier:
             self.setFontWeight(QFont.Bold if self.fontWeight() == QFont.Normal else QFont.Normal)
-        if event.key() == Qt.Key.Key_U and event.modifiers() & Qt.KeyboardModifiers.ControlModifier:
+        if event.key() == Qt.Key.Key_U and event.modifiers() & Qt.ControlModifier:
             self.setFontUnderline(not self.fontUnderline())
         if event.text().isalpha() and self._atSentenceStart(cursor):
             self.textCursor().insertText(event.text().upper())
