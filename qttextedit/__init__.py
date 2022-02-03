@@ -1,12 +1,9 @@
 import qtawesome
-from PyQt5.QtGui import QKeySequence, QTextListFormat
-from PyQt5.QtWidgets import QButtonGroup
 from qthandy import vbox, hbox, spacer, vline
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize
-from qtpy.QtGui import QContextMenuEvent, QFont, QTextBlockFormat, QTextCursor
-from qtpy.QtWidgets import QMenu, QWidget, QHBoxLayout, QToolButton, QFrame
-from qtpy.QtWidgets import QTextEdit
+from qtpy.QtGui import QContextMenuEvent, QFont, QTextBlockFormat, QTextCursor, QKeySequence, QTextListFormat
+from qtpy.QtWidgets import QMenu, QWidget, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit
 
 
 class TextFormatWidget(QWidget):
