@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QTextEdit
 from qthandy import hbox
 from qtpy.QtWidgets import QMainWindow, QApplication, QWidget
 
-from qttextedit import EnhancedTextEdit
+from qttextedit import RichTextEditor
 
 
 class MainWindow(QMainWindow):
@@ -18,10 +18,10 @@ class MainWindow(QMainWindow):
 
         hbox(self.widget)
 
-        self.enhancedTextEdit = EnhancedTextEdit()
-        self.enhancedTextEdit.setAutoFormatting(QTextEdit.AutoAll)
-        self.enhancedTextEdit.setFontPointSize(16)
-        self.widget.layout().addWidget(self.enhancedTextEdit)
+        self.editor = RichTextEditor()
+        self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
+        self.editor.textEdit.setFontPointSize(16)
+        self.widget.layout().addWidget(self.editor)
 
 
 if __name__ == '__main__':

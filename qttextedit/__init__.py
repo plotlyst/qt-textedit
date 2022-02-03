@@ -1,9 +1,11 @@
 import qtawesome
+from PyQt5.QtGui import QKeySequence, QTextListFormat
+from PyQt5.QtWidgets import QButtonGroup
+from qthandy import vbox, hbox, spacer, vline
 from qtpy import QtGui
-from qtpy.QtCore import QMimeData
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QMimeData, QSize
 from qtpy.QtGui import QContextMenuEvent, QFont, QTextBlockFormat, QTextCursor
-from qtpy.QtWidgets import QMenu, QWidget, QHBoxLayout, QToolButton
+from qtpy.QtWidgets import QMenu, QWidget, QHBoxLayout, QToolButton, QFrame
 from qtpy.QtWidgets import QTextEdit
 
 
@@ -26,6 +28,18 @@ class TextFormatWidget(QWidget):
         self.layout().addWidget(self.btnBold)
         self.layout().addWidget(self.btnItalic)
         self.layout().addWidget(self.btnUnderline)
+
+
+def _button(icon: str, shortcut=None, checkable: bool = True) -> QToolButton:
+    btn = QToolButton()
+    btn.setIconSize(QSize(18, 18))
+    btn.setCursor(Qt.CursorShape.PointingHandCursor)
+    btn.setIcon(qtawesome.icon(icon))
+    if shortcut:
+        btn.setShortcut(shortcut)
+    btn.setCheckable(checkable)
+
+    return btn
 
 
 class EnhancedTextEdit(QTextEdit):
@@ -112,11 +126,11 @@ class EnhancedTextEdit(QTextEdit):
                     list_.setFormat(new_format)
                     cursor.endEditBlock()
                 return
-        if event.key() == Qt.Key_I and event.modifiers() & Qt.ControlModifier:
+        if event.key() == Qt.Key.Key_I and event.modifiers() & Qt.KeyboardModifiers.ControlModifier:
             self.setFontItalic(not self.fontItalic())
-        if event.key() == Qt.Key_B and event.modifiers() & Qt.ControlModifier:
+        if event.key() == Qt.Key.Key_B and event.modifiers() & Qt.KeyboardModifiers.ControlModifier:
             self.setFontWeight(QFont.Bold if self.fontWeight() == QFont.Normal else QFont.Normal)
-        if event.key() == Qt.Key_U and event.modifiers() & Qt.ControlModifier:
+        if event.key() == Qt.Key.Key_U and event.modifiers() & Qt.KeyboardModifiers.ControlModifier:
             self.setFontUnderline(not self.fontUnderline())
         if event.text().isalpha() and self._atSentenceStart(cursor):
             self.textCursor().insertText(event.text().upper())
@@ -178,3 +192,87 @@ class EnhancedTextEdit(QTextEdit):
                 return True
 
         return False
+
+
+class RichTextEditor(QWidget):
+    def __init__(self, parent=None):
+        super(RichTextEditor, self).__init__(parent)
+        vbox(self, 0, 0)
+
+        self.toolbar = QFrame(self)
+        self.toolbar.setStyleSheet('''
+            QFrame {
+                background-color: white;
+            }
+            
+            QToolButton {
+                border: 1px hidden black;
+            }
+            QToolButton:checked {
+                background-color: #ced4da;
+            }
+            QToolButton:hover:!checked {
+                background-color: #e5e5e5;
+            }
+        ''')
+        hbox(self.toolbar)
+        self.textEdit = EnhancedTextEdit(self)
+
+        self.layout().addWidget(self.toolbar)
+        self.layout().addWidget(self.textEdit)
+
+        self.btnBold = _button('fa5s.bold', shortcut=QKeySequence.Bold)
+        self.btnBold.clicked.connect(lambda x: self.textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
+        self.btnItalic = _button('fa5s.italic', shortcut=QKeySequence.Italic)
+        self.btnItalic.clicked.connect(self.textEdit.setFontItalic)
+        self.btnUnderline = _button('fa5s.underline', shortcut=QKeySequence.Underline)
+        self.btnUnderline.clicked.connect(self.textEdit.setFontUnderline)
+
+        self.btnAlignLeft = _button('fa5s.align-left')
+        self.btnAlignLeft.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignLeft))
+        self.btnAlignLeft.setChecked(True)
+        self.btnAlignCenter = _button('fa5s.align-center')
+        self.btnAlignCenter.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignCenter))
+        self.btnAlignRight = _button('fa5s.align-right')
+        self.btnAlignRight.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignRight))
+
+        self.btnGroupAlignment = QButtonGroup(self.toolbar)
+        self.btnGroupAlignment.setExclusive(True)
+        self.btnGroupAlignment.addButton(self.btnAlignLeft)
+        self.btnGroupAlignment.addButton(self.btnAlignCenter)
+        self.btnGroupAlignment.addButton(self.btnAlignRight)
+
+        self.btnInsertList = _button('fa5s.list')
+        self.btnInsertList.clicked.connect(lambda: self.textEdit.textCursor().insertList(QTextListFormat.ListDisc))
+        self.btnInsertNumberedList = _button('fa5s.list-ol')
+        self.btnInsertNumberedList.clicked.connect(
+            lambda: self.textEdit.textCursor().insertList(QTextListFormat.ListDecimal))
+
+        self.toolbar.layout().addWidget(self.btnBold)
+        self.toolbar.layout().addWidget(self.btnItalic)
+        self.toolbar.layout().addWidget(self.btnUnderline)
+        self.toolbar.layout().addWidget(vline())
+        self.toolbar.layout().addWidget(self.btnAlignLeft)
+        self.toolbar.layout().addWidget(self.btnAlignCenter)
+        self.toolbar.layout().addWidget(self.btnAlignRight)
+        self.toolbar.layout().addWidget(vline())
+        self.toolbar.layout().addWidget(self.btnInsertList)
+        self.toolbar.layout().addWidget(self.btnInsertNumberedList)
+        self.toolbar.layout().addWidget(spacer())
+
+        self.textEdit.cursorPositionChanged.connect(self._updateFormat)
+
+    def _updateFormat(self):
+        self.btnBold.setChecked(self.textEdit.fontWeight() == QFont.Bold)
+        self.btnItalic.setChecked(self.textEdit.fontItalic())
+        self.btnUnderline.setChecked(self.textEdit.fontUnderline())
+
+        self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignLeft)
+        self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignCenter)
+        self.btnAlignRight.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignRight)
+
+        # self.cbHeading.blockSignals(True)
+        # cursor = self.textEditor.textCursor()
+        # level = cursor.blockFormat().headingLevel()
+        # self.cbHeading.setCurrentIndex(level)
+        # self.cbHeading.blockSignals(False)
