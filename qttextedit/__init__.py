@@ -37,6 +37,9 @@ class EnhancedTextEdit(QTextEdit):
         self._quickFormatPopup.setHidden(True)
         self.selectionChanged.connect(self._toggleQuickFormatPopup)
 
+        self.setTabStopDistance(
+            QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
+
     def contextMenuEvent(self, event: QContextMenuEvent):
         menu = QMenu()
         menu.setToolTipsVisible(True)
@@ -150,6 +153,9 @@ class EnhancedTextEdit(QTextEdit):
         self.document().setDefaultFont(font)
         super(EnhancedTextEdit, self).setFontPointSize(size)
         self.textCursor().clearSelection()
+
+        self.setTabStopDistance(
+            QtGui.QFontMetricsF(font).horizontalAdvance(' ') * 4)
 
     def _toggleQuickFormatPopup(self):
         if not self.textCursor().hasSelection():
