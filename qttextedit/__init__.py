@@ -27,8 +27,9 @@ class TextFormatWidget(QWidget):
         self.layout().addWidget(self.btnUnderline)
 
 
-def _button(icon: str, shortcut=None, checkable: bool = True) -> QToolButton:
+def _button(icon: str, tooltip: str = '', shortcut=None, checkable: bool = True) -> QToolButton:
     btn = QToolButton()
+    btn.setToolTip(tooltip)
     btn.setIconSize(QSize(18, 18))
     btn.setCursor(Qt.CursorShape.PointingHandCursor)
     btn.setIcon(qtawesome.icon(icon))
@@ -157,6 +158,11 @@ class EnhancedTextEdit(QTextEdit):
         cursor.select(QTextCursor.Document)
         cursor.mergeBlockFormat(blockFmt)
 
+    def setStrikethrough(self, strikethrough: bool):
+        font = self.currentFont()
+        font.setStrikeOut(strikethrough)
+        self.setCurrentFont(font)
+
     def setFontPointSize(self, size: int):
         self.textCursor().select(QTextCursor.Document)
         font = self.document().defaultFont()
@@ -218,19 +224,21 @@ class RichTextEditor(QWidget):
         self.layout().addWidget(self.toolbar)
         self.layout().addWidget(self.textEdit)
 
-        self.btnBold = _button('fa5s.bold', shortcut=QKeySequence.Bold)
+        self.btnBold = _button('fa5s.bold', 'Bold', shortcut=QKeySequence.StandardKey.Bold)
         self.btnBold.clicked.connect(lambda x: self.textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
-        self.btnItalic = _button('fa5s.italic', shortcut=QKeySequence.Italic)
+        self.btnItalic = _button('fa5s.italic', 'Italic', shortcut=QKeySequence.StandardKey.Italic)
         self.btnItalic.clicked.connect(self.textEdit.setFontItalic)
-        self.btnUnderline = _button('fa5s.underline', shortcut=QKeySequence.Underline)
+        self.btnUnderline = _button('fa5s.underline', 'Underline', shortcut=QKeySequence.StandardKey.Underline)
         self.btnUnderline.clicked.connect(self.textEdit.setFontUnderline)
+        self.btnStrikethrough = _button('fa5s.strikethrough', 'Strikethrough')
+        self.btnStrikethrough.clicked.connect(self.textEdit.setStrikethrough)
 
-        self.btnAlignLeft = _button('fa5s.align-left')
+        self.btnAlignLeft = _button('fa5s.align-left', 'Align left')
         self.btnAlignLeft.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignLeft))
         self.btnAlignLeft.setChecked(True)
-        self.btnAlignCenter = _button('fa5s.align-center')
+        self.btnAlignCenter = _button('fa5s.align-center', 'Align center')
         self.btnAlignCenter.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignCenter))
-        self.btnAlignRight = _button('fa5s.align-right')
+        self.btnAlignRight = _button('fa5s.align-right', 'Align right')
         self.btnAlignRight.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignRight))
 
         self.btnGroupAlignment = QButtonGroup(self.toolbar)
@@ -239,15 +247,16 @@ class RichTextEditor(QWidget):
         self.btnGroupAlignment.addButton(self.btnAlignCenter)
         self.btnGroupAlignment.addButton(self.btnAlignRight)
 
-        self.btnInsertList = _button('fa5s.list')
+        self.btnInsertList = _button('fa5s.list', 'Insert list')
         self.btnInsertList.clicked.connect(lambda: self.textEdit.textCursor().insertList(QTextListFormat.ListDisc))
-        self.btnInsertNumberedList = _button('fa5s.list-ol')
+        self.btnInsertNumberedList = _button('fa5s.list-ol', 'Insert numbered list')
         self.btnInsertNumberedList.clicked.connect(
             lambda: self.textEdit.textCursor().insertList(QTextListFormat.ListDecimal))
 
         self.toolbar.layout().addWidget(self.btnBold)
         self.toolbar.layout().addWidget(self.btnItalic)
         self.toolbar.layout().addWidget(self.btnUnderline)
+        self.toolbar.layout().addWidget(self.btnStrikethrough)
         self.toolbar.layout().addWidget(vline())
         self.toolbar.layout().addWidget(self.btnAlignLeft)
         self.toolbar.layout().addWidget(self.btnAlignCenter)
@@ -263,6 +272,7 @@ class RichTextEditor(QWidget):
         self.btnBold.setChecked(self.textEdit.fontWeight() == QFont.Bold)
         self.btnItalic.setChecked(self.textEdit.fontItalic())
         self.btnUnderline.setChecked(self.textEdit.fontUnderline())
+        self.btnStrikethrough.setChecked(self.textEdit.currentFont().strikeOut())
 
         self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignLeft)
         self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignCenter)

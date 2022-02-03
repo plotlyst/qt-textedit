@@ -1,3 +1,5 @@
+from qtpy.QtGui import QFont
+
 from qttextedit import EnhancedTextEdit, RichTextEditor
 
 
@@ -21,3 +23,39 @@ def test_rich_texteditor(qtbot):
     editor.show()
 
     assert editor.btnAlignLeft.isChecked()
+
+
+def test_bold_button(qtbot):
+    editor = RichTextEditor()
+    qtbot.addWidget(editor)
+    editor.show()
+
+    editor.btnBold.click()
+    assert editor.textEdit.fontWeight() == QFont.Bold
+
+
+def test_italic_button(qtbot):
+    editor = RichTextEditor()
+    qtbot.addWidget(editor)
+    editor.show()
+
+    editor.btnItalic.click()
+    assert editor.textEdit.fontItalic()
+
+
+def test_underline_button(qtbot):
+    editor = RichTextEditor()
+    qtbot.addWidget(editor)
+    editor.show()
+
+    editor.btnUnderline.click()
+    assert editor.textEdit.fontUnderline()
+
+
+def test_strikethrough_button(qtbot):
+    editor = RichTextEditor()
+    qtbot.addWidget(editor)
+    editor.show()
+
+    editor.btnStrikethrough.click()
+    assert editor.textEdit.currentFont().strikeOut()
