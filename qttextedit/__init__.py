@@ -219,7 +219,7 @@ class RichTextEditor(QWidget):
             }
         ''')
         hbox(self.toolbar)
-        self.textEdit = EnhancedTextEdit(self)
+        self.textEdit = self._initTextEdit()
 
         self.layout().addWidget(self.toolbar)
         self.layout().addWidget(self.textEdit)
@@ -267,6 +267,9 @@ class RichTextEditor(QWidget):
         self.toolbar.layout().addWidget(spacer())
 
         self.textEdit.cursorPositionChanged.connect(self._updateFormat)
+
+    def _initTextEdit(self) -> EnhancedTextEdit:
+        return EnhancedTextEdit(self)
 
     def _updateFormat(self):
         self.btnBold.setChecked(self.textEdit.fontWeight() == QFont.Bold)
