@@ -2,7 +2,7 @@ import qtawesome
 from qthandy import vbox, hbox, spacer, vline
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize
-from qtpy.QtGui import QContextMenuEvent, QFont, QTextBlockFormat, QTextCursor, QKeySequence, QTextListFormat
+from qtpy.QtGui import QContextMenuEvent, QFont, QTextBlockFormat, QTextCursor, QTextList, QKeySequence, QTextListFormat
 from qtpy.QtWidgets import QMenu, QWidget, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit
 
 
@@ -98,7 +98,7 @@ class EnhancedTextEdit(QTextEdit):
             super(EnhancedTextEdit, self).insertFromMimeData(source)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        cursor = self.textCursor()
+        cursor: QTextCursor = self.textCursor()
         if event.key() == Qt.Key.Key_Tab:
             list_ = cursor.block().textList()
             if list_:
@@ -114,15 +114,26 @@ class EnhancedTextEdit(QTextEdit):
                 cursor.endEditBlock()
                 return
         if event.key() == Qt.Key.Key_Backtab:
-            list_ = cursor.block().textList()
+            list_: QTextList = cursor.block().textList()
             if list_:
                 indent = list_.format().indent()
                 if indent > 1:
-                    cursor.beginEditBlock()
-                    new_format = list_.format()
-                    new_format.setIndent(indent - 1)
-                    list_.setFormat(new_format)
-                    cursor.endEditBlock()
+                    if list_.count() == 1:
+                        cursor.beginEditBlock()
+                        new_format = list_.format()
+                        new_format.setIndent(indent - 1)
+                        list_.setFormat(new_format)
+                        cursor.endEditBlock()
+                    elif list_.count() > 1:
+                        cursor.beginEditBlock()
+                        new_format = list_.format()
+                        new_format.setIndent(indent - 1)
+                        list_.remove(cursor.block())
+                        new_block_format = cursor.block().blockFormat()
+                        new_block_format.setIndent(cursor.block().blockFormat().indent() - 2)
+                        cursor.mergeBlockFormat(new_block_format)
+                        cursor.createList(new_format)
+                        cursor.endEditBlock()
                 return
         if event.key() == Qt.Key.Key_I and event.modifiers() & Qt.ControlModifier:
             self.setFontItalic(not self.fontItalic())
