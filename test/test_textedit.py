@@ -10,8 +10,10 @@ def type_text(qtbot, textedit, text: str):
 
 def test_enhanced_textedit(qtbot):
     textedit = EnhancedTextEdit()
-    qtbot.addWidget(textedit)
     textedit.show()
+    qtbot.addWidget(textedit)
+    qtbot.waitExposed(textedit)
+
     type_text(qtbot, textedit, 'test. test')
 
     assert textedit.toPlainText() == 'Test. Test'
@@ -19,16 +21,18 @@ def test_enhanced_textedit(qtbot):
 
 def test_rich_texteditor(qtbot):
     editor = RichTextEditor()
-    qtbot.addWidget(editor)
     editor.show()
+    qtbot.addWidget(editor)
+    qtbot.waitExposed(editor)
 
     assert editor.btnAlignLeft.isChecked()
 
 
 def test_bold_button(qtbot):
     editor = RichTextEditor()
-    qtbot.addWidget(editor)
     editor.show()
+    qtbot.addWidget(editor)
+    qtbot.waitExposed(editor)
 
     editor.btnBold.click()
     assert editor.textEdit.fontWeight() == QFont.Bold
@@ -36,8 +40,9 @@ def test_bold_button(qtbot):
 
 def test_italic_button(qtbot):
     editor = RichTextEditor()
-    qtbot.addWidget(editor)
     editor.show()
+    qtbot.addWidget(editor)
+    qtbot.waitExposed(editor)
 
     editor.btnItalic.click()
     assert editor.textEdit.fontItalic()
@@ -45,8 +50,9 @@ def test_italic_button(qtbot):
 
 def test_underline_button(qtbot):
     editor = RichTextEditor()
-    qtbot.addWidget(editor)
     editor.show()
+    qtbot.addWidget(editor)
+    qtbot.waitExposed(editor)
 
     editor.btnUnderline.click()
     assert editor.textEdit.fontUnderline()
@@ -54,8 +60,9 @@ def test_underline_button(qtbot):
 
 def test_strikethrough_button(qtbot):
     editor = RichTextEditor()
-    qtbot.addWidget(editor)
     editor.show()
+    qtbot.addWidget(editor)
+    qtbot.waitExposed(editor)
 
     editor.btnStrikethrough.click()
     assert editor.textEdit.currentFont().strikeOut()
