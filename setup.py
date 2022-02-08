@@ -12,9 +12,9 @@ REQUIREMENTS: dict = {
         'qtawesome',
     ],
     'test': [
-        'pytest',
-        'pytest-qt',
-        'pytest-cov',
+        'pytest==6.2.4',
+        'pytest-qt==4.0.2',
+        'pytest-cov==2.12.1',
     ],
     'dev': [
     ],
