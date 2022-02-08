@@ -3,7 +3,8 @@ from qthandy import vbox, hbox, spacer, vline
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize
 from qtpy.QtGui import QContextMenuEvent, QFont, QTextBlockFormat, QTextCursor, QTextList, QKeySequence, QTextListFormat
-from qtpy.QtWidgets import QMenu, QWidget, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit
+from qtpy.QtPrintSupport import QPrinter, QPrintDialog
+from qtpy.QtWidgets import QMenu, QWidget, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit, QFileDialog
 
 
 class TextFormatWidget(QWidget):
@@ -264,6 +265,11 @@ class RichTextEditor(QWidget):
         self.btnInsertNumberedList.clicked.connect(
             lambda: self.textEdit.textCursor().insertList(QTextListFormat.ListDecimal))
 
+        self.btnExportToPdf = _button('mdi.file-export-outline', 'Export to PDF', checkable=False)
+        self.btnExportToPdf.clicked.connect(lambda: self._exportPdf())
+        self.btnPrint = _button('mdi.printer', 'Print', checkable=False)
+        self.btnPrint.clicked.connect(lambda: self._print())
+
         self.toolbar.layout().addWidget(self.btnBold)
         self.toolbar.layout().addWidget(self.btnItalic)
         self.toolbar.layout().addWidget(self.btnUnderline)
@@ -276,6 +282,8 @@ class RichTextEditor(QWidget):
         self.toolbar.layout().addWidget(self.btnInsertList)
         self.toolbar.layout().addWidget(self.btnInsertNumberedList)
         self.toolbar.layout().addWidget(spacer())
+        self.toolbar.layout().addWidget(self.btnExportToPdf)
+        self.toolbar.layout().addWidget(self.btnPrint)
 
         self.textEdit.cursorPositionChanged.connect(self._updateFormat)
 
@@ -297,3 +305,26 @@ class RichTextEditor(QWidget):
         # level = cursor.blockFormat().headingLevel()
         # self.cbHeading.setCurrentIndex(level)
         # self.cbHeading.blockSignals(False)
+
+    def _exportPdf(self):
+        title = 'document'
+        fn, _ = QFileDialog.getSaveFileName(self, 'Export PDF', f'{title}.pdf',
+                                            'PDF files (*.pdf);;All Files()')
+        if fn:
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer.setOutputFileName(fn)
+            printer.setDocName(title)
+            self.__printHtml(printer)
+
+    def _print(self):
+        printer = QPrinter(QPrinter.HighResolution)
+        dialog = QPrintDialog(printer, self)
+        if dialog.exec_() == QPrintDialog.Accepted:
+            self.__printHtml(printer)
+
+    def __printHtml(self, printer: QPrinter):
+        textedit = EnhancedTextEdit()  # create a new instance without the highlighters associated to it
+        textedit.setFormat()
+        textedit.setHtml(self.textEdit.toHtml())
+        textedit.print(printer)
