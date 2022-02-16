@@ -310,7 +310,7 @@ class RichTextEditor(QWidget):
         # self.cbHeading.blockSignals(False)
 
     def _exportPdf(self):
-        title = 'document'
+        title = self._exportedDocumentTitle()
         fn, _ = QFileDialog.getSaveFileName(self, 'Export PDF', f'{title}.pdf',
                                             'PDF files (*.pdf);;All Files()')
         if fn:
@@ -319,6 +319,9 @@ class RichTextEditor(QWidget):
             printer.setOutputFileName(fn)
             printer.setDocName(title)
             self.__printHtml(printer)
+
+    def _exportedDocumentTitle(self) -> str:
+        return 'document'
 
     def _print(self):
         printer = QPrinter(QPrinter.HighResolution)
