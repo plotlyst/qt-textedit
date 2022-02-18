@@ -1,3 +1,5 @@
+import re
+
 import qtawesome
 from qthandy import vbox, hbox, spacer, vline
 from qtpy import QtGui
@@ -51,6 +53,7 @@ class EnhancedTextEdit(QTextEdit):
     def __init__(self, parent=None):
         super(EnhancedTextEdit, self).__init__(parent)
         self._pasteAsPlain: bool = False
+        self._pasteAsOriginal: bool = False
         self._quickFormatPopup = TextFormatWidget(self)
         self._quickFormatPopup.setHidden(True)
         self.selectionChanged.connect(self._toggleQuickFormatPopup)
@@ -76,6 +79,8 @@ class EnhancedTextEdit(QTextEdit):
         paste_submenu = menu.addMenu('Paste as...')
         action = paste_submenu.addAction('Paste as plain text', self.pasteAsPlainText)
         action.setToolTip('Paste as plain text without any formatting')
+        action = paste_submenu.addAction('Paste with original style', self.pasteAsOriginalText)
+        action.setToolTip('Paste with the original formatting')
 
         menu.exec(event.globalPos())
 
@@ -85,22 +90,21 @@ class EnhancedTextEdit(QTextEdit):
         self.paste()
         self._pasteAsPlain = previous
 
+    def pasteAsOriginalText(self):
+        previous = self._pasteAsOriginal
+        self._pasteAsOriginal = True
+        self.paste()
+        self._pasteAsOriginal = previous
+
     def insertFromMimeData(self, source: QMimeData) -> None:
-        # doc = QTextDocument()
-        # doc.setDefaultFont(QFont('Helvetica', 16))
-        # doc.setHtml(source.html())
-
-        # self.textEditor.textCursor().select(QTextCursor.Document)
-        # self.textEditor.setFontPointSize(size)
-        # font = self._lblPlaceholder.font()
-        # font.setPointSize(size)
-        # self._lblPlaceholder.setFont(font)
-        # self.textEditor.textCursor().clearSelection()
-
         if self._pasteAsPlain:
             self.insertPlainText(source.text())
-        else:
+        elif self._pasteAsOriginal:
             super(EnhancedTextEdit, self).insertFromMimeData(source)
+        else:
+            html = source.html()
+            html = re.sub('font-family', '', html)
+            self.insertHtml(html)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         super(EnhancedTextEdit, self).mouseMoveEvent(event)
