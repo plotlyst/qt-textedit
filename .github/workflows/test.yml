@@ -31,8 +31,12 @@ jobs:
           pip install git+https://github.com/plotlyst/qt-handy.git
           pip install ${{ matrix.pyqt }}
       - name: Test with pytest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./tst.sh
+          pip install coveralls
+          coveralls --service=github
 
   qa:
     runs-on: ubuntu-latest
