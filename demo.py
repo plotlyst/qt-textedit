@@ -1,6 +1,6 @@
 import sys
 
-from qthandy import hbox
+from qthandy import vbox
 from qtpy.QtWidgets import QMainWindow, QApplication, QWidget
 from qtpy.QtWidgets import QTextEdit
 
@@ -16,12 +16,20 @@ class MainWindow(QMainWindow):
         self.widget = QWidget(self)
         self.setCentralWidget(self.widget)
 
-        hbox(self.widget)
+        vbox(self.widget)
 
         self.editor = RichTextEditor()
         self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
         self.editor.textEdit.setFontPointSize(16)
+
+        self.sourceViewed = QTextEdit()
+        self.sourceViewed.setReadOnly(True)
+        self.sourceViewed.setAcceptRichText(False)
+
         self.widget.layout().addWidget(self.editor)
+        self.widget.layout().addWidget(self.sourceViewed)
+
+        self.editor.textEdit.textChanged.connect(lambda: self.sourceViewed.setPlainText(self.editor.textEdit.toHtml()))
 
 
 if __name__ == '__main__':
