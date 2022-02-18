@@ -1,10 +1,12 @@
 import qtawesome
 from qthandy import vbox, hbox, spacer, vline
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize
-from qtpy.QtGui import QContextMenuEvent, QFont, QTextBlockFormat, QTextCursor, QTextList, QKeySequence, QTextListFormat
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl
+from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
+    QKeySequence, QTextListFormat
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
-from qtpy.QtWidgets import QMenu, QWidget, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit, QFileDialog
+from qtpy.QtWidgets import QMenu, QWidget, QApplication, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit, \
+    QFileDialog
 
 
 class TextFormatWidget(QWidget):
@@ -98,8 +100,29 @@ class EnhancedTextEdit(QTextEdit):
         if self._pasteAsPlain:
             self.insertPlainText(source.text())
         else:
-            # self.insertHtml(doc.toHtml())
             super(EnhancedTextEdit, self).insertFromMimeData(source)
+
+    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        super(EnhancedTextEdit, self).mouseMoveEvent(event)
+
+        cursor = self.cursorForPosition(event.pos())
+        if cursor.atBlockStart() or cursor.atBlockEnd():
+            QApplication.restoreOverrideCursor()
+            return
+
+        anchor = self.anchorAt(event.pos())
+        if anchor:
+            if QApplication.overrideCursor() is None:
+                QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            QApplication.restoreOverrideCursor()
+
+    def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
+        super(EnhancedTextEdit, self).mouseReleaseEvent(event)
+
+        anchor = self.anchorAt(event.pos())
+        if anchor and not self.textCursor().selectedText():
+            QDesktopServices.openUrl(QUrl(anchor))
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         cursor: QTextCursor = self.textCursor()
@@ -262,9 +285,9 @@ class RichTextEditor(QWidget):
         self.btnGroupAlignment.addButton(self.btnAlignCenter)
         self.btnGroupAlignment.addButton(self.btnAlignRight)
 
-        self.btnInsertList = _button('fa5s.list', 'Insert list')
+        self.btnInsertList = _button('fa5s.list', 'Insert list', checkable=False)
         self.btnInsertList.clicked.connect(lambda: self.textEdit.textCursor().insertList(QTextListFormat.ListDisc))
-        self.btnInsertNumberedList = _button('fa5s.list-ol', 'Insert numbered list')
+        self.btnInsertNumberedList = _button('fa5s.list-ol', 'Insert numbered list', checkable=False)
         self.btnInsertNumberedList.clicked.connect(
             lambda: self.textEdit.textCursor().insertList(QTextListFormat.ListDecimal))
 
