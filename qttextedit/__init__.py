@@ -1,14 +1,17 @@
 import re
+from functools import partial
+from typing import List
 
 import qtawesome
-from qthandy import vbox, hbox, spacer, vline, btn_popup_menu
+from PyQt6.QtGui import QColor
+from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, btn_popup, line
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QKeySequence, QTextListFormat, QTextCharFormat, QTextFormat
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit, \
-    QFileDialog, QInputDialog
+    QFileDialog, QInputDialog, QSizePolicy, QGridLayout
 
 from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import select_anchor
@@ -33,6 +36,47 @@ class TextFormatWidget(QWidget):
         self.layout().addWidget(self.btnBold)
         self.layout().addWidget(self.btnItalic)
         self.layout().addWidget(self.btnUnderline)
+
+
+class TextColorSelectorWidget(QWidget):
+    foregroundColorSelected = Signal(QColor)
+    backgroundColorSelected = Signal(QColor)
+
+    def __init__(self, foregroundColors: List[str], backgroundColors: List[str], parent=None):
+        super(TextColorSelectorWidget, self).__init__(parent)
+
+        vbox(self)
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+
+        self.wdgForeground = QWidget()
+        self.wdgForeground.setLayout(QGridLayout())
+        self.wdgForeground.layout().setSpacing(2)
+        self.wdgForeground.layout().setContentsMargins(2, 2, 2, 2)
+
+        for i, color in enumerate(foregroundColors):
+            btn = self._addBtn('mdi.alpha-a', i, color, self.wdgForeground)
+            btn.clicked.connect(partial(self.foregroundColorSelected.emit, QColor(color)))
+
+        self.wdgBackground = QWidget()
+        self.wdgBackground.setLayout(QGridLayout())
+
+        for i, color in enumerate(backgroundColors):
+            btn = self._addBtn('mdi.alpha-a-box', i, color, self.wdgBackground)
+            btn.clicked.connect(partial(self.backgroundColorSelected.emit, QColor(color)))
+
+        self.layout().addWidget(self.wdgForeground)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.wdgBackground)
+
+    def _addBtn(self, icon: str, i: int, color: str, parent: QWidget) -> QToolButton:
+        btn = QToolButton()
+        btn.setIconSize(QSize(24, 24))
+        btn.setCursor(Qt.PointingHandCursor)
+        btn.setIcon(qtawesome.icon(icon, color=color, options=[{'scale_factor': 1.2}]))
+
+        parent.layout().addWidget(btn, i // 6, i % 6)
+
+        return btn
 
 
 def _button(icon: str, tooltip: str = '', shortcut=None, checkable: bool = True) -> QToolButton:
@@ -92,6 +136,10 @@ class EnhancedTextEdit(QTextEdit):
                            lambda: self._editLink(self.cursorForPosition(event.pos())))
 
         menu.exec(event.globalPos())
+
+    def setTextColor(self, color):
+        print(color.name())
+        super(EnhancedTextEdit, self).setTextColor(Qt.red)
 
     def pasteAsPlainText(self):
         previous = self._pasteAsPlain
@@ -345,6 +393,18 @@ class RichTextEditor(QWidget):
         self.btnStrikethrough = _button('fa5s.strikethrough', 'Strikethrough')
         self.btnStrikethrough.clicked.connect(self.textEdit.setStrikethrough)
 
+        self.btnTextStyle = _button('fa5s.highlighter', 'Text color', checkable=False)
+        self._wdgTextStyle = TextColorSelectorWidget(
+            ['#da1e37', '#e85d04', '#9c6644', '#ffd500', '#2d6a4f', '#74c69d', '#023e8a', '#219ebc', '#7209b7',
+             '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'],
+            ['#da1e37', '#e85d04', '#9c6644', '#ffd500', '#2d6a4f', '#74c69d', '#023e8a', '#219ebc', '#7209b7',
+             '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'])
+        btn_popup(self.btnTextStyle, self._wdgTextStyle)
+        self._wdgTextStyle.foregroundColorSelected.connect(lambda x: self.textEdit.setTextColor(x))
+        self._wdgTextStyle.backgroundColorSelected.connect(lambda x: self.textEdit.setTextBackgroundColor(x))
+        self._wdgTextStyle.foregroundColorSelected.connect(lambda: self.btnTextStyle.menu().hide())
+        self._wdgTextStyle.backgroundColorSelected.connect(lambda: self.btnTextStyle.menu().hide())
+
         self.btnAlignLeft = _button('fa5s.align-left', 'Align left')
         self.btnAlignLeft.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignLeft))
         self.btnAlignLeft.setChecked(True)
@@ -379,6 +439,8 @@ class RichTextEditor(QWidget):
         self.toolbar.layout().addWidget(self.btnItalic)
         self.toolbar.layout().addWidget(self.btnUnderline)
         self.toolbar.layout().addWidget(self.btnStrikethrough)
+        self.toolbar.layout().addWidget(vline())
+        self.toolbar.layout().addWidget(self.btnTextStyle)
         self.toolbar.layout().addWidget(vline())
         self.toolbar.layout().addWidget(self.btnAlignLeft)
         self.toolbar.layout().addWidget(self.btnAlignCenter)
