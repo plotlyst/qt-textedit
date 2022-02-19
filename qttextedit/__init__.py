@@ -1,14 +1,16 @@
 import re
+from functools import partial
+from typing import List
 
 import qtawesome
-from qthandy import vbox, hbox, spacer, vline, btn_popup_menu
+from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, btn_popup, line
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
-    QKeySequence, QTextListFormat, QTextCharFormat, QTextFormat
+    QKeySequence, QTextListFormat, QTextCharFormat, QTextFormat, QColor
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit, \
-    QFileDialog, QInputDialog
+    QFileDialog, QInputDialog, QSizePolicy, QGridLayout
 
 from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import select_anchor
@@ -35,11 +37,57 @@ class TextFormatWidget(QWidget):
         self.layout().addWidget(self.btnUnderline)
 
 
+class TextColorSelectorWidget(QWidget):
+    foregroundColorSelected = Signal(QColor)
+    backgroundColorSelected = Signal(QColor)
+    reset = Signal()
+
+    def __init__(self, foregroundColors: List[str], backgroundColors: List[str], parent=None):
+        super(TextColorSelectorWidget, self).__init__(parent)
+
+        vbox(self)
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+
+        self.btnReset = _button('mdi.format-color-marker-cancel', tooltip='Reset current color', checkable=False)
+        self.btnReset.clicked.connect(lambda: self.reset.emit())
+
+        self.wdgForeground = QWidget()
+        self.wdgForeground.setLayout(QGridLayout())
+        self.wdgForeground.layout().setSpacing(2)
+        self.wdgForeground.layout().setContentsMargins(2, 2, 2, 2)
+
+        for i, color in enumerate(foregroundColors):
+            btn = self._addBtn('mdi.alpha-a', i, color, self.wdgForeground)
+            btn.clicked.connect(partial(self.foregroundColorSelected.emit, QColor(color)))
+
+        self.wdgBackground = QWidget()
+        self.wdgBackground.setLayout(QGridLayout())
+
+        for i, color in enumerate(backgroundColors):
+            btn = self._addBtn('mdi.alpha-a-box', i, color, self.wdgBackground)
+            btn.clicked.connect(partial(self.backgroundColorSelected.emit, QColor(color)))
+
+        self.layout().addWidget(self.btnReset, alignment=Qt.AlignRight)
+        self.layout().addWidget(self.wdgForeground)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.wdgBackground)
+
+    def _addBtn(self, icon: str, i: int, color: str, parent: QWidget) -> QToolButton:
+        btn = QToolButton()
+        btn.setIconSize(QSize(24, 24))
+        btn.setCursor(Qt.PointingHandCursor)
+        btn.setIcon(qtawesome.icon(icon, color=color, options=[{'scale_factor': 1.2}]))
+
+        parent.layout().addWidget(btn, i // 6, i % 6)
+
+        return btn
+
+
 def _button(icon: str, tooltip: str = '', shortcut=None, checkable: bool = True) -> QToolButton:
     btn = QToolButton()
     btn.setToolTip(tooltip)
     btn.setIconSize(QSize(18, 18))
-    btn.setCursor(Qt.CursorShape.PointingHandCursor)
+    btn.setCursor(Qt.PointingHandCursor)
     if icon.startswith('md') or icon.startswith('ri'):
         btn.setIcon(qtawesome.icon(icon, options=[{'scale_factor': 1.2}]))
     else:
@@ -126,7 +174,7 @@ class EnhancedTextEdit(QTextEdit):
         anchor = self.anchorAt(event.pos())
         if anchor:
             if QApplication.overrideCursor() is None:
-                QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+                QApplication.setOverrideCursor(Qt.PointingHandCursor)
                 self._setLinkTooltip(anchor)
         else:
             QApplication.restoreOverrideCursor()
@@ -141,7 +189,7 @@ class EnhancedTextEdit(QTextEdit):
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         cursor: QTextCursor = self.textCursor()
-        if event.key() == Qt.Key.Key_Tab:
+        if event.key() == Qt.Key_Tab:
             list_ = cursor.block().textList()
             if list_:
                 cursor.beginEditBlock()
@@ -155,7 +203,7 @@ class EnhancedTextEdit(QTextEdit):
 
                 cursor.endEditBlock()
                 return
-        if event.key() == Qt.Key.Key_Backtab:
+        if event.key() == Qt.Key_Backtab:
             list_: QTextList = cursor.block().textList()
             if list_:
                 indent = list_.format().indent()
@@ -177,16 +225,18 @@ class EnhancedTextEdit(QTextEdit):
                         cursor.createList(new_format)
                         cursor.endEditBlock()
                 return
-        if event.key() == Qt.Key.Key_I and event.modifiers() & Qt.ControlModifier:
+        if event.key() == Qt.Key_I and event.modifiers() & Qt.ControlModifier:
             self.setFontItalic(not self.fontItalic())
-        if event.key() == Qt.Key.Key_B and event.modifiers() & Qt.ControlModifier:
+        if event.key() == Qt.Key_B and event.modifiers() & Qt.ControlModifier:
             self.setFontWeight(QFont.Bold if self.fontWeight() == QFont.Normal else QFont.Normal)
-        if event.key() == Qt.Key.Key_U and event.modifiers() & Qt.ControlModifier:
+        if event.key() == Qt.Key_U and event.modifiers() & Qt.ControlModifier:
             self.setFontUnderline(not self.fontUnderline())
         if event.text().isalpha() and self._atSentenceStart(cursor) and cursor.atBlockEnd():
             self.textCursor().insertText(event.text().upper())
             return
         if event.key() == Qt.Key_Return:
+            self.resetTextColor()
+            self.resetTextBackgroundColor()
             level = self.textCursor().blockFormat().headingLevel()
             if level > 0:  # heading
                 self.textCursor().insertBlock()
@@ -233,6 +283,12 @@ class EnhancedTextEdit(QTextEdit):
 
         self.setTabStopDistance(
             QtGui.QFontMetricsF(font).horizontalAdvance(' ') * 4)
+
+    def resetTextColor(self):
+        self.setTextColor(Qt.black)
+
+    def resetTextBackgroundColor(self):
+        self.setTextBackgroundColor(Qt.white)
 
     def setHeading(self, heading: int):
         cursor: QTextCursor = self.textCursor()
@@ -336,22 +392,37 @@ class RichTextEditor(QWidget):
                              lambda: self.textEdit.setHeading(0))
         btn_popup_menu(self.btnFormat, formatMenu)
 
-        self.btnBold = _button('fa5s.bold', 'Bold', shortcut=QKeySequence.StandardKey.Bold)
+        self.btnBold = _button('fa5s.bold', 'Bold', shortcut=QKeySequence.Bold)
         self.btnBold.clicked.connect(lambda x: self.textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
-        self.btnItalic = _button('fa5s.italic', 'Italic', shortcut=QKeySequence.StandardKey.Italic)
+        self.btnItalic = _button('fa5s.italic', 'Italic', shortcut=QKeySequence.Italic)
         self.btnItalic.clicked.connect(lambda x: self.textEdit.setFontItalic(x))
-        self.btnUnderline = _button('fa5s.underline', 'Underline', shortcut=QKeySequence.StandardKey.Underline)
+        self.btnUnderline = _button('fa5s.underline', 'Underline', shortcut=QKeySequence.Underline)
         self.btnUnderline.clicked.connect(lambda x: self.textEdit.setFontUnderline(x))
         self.btnStrikethrough = _button('fa5s.strikethrough', 'Strikethrough')
         self.btnStrikethrough.clicked.connect(self.textEdit.setStrikethrough)
 
+        self.btnTextStyle = _button('fa5s.highlighter', 'Text color', checkable=False)
+        self.wdgTextStyle = TextColorSelectorWidget(
+            ['#da1e37', '#e85d04', '#9c6644', '#ffd500', '#2d6a4f', '#74c69d', '#023e8a', '#219ebc', '#7209b7',
+             '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'],
+            ['#da1e37', '#e85d04', '#9c6644', '#ffd500', '#2d6a4f', '#74c69d', '#023e8a', '#219ebc', '#7209b7',
+             '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'])
+        btn_popup(self.btnTextStyle, self.wdgTextStyle)
+        self.wdgTextStyle.foregroundColorSelected.connect(lambda x: self.textEdit.setTextColor(x))
+        self.wdgTextStyle.backgroundColorSelected.connect(lambda x: self.textEdit.setTextBackgroundColor(x))
+        self.wdgTextStyle.foregroundColorSelected.connect(self.btnTextStyle.menu().hide)
+        self.wdgTextStyle.backgroundColorSelected.connect(self.btnTextStyle.menu().hide)
+        self.wdgTextStyle.reset.connect(self.textEdit.resetTextColor)
+        self.wdgTextStyle.reset.connect(self.textEdit.resetTextBackgroundColor)
+        self.wdgTextStyle.reset.connect(self.btnTextStyle.menu().hide)
+
         self.btnAlignLeft = _button('fa5s.align-left', 'Align left')
-        self.btnAlignLeft.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignLeft))
+        self.btnAlignLeft.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignLeft))
         self.btnAlignLeft.setChecked(True)
         self.btnAlignCenter = _button('fa5s.align-center', 'Align center')
-        self.btnAlignCenter.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignCenter))
+        self.btnAlignCenter.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignCenter))
         self.btnAlignRight = _button('fa5s.align-right', 'Align right')
-        self.btnAlignRight.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignRight))
+        self.btnAlignRight.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignRight))
 
         self.btnGroupAlignment = QButtonGroup(self.toolbar)
         self.btnGroupAlignment.setExclusive(True)
@@ -380,6 +451,8 @@ class RichTextEditor(QWidget):
         self.toolbar.layout().addWidget(self.btnUnderline)
         self.toolbar.layout().addWidget(self.btnStrikethrough)
         self.toolbar.layout().addWidget(vline())
+        self.toolbar.layout().addWidget(self.btnTextStyle)
+        self.toolbar.layout().addWidget(vline())
         self.toolbar.layout().addWidget(self.btnAlignLeft)
         self.toolbar.layout().addWidget(self.btnAlignCenter)
         self.toolbar.layout().addWidget(self.btnAlignRight)
@@ -403,9 +476,9 @@ class RichTextEditor(QWidget):
         self.btnUnderline.setChecked(self.textEdit.fontUnderline())
         self.btnStrikethrough.setChecked(self.textEdit.currentFont().strikeOut())
 
-        self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignLeft)
-        self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignCenter)
-        self.btnAlignRight.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignRight)
+        self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignLeft)
+        self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignCenter)
+        self.btnAlignRight.setChecked(self.textEdit.alignment() == Qt.AlignRight)
 
     def _insertLink(self):
         result = LinkCreationDialog().display()

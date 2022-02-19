@@ -62,3 +62,27 @@ def test_strikethrough_button(qtbot):
 
     editor.btnStrikethrough.click()
     assert editor.textEdit.currentFont().strikeOut()
+
+
+def test_foreground_color(qtbot):
+    editor = RichTextEditor()
+    editor.show()
+    qtbot.addWidget(editor)
+    qtbot.waitExposed(editor)
+
+    item = editor.wdgTextStyle.wdgForeground.layout().itemAt(0)
+    item.widget().click()
+
+    assert editor.textEdit.textColor().name() == '#da1e37'
+
+
+def test_background_color(qtbot):
+    editor = RichTextEditor()
+    editor.show()
+    qtbot.addWidget(editor)
+    qtbot.waitExposed(editor)
+
+    item = editor.wdgTextStyle.wdgBackground.layout().itemAt(0)
+    item.widget().click()
+
+    assert editor.textEdit.textBackgroundColor().name() == '#da1e37'
