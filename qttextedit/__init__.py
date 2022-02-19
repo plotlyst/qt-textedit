@@ -8,7 +8,9 @@ from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFor
     QKeySequence, QTextListFormat, QTextCharFormat, QTextFormat
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit, \
-    QFileDialog
+    QFileDialog, QInputDialog
+
+from qttextedit.util import select_anchor
 
 
 class TextFormatWidget(QWidget):
@@ -82,6 +84,12 @@ class EnhancedTextEdit(QTextEdit):
         action = paste_submenu.addAction('Paste with original style', self.pasteAsOriginalText)
         action.setToolTip('Paste with the original formatting')
 
+        anchor = self.anchorAt(event.pos())
+        if anchor:
+            menu.addSeparator()
+            menu.addAction(qtawesome.icon('fa5s.link'), 'Edit link',
+                           lambda: self._editLink(self.cursorForPosition(event.pos())))
+
         menu.exec(event.globalPos())
 
     def pasteAsPlainText(self):
@@ -118,8 +126,10 @@ class EnhancedTextEdit(QTextEdit):
         if anchor:
             if QApplication.overrideCursor() is None:
                 QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+                self.setToolTip(f'Visit {anchor}')
         else:
             QApplication.restoreOverrideCursor()
+            self.setToolTip('')
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         super(EnhancedTextEdit, self).mouseReleaseEvent(event)
@@ -240,6 +250,18 @@ class EnhancedTextEdit(QTextEdit):
         self.mergeCurrentCharFormat(charFormat)
 
         cursor.endEditBlock()
+
+    def _editLink(self, cursor: QTextCursor):
+        QApplication.restoreOverrideCursor()
+        self.setToolTip('')
+
+        anchor, ok = QInputDialog.getText(self, 'Edit link', 'URL', text=cursor.charFormat().anchorHref())
+        if ok:
+            pos_cursor = select_anchor(cursor)
+
+            char_format: QTextCharFormat = pos_cursor.charFormat()
+            char_format.setAnchorHref(anchor)
+            pos_cursor.mergeCharFormat(char_format)
 
     def _toggleQuickFormatPopup(self):
         if not self.textCursor().hasSelection():
