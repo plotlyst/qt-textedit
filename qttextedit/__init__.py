@@ -10,6 +10,7 @@ from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit, \
     QFileDialog, QInputDialog
 
+from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import select_anchor
 
 
@@ -364,6 +365,9 @@ class RichTextEditor(QWidget):
         self.btnInsertNumberedList.clicked.connect(
             lambda: self.textEdit.textCursor().insertList(QTextListFormat.ListDecimal))
 
+        self.btnInsertLink = _button('fa5s.link', 'Insert link', checkable=False)
+        self.btnInsertLink.clicked.connect(lambda: self._insertLink())
+
         self.btnExportToPdf = _button('mdi.file-export-outline', 'Export to PDF', checkable=False)
         self.btnExportToPdf.clicked.connect(lambda: self._exportPdf())
         self.btnPrint = _button('mdi.printer', 'Print', checkable=False)
@@ -382,6 +386,8 @@ class RichTextEditor(QWidget):
         self.toolbar.layout().addWidget(vline())
         self.toolbar.layout().addWidget(self.btnInsertList)
         self.toolbar.layout().addWidget(self.btnInsertNumberedList)
+        self.toolbar.layout().addWidget(vline())
+        self.toolbar.layout().addWidget(self.btnInsertLink)
         self.toolbar.layout().addWidget(spacer())
         self.toolbar.layout().addWidget(self.btnExportToPdf)
         self.toolbar.layout().addWidget(self.btnPrint)
@@ -400,6 +406,11 @@ class RichTextEditor(QWidget):
         self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignLeft)
         self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignCenter)
         self.btnAlignRight.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignRight)
+
+    def _insertLink(self):
+        result = LinkCreationDialog().display()
+        if result.accepted:
+            self.textEdit.textCursor().insertHtml(f'<a href="{result.link}">{result.name}</a>')
 
     def _exportPdf(self):
         title = self._exportedDocumentTitle()

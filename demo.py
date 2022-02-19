@@ -31,6 +31,9 @@ class MainWindow(QMainWindow):
 
         self.editor.textEdit.textChanged.connect(lambda: self.sourceViewed.setPlainText(self.editor.textEdit.toHtml()))
 
+        self.editor.textEdit.insertHtml(
+            '<a href="https://github.com/zkovari">zkovari</a> opened this issue 3 days ago · 0 comments')
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
