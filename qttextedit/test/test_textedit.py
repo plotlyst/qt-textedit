@@ -73,6 +73,8 @@ def test_foreground_color(qtbot):
     item = editor.wdgTextStyle.wdgForeground.layout().itemAt(0)
     item.widget().click()
 
+    assert editor.textEdit.textColor().name() == '#da1e37'
+
 
 def test_background_color(qtbot):
     editor = RichTextEditor()
@@ -82,3 +84,5 @@ def test_background_color(qtbot):
 
     item = editor.wdgTextStyle.wdgBackground.layout().itemAt(0)
     item.widget().click()
+
+    assert editor.textEdit.textBackgroundColor().name() == '#da1e37'

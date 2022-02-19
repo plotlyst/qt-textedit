@@ -40,12 +40,16 @@ class TextFormatWidget(QWidget):
 class TextColorSelectorWidget(QWidget):
     foregroundColorSelected = Signal(QColor)
     backgroundColorSelected = Signal(QColor)
+    reset = Signal()
 
     def __init__(self, foregroundColors: List[str], backgroundColors: List[str], parent=None):
         super(TextColorSelectorWidget, self).__init__(parent)
 
         vbox(self)
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+
+        self.btnReset = _button('mdi.format-color-marker-cancel', tooltip='Reset current color', checkable=False)
+        self.btnReset.clicked.connect(lambda: self.reset.emit())
 
         self.wdgForeground = QWidget()
         self.wdgForeground.setLayout(QGridLayout())
@@ -63,6 +67,7 @@ class TextColorSelectorWidget(QWidget):
             btn = self._addBtn('mdi.alpha-a-box', i, color, self.wdgBackground)
             btn.clicked.connect(partial(self.backgroundColorSelected.emit, QColor(color)))
 
+        self.layout().addWidget(self.btnReset, alignment=Qt.AlignRight)
         self.layout().addWidget(self.wdgForeground)
         self.layout().addWidget(line())
         self.layout().addWidget(self.wdgBackground)
@@ -106,6 +111,9 @@ class EnhancedTextEdit(QTextEdit):
 
         self.setTabStopDistance(
             QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
+
+        self._defaultTextColor = self.textColor()
+        self._defaultBgColor = self.textBackgroundColor()
 
     def contextMenuEvent(self, event: QContextMenuEvent):
         menu = QMenu()
@@ -230,6 +238,8 @@ class EnhancedTextEdit(QTextEdit):
             self.textCursor().insertText(event.text().upper())
             return
         if event.key() == Qt.Key_Return:
+            self.resetTextColor()
+            self.resetTextBackgroundColor()
             level = self.textCursor().blockFormat().headingLevel()
             if level > 0:  # heading
                 self.textCursor().insertBlock()
@@ -276,6 +286,12 @@ class EnhancedTextEdit(QTextEdit):
 
         self.setTabStopDistance(
             QtGui.QFontMetricsF(font).horizontalAdvance(' ') * 4)
+
+    def resetTextColor(self):
+        self.setTextColor(Qt.black)
+
+    def resetTextBackgroundColor(self):
+        self.setTextBackgroundColor(Qt.white)
 
     def setHeading(self, heading: int):
         cursor: QTextCursor = self.textCursor()
@@ -397,8 +413,13 @@ class RichTextEditor(QWidget):
         btn_popup(self.btnTextStyle, self.wdgTextStyle)
         self.wdgTextStyle.foregroundColorSelected.connect(lambda x: self.textEdit.setTextColor(x))
         self.wdgTextStyle.backgroundColorSelected.connect(lambda x: self.textEdit.setTextBackgroundColor(x))
-        self.wdgTextStyle.foregroundColorSelected.connect(lambda: self.btnTextStyle.menu().hide())
-        self.wdgTextStyle.backgroundColorSelected.connect(lambda: self.btnTextStyle.menu().hide())
+        self.wdgTextStyle.foregroundColorSelected.connect(self.btnTextStyle.menu().hide)
+        self.wdgTextStyle.foregroundColorSelected.connect(self.textEdit.textCursor().clearSelection)
+        self.wdgTextStyle.backgroundColorSelected.connect(self.btnTextStyle.menu().hide)
+        self.wdgTextStyle.backgroundColorSelected.connect(self.textEdit.textCursor().clearSelection)
+        self.wdgTextStyle.reset.connect(self.textEdit.resetTextColor)
+        self.wdgTextStyle.reset.connect(self.textEdit.resetTextBackgroundColor)
+        self.wdgTextStyle.reset.connect(self.btnTextStyle.menu().hide)
 
         self.btnAlignLeft = _button('fa5s.align-left', 'Align left')
         self.btnAlignLeft.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignLeft))
