@@ -1,11 +1,11 @@
 import re
 
 import qtawesome
-from qthandy import vbox, hbox, spacer, vline
+from qthandy import vbox, hbox, spacer, vline, btn_popup_menu
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
-    QKeySequence, QTextListFormat
+    QKeySequence, QTextListFormat, QTextCharFormat, QTextFormat
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit, \
     QFileDialog
@@ -175,6 +175,13 @@ class EnhancedTextEdit(QTextEdit):
         if event.text().isalpha() and self._atSentenceStart(cursor):
             self.textCursor().insertText(event.text().upper())
             return
+        if event.key() == Qt.Key_Return:
+            level = self.textCursor().blockFormat().headingLevel()
+            if level > 0:  # heading
+                self.textCursor().insertBlock()
+                self.textCursor().insertText('')
+                self.setHeading(0)
+                return
         super(EnhancedTextEdit, self).keyPressEvent(event)
 
     # def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -215,6 +222,24 @@ class EnhancedTextEdit(QTextEdit):
 
         self.setTabStopDistance(
             QtGui.QFontMetricsF(font).horizontalAdvance(' ') * 4)
+
+    def setHeading(self, heading: int):
+        cursor: QTextCursor = self.textCursor()
+        cursor.beginEditBlock()
+
+        blockFormat: QTextBlockFormat = cursor.blockFormat()
+        blockFormat.setHeadingLevel(heading)
+        cursor.setBlockFormat(blockFormat)
+        sizeAdjustment = 5 - heading if heading else 0
+
+        charFormat = QTextCharFormat()
+        charFormat.setFontWeight(QFont.Bold if heading else QFont.Normal)
+        charFormat.setProperty(QTextFormat.FontSizeAdjustment, sizeAdjustment)
+        cursor.select(QTextCursor.LineUnderCursor)
+        cursor.mergeBlockCharFormat(charFormat)
+        self.mergeCurrentCharFormat(charFormat)
+
+        cursor.endEditBlock()
 
     def _toggleQuickFormatPopup(self):
         if not self.textCursor().hasSelection():
@@ -266,6 +291,19 @@ class RichTextEditor(QWidget):
         self.layout().addWidget(self.toolbar)
         self.layout().addWidget(self.textEdit)
 
+        self.btnFormat = _button('mdi.format-text', 'Format text', checkable=False)
+        formatMenu = QMenu(self.btnFormat)
+        formatMenu.addAction(qtawesome.icon('mdi.format-header-1', options=[{'scale_factor': 1.4}]), '',
+                             lambda: self.textEdit.setHeading(1))
+        formatMenu.addAction(qtawesome.icon('mdi.format-header-2', options=[{'scale_factor': 1.3}]), '',
+                             lambda: self.textEdit.setHeading(2))
+        formatMenu.addAction(qtawesome.icon('mdi.format-header-3', options=[{'scale_factor': 1.2}]), '',
+                             lambda: self.textEdit.setHeading(3))
+        formatMenu.addSeparator()
+        formatMenu.addAction(qtawesome.icon('mdi.format-clear', options=[{'scale_factor': 1.2}]), '',
+                             lambda: self.textEdit.setHeading(0))
+        btn_popup_menu(self.btnFormat, formatMenu)
+
         self.btnBold = _button('fa5s.bold', 'Bold', shortcut=QKeySequence.StandardKey.Bold)
         self.btnBold.clicked.connect(lambda x: self.textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
         self.btnItalic = _button('fa5s.italic', 'Italic', shortcut=QKeySequence.StandardKey.Italic)
@@ -300,6 +338,8 @@ class RichTextEditor(QWidget):
         self.btnPrint = _button('mdi.printer', 'Print', checkable=False)
         self.btnPrint.clicked.connect(lambda: self._print())
 
+        self.toolbar.layout().addWidget(self.btnFormat)
+        self.toolbar.layout().addWidget(vline())
         self.toolbar.layout().addWidget(self.btnBold)
         self.toolbar.layout().addWidget(self.btnItalic)
         self.toolbar.layout().addWidget(self.btnUnderline)
@@ -329,12 +369,6 @@ class RichTextEditor(QWidget):
         self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignLeft)
         self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignCenter)
         self.btnAlignRight.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignRight)
-
-        # self.cbHeading.blockSignals(True)
-        # cursor = self.textEditor.textCursor()
-        # level = cursor.blockFormat().headingLevel()
-        # self.cbHeading.setCurrentIndex(level)
-        # self.cbHeading.blockSignals(False)
 
     def _exportPdf(self):
         title = self._exportedDocumentTitle()
