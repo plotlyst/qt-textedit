@@ -183,7 +183,7 @@ class EnhancedTextEdit(QTextEdit):
             self.setFontWeight(QFont.Bold if self.fontWeight() == QFont.Normal else QFont.Normal)
         if event.key() == Qt.Key.Key_U and event.modifiers() & Qt.ControlModifier:
             self.setFontUnderline(not self.fontUnderline())
-        if event.text().isalpha() and self._atSentenceStart(cursor):
+        if event.text().isalpha() and self._atSentenceStart(cursor) and cursor.atBlockEnd():
             self.textCursor().insertText(event.text().upper())
             return
         if event.key() == Qt.Key_Return:
@@ -280,17 +280,17 @@ class EnhancedTextEdit(QTextEdit):
     def _atSentenceStart(self, cursor: QTextCursor) -> bool:
         if cursor.atBlockStart():
             return True
-
-        cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
-        if cursor.selectedText() == '.':
+        moved_cursor = QTextCursor(cursor)
+        moved_cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+        if moved_cursor.selectedText() == '.':
             return True
-        if cursor.atBlockStart() and cursor.selectedText() == '"':
+        if moved_cursor.atBlockStart() and moved_cursor.selectedText() == '"':
             return True
-        if cursor.positionInBlock() == 1:
+        if moved_cursor.positionInBlock() == 1:
             return False
-        elif cursor.selectedText() == ' ' or cursor.selectedText() == '"':
-            cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
-            if cursor.selectedText().startswith('.'):
+        elif moved_cursor.selectedText() == ' ' or moved_cursor.selectedText() == '"':
+            moved_cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+            if moved_cursor.selectedText().startswith('.'):
                 return True
 
         return False
