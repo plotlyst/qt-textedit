@@ -16,7 +16,7 @@ class LinkCreationDialog(QDialog):
     def __init__(self, parent=None):
         super(LinkCreationDialog, self).__init__(parent)
         self.setWindowTitle('Insert link')
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
         vbox(self)
 
         self._wdgLink = QWidget()
@@ -56,7 +56,7 @@ class LinkCreationDialog(QDialog):
 
     def display(self) -> LinkCreationResult:
         result = self.exec()
-        if result == QDialog.DialogCode.Accepted:
+        if result == QDialog.Accepted:
             name = self.lineName.text() if self.lineName.text() else self.lineLink.text()
             return LinkCreationResult(True, self.lineLink.text(), name)
         return LinkCreationResult(False, '', '')
