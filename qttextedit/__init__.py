@@ -112,9 +112,6 @@ class EnhancedTextEdit(QTextEdit):
         self.setTabStopDistance(
             QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
 
-        self._defaultTextColor = self.textColor()
-        self._defaultBgColor = self.textBackgroundColor()
-
     def contextMenuEvent(self, event: QContextMenuEvent):
         menu = QMenu()
         menu.setToolTipsVisible(True)
