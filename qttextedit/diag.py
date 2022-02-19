@@ -43,10 +43,10 @@ class LinkCreationDialog(QDialog):
         self._wdgName.layout().addWidget(self.lineName)
 
         self._btnBox = QDialogButtonBox()
-        self._btnBox.setStandardButtons(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        self.btnOk = self._btnBox.button(QDialogButtonBox.StandardButton.Ok)
+        self._btnBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.btnOk = self._btnBox.button(QDialogButtonBox.Ok)
         self.btnOk.setEnabled(False)
-        self.btnCancel = self._btnBox.button(QDialogButtonBox.StandardButton.Cancel)
+        self.btnCancel = self._btnBox.button(QDialogButtonBox.Cancel)
         self.btnOk.clicked.connect(lambda: self.accept())
         self.btnCancel.clicked.connect(lambda: self.reject())
 
