@@ -16,7 +16,7 @@ class LinkCreationDialog(QDialog):
     def __init__(self, parent=None):
         super(LinkCreationDialog, self).__init__(parent)
         self.setWindowTitle('Insert link')
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
         vbox(self)
 
         self._wdgLink = QWidget()
@@ -43,10 +43,10 @@ class LinkCreationDialog(QDialog):
         self._wdgName.layout().addWidget(self.lineName)
 
         self._btnBox = QDialogButtonBox()
-        self._btnBox.setStandardButtons(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        self.btnOk = self._btnBox.button(QDialogButtonBox.StandardButton.Ok)
+        self._btnBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.btnOk = self._btnBox.button(QDialogButtonBox.Ok)
         self.btnOk.setEnabled(False)
-        self.btnCancel = self._btnBox.button(QDialogButtonBox.StandardButton.Cancel)
+        self.btnCancel = self._btnBox.button(QDialogButtonBox.Cancel)
         self.btnOk.clicked.connect(lambda: self.accept())
         self.btnCancel.clicked.connect(lambda: self.reject())
 
@@ -56,7 +56,7 @@ class LinkCreationDialog(QDialog):
 
     def display(self) -> LinkCreationResult:
         result = self.exec()
-        if result == QDialog.DialogCode.Accepted:
+        if result == QDialog.Accepted:
             name = self.lineName.text() if self.lineName.text() else self.lineLink.text()
             return LinkCreationResult(True, self.lineLink.text(), name)
         return LinkCreationResult(False, '', '')

@@ -1,17 +1,13 @@
 from qtpy.QtGui import QFont
 
 from qttextedit import EnhancedTextEdit, RichTextEditor
-
-
-def type_text(qtbot, textedit, text: str):
-    for c in text:
-        qtbot.keyPress(textedit, c)
+from .common import type_text
 
 
 def test_enhanced_textedit(qtbot):
     textedit = EnhancedTextEdit()
-    textedit.show()
     qtbot.addWidget(textedit)
+    textedit.show()
     qtbot.waitExposed(textedit)
 
     type_text(qtbot, textedit, 'test. test')
@@ -21,8 +17,8 @@ def test_enhanced_textedit(qtbot):
 
 def test_rich_texteditor(qtbot):
     editor = RichTextEditor()
-    editor.show()
     qtbot.addWidget(editor)
+    editor.show()
     qtbot.waitExposed(editor)
 
     assert editor.btnAlignLeft.isChecked()
@@ -30,8 +26,8 @@ def test_rich_texteditor(qtbot):
 
 def test_bold_button(qtbot):
     editor = RichTextEditor()
-    editor.show()
     qtbot.addWidget(editor)
+    editor.show()
     qtbot.waitExposed(editor)
 
     editor.btnBold.click()
@@ -40,8 +36,8 @@ def test_bold_button(qtbot):
 
 def test_italic_button(qtbot):
     editor = RichTextEditor()
-    editor.show()
     qtbot.addWidget(editor)
+    editor.show()
     qtbot.waitExposed(editor)
 
     editor.btnItalic.click()
