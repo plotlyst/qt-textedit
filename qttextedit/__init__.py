@@ -189,7 +189,7 @@ class EnhancedTextEdit(QTextEdit):
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         cursor: QTextCursor = self.textCursor()
-        if event.key() == Qt.Key.Key_Tab:
+        if event.key() == Qt.Key_Tab:
             list_ = cursor.block().textList()
             if list_:
                 cursor.beginEditBlock()
@@ -203,7 +203,7 @@ class EnhancedTextEdit(QTextEdit):
 
                 cursor.endEditBlock()
                 return
-        if event.key() == Qt.Key.Key_Backtab:
+        if event.key() == Qt.Key_Backtab:
             list_: QTextList = cursor.block().textList()
             if list_:
                 indent = list_.format().indent()
@@ -225,11 +225,11 @@ class EnhancedTextEdit(QTextEdit):
                         cursor.createList(new_format)
                         cursor.endEditBlock()
                 return
-        if event.key() == Qt.Key.Key_I and event.modifiers() & Qt.ControlModifier:
+        if event.key() == Qt.Key_I and event.modifiers() & Qt.ControlModifier:
             self.setFontItalic(not self.fontItalic())
-        if event.key() == Qt.Key.Key_B and event.modifiers() & Qt.ControlModifier:
+        if event.key() == Qt.Key_B and event.modifiers() & Qt.ControlModifier:
             self.setFontWeight(QFont.Bold if self.fontWeight() == QFont.Normal else QFont.Normal)
-        if event.key() == Qt.Key.Key_U and event.modifiers() & Qt.ControlModifier:
+        if event.key() == Qt.Key_U and event.modifiers() & Qt.ControlModifier:
             self.setFontUnderline(not self.fontUnderline())
         if event.text().isalpha() and self._atSentenceStart(cursor) and cursor.atBlockEnd():
             self.textCursor().insertText(event.text().upper())
