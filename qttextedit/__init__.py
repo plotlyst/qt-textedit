@@ -3,7 +3,7 @@ import re
 import qtawesome
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QKeySequence, QTextListFormat, QTextCharFormat, QTextFormat
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
@@ -126,7 +126,7 @@ class EnhancedTextEdit(QTextEdit):
         if anchor:
             if QApplication.overrideCursor() is None:
                 QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
-                self.setToolTip(f'Visit {anchor}')
+                self._setLinkTooltip(anchor)
         else:
             QApplication.restoreOverrideCursor()
             self.setToolTip('')
@@ -250,6 +250,15 @@ class EnhancedTextEdit(QTextEdit):
         self.mergeCurrentCharFormat(charFormat)
 
         cursor.endEditBlock()
+
+    def _setLinkTooltip(self, anchor: str):
+        icon = qtawesome.icon('fa5s.external-link-alt')
+        buffer = QBuffer()
+        buffer.open(QIODevice.WriteOnly)
+        pixmap = icon.pixmap(QSize(8, 8))
+        pixmap.save(buffer, "PNG", quality=100)
+        html = f"<img src='data:image/png;base64, {bytes(buffer.data().toBase64()).decode()}'>{anchor}"
+        self.setToolTip(html)
 
     def _editLink(self, cursor: QTextCursor):
         QApplication.restoreOverrideCursor()
