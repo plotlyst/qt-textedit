@@ -6,6 +6,7 @@ def test_link_creation_dialog_when_link_is_copied(qtbot):
     diag = LinkCreationDialog()
     diag.show()
     qtbot.addWidget(diag)
+    qtbot.waitExposed(diag)
 
     assert not diag.btnOk.isEnabled()
     type_text(qtbot, diag.lineLink, 'https://')
@@ -17,6 +18,7 @@ def test_link_creation_dialog_when_link_is_not_copied(qtbot):
     diag = LinkCreationDialog()
     diag.show()
     qtbot.addWidget(diag)
+    qtbot.waitExposed(diag)
 
     type_text(qtbot, diag.lineName, 'name')
     type_text(qtbot, diag.lineLink, 'https://')
