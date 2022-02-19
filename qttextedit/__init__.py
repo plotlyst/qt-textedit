@@ -82,7 +82,7 @@ def _button(icon: str, tooltip: str = '', shortcut=None, checkable: bool = True)
     btn = QToolButton()
     btn.setToolTip(tooltip)
     btn.setIconSize(QSize(18, 18))
-    btn.setCursor(Qt.CursorShape.PointingHandCursor)
+    btn.setCursor(Qt.PointingHandCursor)
     if icon.startswith('md') or icon.startswith('ri'):
         btn.setIcon(qtawesome.icon(icon, options=[{'scale_factor': 1.2}]))
     else:
@@ -169,7 +169,7 @@ class EnhancedTextEdit(QTextEdit):
         anchor = self.anchorAt(event.pos())
         if anchor:
             if QApplication.overrideCursor() is None:
-                QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+                QApplication.setOverrideCursor(Qt.PointingHandCursor)
                 self._setLinkTooltip(anchor)
         else:
             QApplication.restoreOverrideCursor()
@@ -379,11 +379,11 @@ class RichTextEditor(QWidget):
                              lambda: self.textEdit.setHeading(0))
         btn_popup_menu(self.btnFormat, formatMenu)
 
-        self.btnBold = _button('fa5s.bold', 'Bold', shortcut=QKeySequence.StandardKey.Bold)
+        self.btnBold = _button('fa5s.bold', 'Bold', shortcut=QKeySequence.Bold)
         self.btnBold.clicked.connect(lambda x: self.textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
-        self.btnItalic = _button('fa5s.italic', 'Italic', shortcut=QKeySequence.StandardKey.Italic)
+        self.btnItalic = _button('fa5s.italic', 'Italic', shortcut=QKeySequence.Italic)
         self.btnItalic.clicked.connect(lambda x: self.textEdit.setFontItalic(x))
-        self.btnUnderline = _button('fa5s.underline', 'Underline', shortcut=QKeySequence.StandardKey.Underline)
+        self.btnUnderline = _button('fa5s.underline', 'Underline', shortcut=QKeySequence.Underline)
         self.btnUnderline.clicked.connect(lambda x: self.textEdit.setFontUnderline(x))
         self.btnStrikethrough = _button('fa5s.strikethrough', 'Strikethrough')
         self.btnStrikethrough.clicked.connect(self.textEdit.setStrikethrough)
@@ -401,12 +401,12 @@ class RichTextEditor(QWidget):
         self.wdgTextStyle.backgroundColorSelected.connect(lambda: self.btnTextStyle.menu().hide())
 
         self.btnAlignLeft = _button('fa5s.align-left', 'Align left')
-        self.btnAlignLeft.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignLeft))
+        self.btnAlignLeft.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignLeft))
         self.btnAlignLeft.setChecked(True)
         self.btnAlignCenter = _button('fa5s.align-center', 'Align center')
-        self.btnAlignCenter.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignCenter))
+        self.btnAlignCenter.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignCenter))
         self.btnAlignRight = _button('fa5s.align-right', 'Align right')
-        self.btnAlignRight.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignmentFlag.AlignRight))
+        self.btnAlignRight.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignRight))
 
         self.btnGroupAlignment = QButtonGroup(self.toolbar)
         self.btnGroupAlignment.setExclusive(True)
@@ -460,9 +460,9 @@ class RichTextEditor(QWidget):
         self.btnUnderline.setChecked(self.textEdit.fontUnderline())
         self.btnStrikethrough.setChecked(self.textEdit.currentFont().strikeOut())
 
-        self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignLeft)
-        self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignCenter)
-        self.btnAlignRight.setChecked(self.textEdit.alignment() == Qt.AlignmentFlag.AlignRight)
+        self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignLeft)
+        self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignCenter)
+        self.btnAlignRight.setChecked(self.textEdit.alignment() == Qt.AlignRight)
 
     def _insertLink(self):
         result = LinkCreationDialog().display()
