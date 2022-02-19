@@ -1,5 +1,5 @@
 from qttextedit import LinkCreationDialog
-from qttextedit.test.test_textedit import type_text
+from .common import type_text
 
 
 def test_link_creation_dialog_when_link_is_copied(qtbot):
