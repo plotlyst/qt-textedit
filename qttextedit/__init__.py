@@ -7,7 +7,7 @@ from typing import List, Dict
 import qtawesome
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, line, btn_popup, busy
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal, QPoint
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QKeySequence, QTextListFormat, QTextCharFormat, QTextFormat, QColor
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
@@ -222,8 +222,8 @@ class EnhancedTextEdit(QTextEdit):
                 self.textCursor().insertText('')
                 self.setHeading(0)
                 return
-        if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
-            self._showCommands()
+        # if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
+        #     self._showCommands()
         super(EnhancedTextEdit, self).keyPressEvent(event)
 
     # def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -328,18 +328,18 @@ class EnhancedTextEdit(QTextEdit):
 
         return False
 
-    def _showCommands(self, point: QPoint):
-        def trigger(func):
-            self.textEditor.textCursor().deletePreviousChar()
-            func()
+    # def _showCommands(self, point: QPoint):
+    #     def trigger(func):
+    #         self.textEditor.textCursor().deletePreviousChar()
+    #         func()
 
-        # rect = self.textEditor.cursorRect(self.textEditor.textCursor())
-        #
-        # menu = QMenu(self.textEditor)
-        # menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(1)))
-        # menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
-        #
-        # menu.popup(self.textEditor.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+    # rect = self.textEditor.cursorRect(self.textEditor.textCursor())
+    #
+    # menu = QMenu(self.textEditor)
+    # menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(1)))
+    # menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
+    #
+    # menu.popup(self.textEditor.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
 
 class TextEditorOperationType(Enum):
