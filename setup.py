@@ -15,7 +15,6 @@ REQUIREMENTS: dict = {
         'pytest',
         'pytest-qt',
         'pytest-cov',
-        'pytest-randomly',
     ],
     'dev': [
     ],
