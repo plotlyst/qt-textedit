@@ -5,39 +5,18 @@ from functools import partial
 from typing import List, Dict
 
 import qtawesome
-from PyQt6.QtCore import QPoint
-from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, btn_popup, line
+from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, line, btn_popup, busy
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal, QPoint
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QKeySequence, QTextListFormat, QTextCharFormat, QTextFormat, QColor
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
-from qtpy.QtWidgets import QMenu, QWidget, QApplication, QHBoxLayout, QToolButton, QFrame, QButtonGroup, QTextEdit, \
-    QFileDialog, QInputDialog, QSizePolicy, QGridLayout
+from qtpy.QtWidgets import QFileDialog
+from qtpy.QtWidgets import QMenu, QWidget, QApplication, QToolButton, QFrame, QButtonGroup, QTextEdit, \
+    QInputDialog, QSizePolicy, QGridLayout
 
 from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import select_anchor
-
-
-class TextFormatWidget(QWidget):
-    def __init__(self, parent=None):
-        super(TextFormatWidget, self).__init__(parent)
-        self.setLayout(QHBoxLayout())
-        self.layout().setContentsMargins(2, 2, 2, 2)
-        self.layout().setSpacing(3)
-
-        self.btnBold = QToolButton()
-        self.btnBold.setIcon(qtawesome.icon('fa5s.bold'))
-
-        self.btnItalic = QToolButton()
-        self.btnItalic.setIcon(qtawesome.icon('fa5s.italic'))
-
-        self.btnUnderline = QToolButton()
-        self.btnUnderline.setIcon(qtawesome.icon('fa5s.underline'))
-
-        self.layout().addWidget(self.btnBold)
-        self.layout().addWidget(self.btnItalic)
-        self.layout().addWidget(self.btnUnderline)
 
 
 class TextColorSelectorWidget(QWidget):
@@ -108,9 +87,6 @@ class EnhancedTextEdit(QTextEdit):
         super(EnhancedTextEdit, self).__init__(parent)
         self._pasteAsPlain: bool = False
         self._pasteAsOriginal: bool = False
-        self._quickFormatPopup = TextFormatWidget(self)
-        self._quickFormatPopup.setHidden(True)
-        self.selectionChanged.connect(self._toggleQuickFormatPopup)
 
         self.setTabStopDistance(
             QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
@@ -334,10 +310,6 @@ class EnhancedTextEdit(QTextEdit):
             char_format.setAnchorHref(anchor)
             pos_cursor.mergeCharFormat(char_format)
 
-    def _toggleQuickFormatPopup(self):
-        if not self.textCursor().hasSelection():
-            self._quickFormatPopup.setHidden(True)
-
     def _atSentenceStart(self, cursor: QTextCursor) -> bool:
         if cursor.atBlockStart():
             return True
@@ -409,6 +381,24 @@ class TextEditorOperation(QToolButton):
         pass
 
 
+class FormatOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(FormatOperation, self).__init__('mdi.format-text', 'Format text', parent=parent)
+
+    def activate(self, textEdit: QTextEdit):
+        formatMenu = QMenu(self)
+        formatMenu.addAction(qtawesome.icon('mdi.format-header-1', options=[{'scale_factor': 1.4}]), '',
+                             lambda: textEdit.setHeading(1))
+        formatMenu.addAction(qtawesome.icon('mdi.format-header-2', options=[{'scale_factor': 1.3}]), '',
+                             lambda: textEdit.setHeading(2))
+        formatMenu.addAction(qtawesome.icon('mdi.format-header-3', options=[{'scale_factor': 1.2}]), '',
+                             lambda: textEdit.setHeading(3))
+        formatMenu.addSeparator()
+        formatMenu.addAction(qtawesome.icon('mdi.format-clear', options=[{'scale_factor': 1.2}]), '',
+                             lambda: textEdit.setHeading(0))
+        btn_popup_menu(self, formatMenu)
+
+
 class BoldOperation(TextEditorOperation):
     def __init__(self, parent=None):
         super(BoldOperation, self).__init__('fa5s.bold', 'Bold', shortcut=QKeySequence.Bold, checkable=True,
@@ -419,6 +409,177 @@ class BoldOperation(TextEditorOperation):
 
     def updateFormat(self, textEdit: QTextEdit):
         self.setChecked(textEdit.fontWeight() == QFont.Bold)
+
+
+class ItalicOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(ItalicOperation, self).__init__('fa5s.italic', 'Italic', shortcut=QKeySequence.Italic, checkable=True,
+                                              parent=parent)
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(lambda x: textEdit.setFontItalic(x))
+
+    def updateFormat(self, textEdit: QTextEdit):
+        self.setChecked(textEdit.fontItalic())
+
+
+class UnderlineOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(UnderlineOperation, self).__init__('fa5s.underline', 'Underline', shortcut=QKeySequence.Underline,
+                                                 checkable=True,
+                                                 parent=parent)
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(lambda x: textEdit.setFontUnderline(x))
+
+    def updateFormat(self, textEdit: QTextEdit):
+        self.setChecked(textEdit.fontUnderline())
+
+
+class StrikethroughOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(StrikethroughOperation, self).__init__('fa5s.strikethrough', 'Strikethrough', checkable=True,
+                                                     parent=parent)
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(textEdit.setStrikethrough)
+
+    def updateFormat(self, textEdit: QTextEdit):
+        self.setChecked(textEdit.currentFont().strikeOut())
+
+
+class ColorOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(ColorOperation, self).__init__('fa5s.highlighter', 'Text color', parent=parent)
+        self.wdgTextStyle = TextColorSelectorWidget(
+            ['#da1e37', '#e85d04', '#9c6644', '#ffd500', '#2d6a4f', '#74c69d', '#023e8a', '#219ebc', '#7209b7',
+             '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'],
+            ['#da1e37', '#e85d04', '#9c6644', '#ffd500', '#2d6a4f', '#74c69d', '#023e8a', '#219ebc', '#7209b7',
+             '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'])
+        btn_popup(self, self.wdgTextStyle)
+        self.wdgTextStyle.foregroundColorSelected.connect(self.menu().hide)
+        self.wdgTextStyle.backgroundColorSelected.connect(self.menu().hide)
+        self.wdgTextStyle.reset.connect(self.menu().hide)
+
+    def activate(self, textEdit: QTextEdit):
+        self.wdgTextStyle.foregroundColorSelected.connect(lambda x: textEdit.setTextColor(x))
+        self.wdgTextStyle.backgroundColorSelected.connect(lambda x: textEdit.setTextBackgroundColor(x))
+
+        self.wdgTextStyle.reset.connect(textEdit.resetTextColor)
+        self.wdgTextStyle.reset.connect(textEdit.resetTextBackgroundColor)
+
+
+class AlignmentOperation(TextEditorOperation):
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(lambda: textEdit.setAlignment(self.alignment()))
+
+    def updateFormat(self, textEdit: QTextEdit):
+        self.setChecked(textEdit.alignment() == self.alignment())
+
+    @abstractmethod
+    def alignment(self):
+        pass
+
+
+class AlignLeftOperation(AlignmentOperation):
+    def __init__(self, parent=None):
+        super(AlignLeftOperation, self).__init__('fa5s.align-left', 'Align left', checkable=True, parent=parent)
+
+    def alignment(self):
+        return Qt.AlignLeft
+
+
+class AlignCenterOperation(AlignmentOperation):
+    def __init__(self, parent=None):
+        super(AlignCenterOperation, self).__init__('fa5s.align-center', 'Align center', checkable=True, parent=parent)
+
+    def alignment(self):
+        return Qt.AlignCenter
+
+
+class AlignRightOperation(AlignmentOperation):
+    def __init__(self, parent=None):
+        super(AlignRightOperation, self).__init__('fa5s.align-right', 'Align right', checkable=True, parent=parent)
+
+    def alignment(self):
+        return Qt.AlignRight
+
+
+class InsertListOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(InsertListOperation, self).__init__('fa5s.list', 'Insert list', parent=parent)
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(lambda: textEdit.textCursor().insertList(QTextListFormat.ListDisc))
+
+
+class InsertNumberedListOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(InsertNumberedListOperation, self).__init__('fa5s.list-ol', 'Insert numbered list', parent=parent)
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(lambda: textEdit.textCursor().insertList(QTextListFormat.ListDecimal))
+
+
+class InsertLinkOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(InsertLinkOperation, self).__init__('fa5s.link', 'Insert link', parent=parent)
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(lambda: self._insertLink(textEdit))
+
+    def _insertLink(self, textEdit: QTextEdit):
+        result = LinkCreationDialog().display()
+        if result.accepted:
+            textEdit.textCursor().insertHtml(f'<a href="{result.link}">{result.name}</a>')
+
+
+class ExportPdfOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(ExportPdfOperation, self).__init__('mdi.file-export-outline', 'Export to PDF', parent=parent)
+        self._title = 'document'
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(lambda: self._exportPdf(textEdit))
+
+    def title(self) -> str:
+        return self._title
+
+    def setTitle(self, value: str):
+        self._title = value
+
+    def _exportPdf(self, textEdit: QTextEdit):
+        filename, _ = QFileDialog.getSaveFileName(self, 'Export PDF', f'{self._title}.pdf',
+                                                  'PDF files (*.pdf);;All Files()')
+        if filename:
+            self._print(filename, textEdit)
+
+    @busy
+    def _print(self, filename: str, textEdit: QTextEdit):
+        printer = QPrinter(QPrinter.HighResolution)
+        printer.setOutputFormat(QPrinter.PdfFormat)
+        printer.setOutputFileName(filename)
+        printer.setDocName(self._title)
+        textEdit.print(printer)
+
+
+class PrintOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(PrintOperation, self).__init__('mdi.printer', 'Print', parent=parent)
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(lambda: self._print(textEdit))
+
+    @busy
+    def _getPrinter(self) -> QPrinter:
+        return QPrinter(QPrinter.HighResolution)
+
+    def _print(self, textEdit: QTextEdit):
+        printer = self._getPrinter()
+        dialog = QPrintDialog(printer, self)
+        if dialog.exec_() == QPrintDialog.Accepted:
+            textEdit.print(printer)
 
 
 class TextEditorToolbar(QFrame):
@@ -441,12 +602,16 @@ class TextEditorToolbar(QFrame):
                         ''')
         hbox(self)
         self._standardOperations: Dict[TextEditorOperationType, TextEditorOperation] = {}
+        self.btnGroupAlignment = QButtonGroup(self)
+        self.btnGroupAlignment.setExclusive(True)
 
     def addStandardOperation(self, operationType: TextEditorOperationType):
         opBtn = self._newOperation(operationType)
         if opBtn:
             self._standardOperations[operationType] = opBtn
             self.layout().addWidget(opBtn)
+            if operationType.value.startswith('alignment'):
+                self.btnGroupAlignment.addButton(opBtn)
 
     def addSeparator(self):
         self.layout().addWidget(vline())
@@ -470,13 +635,39 @@ class TextEditorToolbar(QFrame):
             op.updateFormat(textEdit)
 
     def _getOperationOrFail(self, operationType: TextEditorOperationType) -> TextEditorOperation:
-        if operationType is self._standardOperations:
+        if operationType in self._standardOperations:
             return self._standardOperations[operationType]
         raise ValueError('Operation type is not present in the toolbar: %s', operationType)
 
     def _newOperation(self, operationType: TextEditorOperationType) -> TextEditorOperation:
+        if operationType == TextEditorOperationType.FORMAT:
+            return FormatOperation()
         if operationType == TextEditorOperationType.BOLD:
             return BoldOperation()
+        if operationType == TextEditorOperationType.ITALIC:
+            return ItalicOperation()
+        if operationType == TextEditorOperationType.UNDERLINE:
+            return UnderlineOperation()
+        if operationType == TextEditorOperationType.STRIKETHROUGH:
+            return StrikethroughOperation()
+        if operationType == TextEditorOperationType.COLOR:
+            return ColorOperation()
+        if operationType == TextEditorOperationType.ALIGNMENT_LEFT:
+            return AlignLeftOperation()
+        if operationType == TextEditorOperationType.ALIGNMENT_CENTER:
+            return AlignCenterOperation()
+        if operationType == TextEditorOperationType.ALIGNMENT_RIGHT:
+            return AlignRightOperation()
+        if operationType == TextEditorOperationType.INSERT_LIST:
+            return InsertListOperation()
+        if operationType == TextEditorOperationType.INSERT_NUMBERED_LIST:
+            return InsertNumberedListOperation()
+        if operationType == TextEditorOperationType.INSERT_LINK:
+            return InsertLinkOperation()
+        if operationType == TextEditorOperationType.EXPORT_PDF:
+            return ExportPdfOperation()
+        if operationType == TextEditorOperationType.PRINT:
+            return PrintOperation()
 
 
 class StandardTextEditorToolbar(TextEditorToolbar):
@@ -522,123 +713,15 @@ class RichTextEditor(QWidget):
 
         self.toolbar = StandardTextEditorToolbar(self)
         self.textEdit = self._initTextEdit()
-
         self.toolbar.activate(self.textEdit)
 
         self.layout().addWidget(self.toolbar)
         self.layout().addWidget(self.textEdit)
 
-        self.btnFormat = _button('mdi.format-text', 'Format text', checkable=False)
-        formatMenu = QMenu(self.btnFormat)
-        formatMenu.addAction(qtawesome.icon('mdi.format-header-1', options=[{'scale_factor': 1.4}]), '',
-                             lambda: self.textEdit.setHeading(1))
-        formatMenu.addAction(qtawesome.icon('mdi.format-header-2', options=[{'scale_factor': 1.3}]), '',
-                             lambda: self.textEdit.setHeading(2))
-        formatMenu.addAction(qtawesome.icon('mdi.format-header-3', options=[{'scale_factor': 1.2}]), '',
-                             lambda: self.textEdit.setHeading(3))
-        formatMenu.addSeparator()
-        formatMenu.addAction(qtawesome.icon('mdi.format-clear', options=[{'scale_factor': 1.2}]), '',
-                             lambda: self.textEdit.setHeading(0))
-        btn_popup_menu(self.btnFormat, formatMenu)
-
-        # self.btnBold = _button('fa5s.bold', 'Bold', shortcut=QKeySequence.Bold)
-        # self.btnBold.clicked.connect(lambda x: self.textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
-        self.btnItalic = _button('fa5s.italic', 'Italic', shortcut=QKeySequence.Italic)
-        self.btnItalic.clicked.connect(lambda x: self.textEdit.setFontItalic(x))
-        self.btnUnderline = _button('fa5s.underline', 'Underline', shortcut=QKeySequence.Underline)
-        self.btnUnderline.clicked.connect(lambda x: self.textEdit.setFontUnderline(x))
-        self.btnStrikethrough = _button('fa5s.strikethrough', 'Strikethrough')
-        self.btnStrikethrough.clicked.connect(self.textEdit.setStrikethrough)
-
-        self.btnTextStyle = _button('fa5s.highlighter', 'Text color', checkable=False)
-        self.wdgTextStyle = TextColorSelectorWidget(
-            ['#da1e37', '#e85d04', '#9c6644', '#ffd500', '#2d6a4f', '#74c69d', '#023e8a', '#219ebc', '#7209b7',
-             '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'],
-            ['#da1e37', '#e85d04', '#9c6644', '#ffd500', '#2d6a4f', '#74c69d', '#023e8a', '#219ebc', '#7209b7',
-             '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'])
-        btn_popup(self.btnTextStyle, self.wdgTextStyle)
-        self.wdgTextStyle.foregroundColorSelected.connect(lambda x: self.textEdit.setTextColor(x))
-        self.wdgTextStyle.backgroundColorSelected.connect(lambda x: self.textEdit.setTextBackgroundColor(x))
-        self.wdgTextStyle.foregroundColorSelected.connect(self.btnTextStyle.menu().hide)
-        self.wdgTextStyle.backgroundColorSelected.connect(self.btnTextStyle.menu().hide)
-        self.wdgTextStyle.reset.connect(self.textEdit.resetTextColor)
-        self.wdgTextStyle.reset.connect(self.textEdit.resetTextBackgroundColor)
-        self.wdgTextStyle.reset.connect(self.btnTextStyle.menu().hide)
-
-        self.btnAlignLeft = _button('fa5s.align-left', 'Align left')
-        self.btnAlignLeft.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignLeft))
-        self.btnAlignLeft.setChecked(True)
-        self.btnAlignCenter = _button('fa5s.align-center', 'Align center')
-        self.btnAlignCenter.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignCenter))
-        self.btnAlignRight = _button('fa5s.align-right', 'Align right')
-        self.btnAlignRight.clicked.connect(lambda: self.textEdit.setAlignment(Qt.AlignRight))
-
-        self.btnGroupAlignment = QButtonGroup(self.toolbar)
-        self.btnGroupAlignment.setExclusive(True)
-        self.btnGroupAlignment.addButton(self.btnAlignLeft)
-        self.btnGroupAlignment.addButton(self.btnAlignCenter)
-        self.btnGroupAlignment.addButton(self.btnAlignRight)
-
-        self.btnInsertList = _button('fa5s.list', 'Insert list', checkable=False)
-        self.btnInsertList.clicked.connect(lambda: self.textEdit.textCursor().insertList(QTextListFormat.ListDisc))
-        self.btnInsertNumberedList = _button('fa5s.list-ol', 'Insert numbered list', checkable=False)
-        self.btnInsertNumberedList.clicked.connect(
-            lambda: self.textEdit.textCursor().insertList(QTextListFormat.ListDecimal))
-
-        self.btnInsertLink = _button('fa5s.link', 'Insert link', checkable=False)
-        self.btnInsertLink.clicked.connect(lambda: self._insertLink())
-
-        self.btnExportToPdf = _button('mdi.file-export-outline', 'Export to PDF', checkable=False)
-        self.btnExportToPdf.clicked.connect(lambda: self._exportPdf())
-        self.btnPrint = _button('mdi.printer', 'Print', checkable=False)
-        self.btnPrint.clicked.connect(lambda: self._print())
-
-        self.textEdit.cursorPositionChanged.connect(self._updateFormat)
+        self.textEdit.cursorPositionChanged.connect(lambda: self.toolbar.updateFormat(self.textEdit))
 
     def setToolbar(self, toolbar: TextEditorToolbar, mode: ToolbarDisplayMode = ToolbarDisplayMode.DOCKED):
         self.toolbar = toolbar
 
     def _initTextEdit(self) -> EnhancedTextEdit:
         return EnhancedTextEdit(self)
-
-    def _updateFormat(self):
-        self.toolbar.updateFormat(self.textEdit)
-        # self.btnBold.setChecked(self.textEdit.fontWeight() == QFont.Bold)
-        # self.btnItalic.setChecked(self.textEdit.fontItalic())
-        # self.btnUnderline.setChecked(self.textEdit.fontUnderline())
-        # self.btnStrikethrough.setChecked(self.textEdit.currentFont().strikeOut())
-        #
-        # self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignLeft)
-        # self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignCenter)
-        # self.btnAlignRight.setChecked(self.textEdit.alignment() == Qt.AlignRight)
-
-    def _insertLink(self):
-        result = LinkCreationDialog().display()
-        if result.accepted:
-            self.textEdit.textCursor().insertHtml(f'<a href="{result.link}">{result.name}</a>')
-
-    def _exportPdf(self):
-        title = self._exportedDocumentTitle()
-        fn, _ = QFileDialog.getSaveFileName(self, 'Export PDF', f'{title}.pdf',
-                                            'PDF files (*.pdf);;All Files()')
-        if fn:
-            printer = QPrinter(QPrinter.HighResolution)
-            printer.setOutputFormat(QPrinter.PdfFormat)
-            printer.setOutputFileName(fn)
-            printer.setDocName(title)
-            self.__printHtml(printer)
-
-    def _exportedDocumentTitle(self) -> str:
-        return 'document'
-
-    def _print(self):
-        printer = QPrinter(QPrinter.HighResolution)
-        dialog = QPrintDialog(printer, self)
-        if dialog.exec_() == QPrintDialog.Accepted:
-            self.__printHtml(printer)
-
-    def __printHtml(self, printer: QPrinter):
-        textedit = EnhancedTextEdit()  # create a new instance without the highlighters associated to it
-        textedit.setFormat()
-        textedit.setHtml(self.textEdit.toHtml())
-        textedit.print(printer)
