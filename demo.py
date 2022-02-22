@@ -31,8 +31,18 @@ class MainWindow(QMainWindow):
 
         self.editor.textEdit.textChanged.connect(lambda: self.sourceViewed.setPlainText(self.editor.textEdit.toHtml()))
 
-        self.editor.textEdit.insertHtml(
-            '<a href="https://github.com/zkovari">zkovari</a> opened this issue 3 days ago · 0 comments')
+        # toolbar = StandardTextEditorToolbar()
+        # toolbar.setDefaultOperations(Operations.Bold | Operations.Italic)
+        #
+        # customToolbar = TextEditorToolbar()
+        # customToolbar.addStandardOperation(Operations.Bold)
+        # customToolbar.addSeparator()
+        # customToolbar.addSpacer()
+        # customToolbar.addCustomAction(action)
+        # customToolbar.addCustomWidget()
+        #
+        # self.editor.setToolbar(toolbar, ToolbarDisplayMode.OnSelection)
+        # self.editor.setTitleEditor(DefaultTitleEditor())
 
 
 if __name__ == '__main__':

@@ -1,8 +1,11 @@
 import re
+from abc import abstractmethod
+from enum import Enum
 from functools import partial
-from typing import List
+from typing import List, Dict
 
 import qtawesome
+from PyQt6.QtCore import QPoint
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, btn_popup, line
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal
@@ -243,6 +246,8 @@ class EnhancedTextEdit(QTextEdit):
                 self.textCursor().insertText('')
                 self.setHeading(0)
                 return
+        if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
+            self._showCommands()
         super(EnhancedTextEdit, self).keyPressEvent(event)
 
     # def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -351,30 +356,174 @@ class EnhancedTextEdit(QTextEdit):
 
         return False
 
+    def _showCommands(self, point: QPoint):
+        def trigger(func):
+            self.textEditor.textCursor().deletePreviousChar()
+            func()
+
+        # rect = self.textEditor.cursorRect(self.textEditor.textCursor())
+        #
+        # menu = QMenu(self.textEditor)
+        # menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(1)))
+        # menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
+        #
+        # menu.popup(self.textEditor.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+
+
+class TextEditorOperationType(Enum):
+    BOLD = 'bold'
+    ITALIC = 'italic'
+    UNDERLINE = 'underline'
+    STRIKETHROUGH = 'strikethrough'
+    FORMAT = 'format'
+    ALIGNMENT_LEFT = 'alignment_left'
+    ALIGNMENT_CENTER = 'alignment_center'
+    ALIGNMENT_RIGHT = 'alignment_right'
+    INSERT_LIST = 'insert_list'
+    INSERT_NUMBERED_LIST = 'insert_numbered_list'
+    INSERT_LINK = 'insert_link'
+    COLOR = 'color'
+    EXPORT_PDF = 'export_pdf'
+    PRINT = 'print'
+
+
+class TextEditorOperation(QToolButton):
+    def __init__(self, icon: str, tooltip: str = '', shortcut=None, checkable: bool = False, parent=None):
+        super(TextEditorOperation, self).__init__(parent)
+        self.setToolTip(tooltip)
+        self.setIconSize(QSize(18, 18))
+        self.setCursor(Qt.PointingHandCursor)
+        if icon.startswith('md') or icon.startswith('ri'):
+            self.setIcon(qtawesome.icon(icon, options=[{'scale_factor': 1.2}]))
+        else:
+            self.setIcon(qtawesome.icon(icon))
+        if shortcut:
+            self.setShortcut(shortcut)
+        self.setCheckable(checkable)
+
+    @abstractmethod
+    def activate(self, textEdit: QTextEdit):
+        pass
+
+    def updateFormat(self, textEdit: QTextEdit):
+        pass
+
+
+class BoldOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(BoldOperation, self).__init__('fa5s.bold', 'Bold', shortcut=QKeySequence.Bold, checkable=True,
+                                            parent=parent)
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(lambda x: textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
+
+    def updateFormat(self, textEdit: QTextEdit):
+        self.setChecked(textEdit.fontWeight() == QFont.Bold)
+
+
+class TextEditorToolbar(QFrame):
+    def __init__(self, parent=None):
+        super(TextEditorToolbar, self).__init__(parent)
+        self.setStyleSheet('''
+                            QFrame {
+                                background-color: white;
+                            }
+
+                            QToolButton {
+                                border: 1px hidden black;
+                            }
+                            QToolButton:checked {
+                                background-color: #ced4da;
+                            }
+                            QToolButton:hover:!checked {
+                                background-color: #e5e5e5;
+                            }
+                        ''')
+        hbox(self)
+        self._standardOperations: Dict[TextEditorOperationType, TextEditorOperation] = {}
+
+    def addStandardOperation(self, operationType: TextEditorOperationType):
+        opBtn = self._newOperation(operationType)
+        if opBtn:
+            self._standardOperations[operationType] = opBtn
+            self.layout().addWidget(opBtn)
+
+    def addSeparator(self):
+        self.layout().addWidget(vline())
+
+    def addSpacer(self):
+        self.layout().addWidget(spacer())
+
+    def setStandardOperationVisible(self, operationType: TextEditorOperationType, visible: bool):
+        op = self._getOperationOrFail(operationType)
+        op.setVisible(visible)
+
+    def standardOperation(self, operationType: TextEditorOperationType) -> TextEditorOperation:
+        return self._getOperationOrFail(operationType)
+
+    def activate(self, textEdit: QTextEdit):
+        for op in self._standardOperations.values():
+            op.activate(textEdit)
+
+    def updateFormat(self, textEdit: QTextEdit):
+        for op in self._standardOperations.values():
+            op.updateFormat(textEdit)
+
+    def _getOperationOrFail(self, operationType: TextEditorOperationType) -> TextEditorOperation:
+        if operationType is self._standardOperations:
+            return self._standardOperations[operationType]
+        raise ValueError('Operation type is not present in the toolbar: %s', operationType)
+
+    def _newOperation(self, operationType: TextEditorOperationType) -> TextEditorOperation:
+        if operationType == TextEditorOperationType.BOLD:
+            return BoldOperation()
+
+
+class StandardTextEditorToolbar(TextEditorToolbar):
+    def __init__(self, parent=None):
+        super(StandardTextEditorToolbar, self).__init__(parent)
+        self.addStandardOperation(TextEditorOperationType.FORMAT)
+        self.addSeparator()
+        self.addStandardOperation(TextEditorOperationType.BOLD)
+        self.addStandardOperation(TextEditorOperationType.ITALIC)
+        self.addStandardOperation(TextEditorOperationType.UNDERLINE)
+        self.addStandardOperation(TextEditorOperationType.STRIKETHROUGH)
+        self.addSeparator()
+        self.addStandardOperation(TextEditorOperationType.COLOR)
+        self.addSeparator()
+        self.addStandardOperation(TextEditorOperationType.ALIGNMENT_LEFT)
+        self.addStandardOperation(TextEditorOperationType.ALIGNMENT_CENTER)
+        self.addStandardOperation(TextEditorOperationType.ALIGNMENT_RIGHT)
+        self.addSeparator()
+        self.addStandardOperation(TextEditorOperationType.INSERT_LIST)
+        self.addStandardOperation(TextEditorOperationType.INSERT_NUMBERED_LIST)
+        self.addSeparator()
+        self.addStandardOperation(TextEditorOperationType.INSERT_LINK)
+        self.addSpacer()
+        self.addStandardOperation(TextEditorOperationType.EXPORT_PDF)
+        self.addStandardOperation(TextEditorOperationType.PRINT)
+
+    def setStandardOperations(self, operations: List[TextEditorOperationType]):
+        for op in TextEditorOperationType:
+            self.setStandardOperationVisible(op, False)
+        for op in operations:
+            self.setStandardOperationVisible(op, True)
+
+
+class ToolbarDisplayMode(Enum):
+    DOCKED = 'docked'
+    ON_SELECTION = 'on_selection'
+
 
 class RichTextEditor(QWidget):
     def __init__(self, parent=None):
         super(RichTextEditor, self).__init__(parent)
         vbox(self, 0, 0)
 
-        self.toolbar = QFrame(self)
-        self.toolbar.setStyleSheet('''
-            QFrame {
-                background-color: white;
-            }
-            
-            QToolButton {
-                border: 1px hidden black;
-            }
-            QToolButton:checked {
-                background-color: #ced4da;
-            }
-            QToolButton:hover:!checked {
-                background-color: #e5e5e5;
-            }
-        ''')
-        hbox(self.toolbar)
+        self.toolbar = StandardTextEditorToolbar(self)
         self.textEdit = self._initTextEdit()
+
+        self.toolbar.activate(self.textEdit)
 
         self.layout().addWidget(self.toolbar)
         self.layout().addWidget(self.textEdit)
@@ -392,8 +541,8 @@ class RichTextEditor(QWidget):
                              lambda: self.textEdit.setHeading(0))
         btn_popup_menu(self.btnFormat, formatMenu)
 
-        self.btnBold = _button('fa5s.bold', 'Bold', shortcut=QKeySequence.Bold)
-        self.btnBold.clicked.connect(lambda x: self.textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
+        # self.btnBold = _button('fa5s.bold', 'Bold', shortcut=QKeySequence.Bold)
+        # self.btnBold.clicked.connect(lambda x: self.textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
         self.btnItalic = _button('fa5s.italic', 'Italic', shortcut=QKeySequence.Italic)
         self.btnItalic.clicked.connect(lambda x: self.textEdit.setFontItalic(x))
         self.btnUnderline = _button('fa5s.underline', 'Underline', shortcut=QKeySequence.Underline)
@@ -444,41 +593,24 @@ class RichTextEditor(QWidget):
         self.btnPrint = _button('mdi.printer', 'Print', checkable=False)
         self.btnPrint.clicked.connect(lambda: self._print())
 
-        self.toolbar.layout().addWidget(self.btnFormat)
-        self.toolbar.layout().addWidget(vline())
-        self.toolbar.layout().addWidget(self.btnBold)
-        self.toolbar.layout().addWidget(self.btnItalic)
-        self.toolbar.layout().addWidget(self.btnUnderline)
-        self.toolbar.layout().addWidget(self.btnStrikethrough)
-        self.toolbar.layout().addWidget(vline())
-        self.toolbar.layout().addWidget(self.btnTextStyle)
-        self.toolbar.layout().addWidget(vline())
-        self.toolbar.layout().addWidget(self.btnAlignLeft)
-        self.toolbar.layout().addWidget(self.btnAlignCenter)
-        self.toolbar.layout().addWidget(self.btnAlignRight)
-        self.toolbar.layout().addWidget(vline())
-        self.toolbar.layout().addWidget(self.btnInsertList)
-        self.toolbar.layout().addWidget(self.btnInsertNumberedList)
-        self.toolbar.layout().addWidget(vline())
-        self.toolbar.layout().addWidget(self.btnInsertLink)
-        self.toolbar.layout().addWidget(spacer())
-        self.toolbar.layout().addWidget(self.btnExportToPdf)
-        self.toolbar.layout().addWidget(self.btnPrint)
-
         self.textEdit.cursorPositionChanged.connect(self._updateFormat)
+
+    def setToolbar(self, toolbar: TextEditorToolbar, mode: ToolbarDisplayMode = ToolbarDisplayMode.DOCKED):
+        self.toolbar = toolbar
 
     def _initTextEdit(self) -> EnhancedTextEdit:
         return EnhancedTextEdit(self)
 
     def _updateFormat(self):
-        self.btnBold.setChecked(self.textEdit.fontWeight() == QFont.Bold)
-        self.btnItalic.setChecked(self.textEdit.fontItalic())
-        self.btnUnderline.setChecked(self.textEdit.fontUnderline())
-        self.btnStrikethrough.setChecked(self.textEdit.currentFont().strikeOut())
-
-        self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignLeft)
-        self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignCenter)
-        self.btnAlignRight.setChecked(self.textEdit.alignment() == Qt.AlignRight)
+        self.toolbar.updateFormat(self.textEdit)
+        # self.btnBold.setChecked(self.textEdit.fontWeight() == QFont.Bold)
+        # self.btnItalic.setChecked(self.textEdit.fontItalic())
+        # self.btnUnderline.setChecked(self.textEdit.fontUnderline())
+        # self.btnStrikethrough.setChecked(self.textEdit.currentFont().strikeOut())
+        #
+        # self.btnAlignLeft.setChecked(self.textEdit.alignment() == Qt.AlignLeft)
+        # self.btnAlignCenter.setChecked(self.textEdit.alignment() == Qt.AlignCenter)
+        # self.btnAlignRight.setChecked(self.textEdit.alignment() == Qt.AlignRight)
 
     def _insertLink(self):
         result = LinkCreationDialog().display()
