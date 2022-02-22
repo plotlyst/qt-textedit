@@ -701,9 +701,9 @@ class StandardTextEditorToolbar(TextEditorToolbar):
             self.setStandardOperationVisible(op, True)
 
 
-class ToolbarDisplayMode(Enum):
-    DOCKED = 'docked'
-    ON_SELECTION = 'on_selection'
+# class ToolbarDisplayMode(Enum):
+#     DOCKED = 'docked'
+#     ON_SELECTION = 'on_selection'
 
 
 class RichTextEditor(QWidget):
@@ -720,7 +720,7 @@ class RichTextEditor(QWidget):
 
         self.textEdit.cursorPositionChanged.connect(lambda: self.toolbar.updateFormat(self.textEdit))
 
-    def setToolbar(self, toolbar: TextEditorToolbar, mode: ToolbarDisplayMode = ToolbarDisplayMode.DOCKED):
+    def setToolbar(self, toolbar: TextEditorToolbar):
         self.toolbar = toolbar
 
     def _initTextEdit(self) -> EnhancedTextEdit:
