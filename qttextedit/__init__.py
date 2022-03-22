@@ -530,7 +530,8 @@ class InsertLinkOperation(TextEditorOperation):
         self.clicked.connect(lambda: self._insertLink(textEdit))
 
     def _insertLink(self, textEdit: QTextEdit):
-        result = LinkCreationDialog().display()
+        text = textEdit.textCursor().selectedText()
+        result = LinkCreationDialog().display(text)
         if result.accepted:
             textEdit.textCursor().insertHtml(f'<a href="{result.link}">{result.name}</a>')
 

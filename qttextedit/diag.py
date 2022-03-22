@@ -54,7 +54,12 @@ class LinkCreationDialog(QDialog):
         self.layout().addWidget(self._wdgName)
         self.layout().addWidget(self._btnBox)
 
-    def display(self) -> LinkCreationResult:
+    def display(self, name: str = '') -> LinkCreationResult:
+        if name:
+            self.lineName.setText(name)
+            self._nameManuallyEdited = True
+
+        self.lineLink.setFocus()
         result = self.exec()
         if result == QDialog.Accepted:
             name = self.lineName.text() if self.lineName.text() else self.lineLink.text()
