@@ -511,7 +511,7 @@ class InsertListOperation(TextEditorOperation):
         super(InsertListOperation, self).__init__('fa5s.list', 'Insert list', parent=parent)
 
     def activate(self, textEdit: QTextEdit):
-        self.clicked.connect(lambda: textEdit.textCursor().insertList(QTextListFormat.ListDisc))
+        self.clicked.connect(lambda: textEdit.textCursor().createList(QTextListFormat.ListDisc))
 
 
 class InsertNumberedListOperation(TextEditorOperation):
@@ -519,7 +519,7 @@ class InsertNumberedListOperation(TextEditorOperation):
         super(InsertNumberedListOperation, self).__init__('fa5s.list-ol', 'Insert numbered list', parent=parent)
 
     def activate(self, textEdit: QTextEdit):
-        self.clicked.connect(lambda: textEdit.textCursor().insertList(QTextListFormat.ListDecimal))
+        self.clicked.connect(lambda: textEdit.textCursor().createList(QTextListFormat.ListDecimal))
 
 
 class InsertLinkOperation(TextEditorOperation):
