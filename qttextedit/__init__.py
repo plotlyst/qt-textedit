@@ -5,6 +5,7 @@ from functools import partial
 from typing import List, Dict
 
 import qtawesome
+from PyQt5.QtGui import QTextTableFormat, QTextLength
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, line, btn_popup, busy
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal
@@ -353,6 +354,7 @@ class TextEditorOperationType(Enum):
     ALIGNMENT_RIGHT = 'alignment_right'
     INSERT_LIST = 'insert_list'
     INSERT_NUMBERED_LIST = 'insert_numbered_list'
+    INSERT_TABLE = 'insert_table'
     INSERT_LINK = 'insert_link'
     COLOR = 'color'
     EXPORT_PDF = 'export_pdf'
@@ -522,6 +524,28 @@ class InsertNumberedListOperation(TextEditorOperation):
         self.clicked.connect(lambda: textEdit.textCursor().createList(QTextListFormat.ListDecimal))
 
 
+class InsertTableOperation(TextEditorOperation):
+    def __init__(self, parent=None):
+        super(InsertTableOperation, self).__init__('fa5s.table', 'Insert table', parent=parent)
+
+    def activate(self, textEdit: QTextEdit):
+        self.clicked.connect(lambda: self._insertTable(textEdit))
+
+    def _insertTable(self, textEdit: QTextEdit):
+        col_number = 3
+
+        format = QTextTableFormat()
+        format.setBorderStyle(QTextTableFormat.BorderStyle_Solid)
+        format.setAlignment(Qt.AlignCenter)
+        format.setWidth(150 * col_number)
+        constraints = []
+        for _ in range(col_number):
+            constraints.append(QTextLength(QTextLength.PercentageLength, 33))
+        format.setColumnWidthConstraints(constraints)
+
+        textEdit.textCursor().insertTable(3, col_number, format)
+
+
 class InsertLinkOperation(TextEditorOperation):
     def __init__(self, parent=None):
         super(InsertLinkOperation, self).__init__('fa5s.link', 'Insert link', parent=parent)
@@ -663,6 +687,8 @@ class TextEditorToolbar(QFrame):
             return InsertListOperation()
         if operationType == TextEditorOperationType.INSERT_NUMBERED_LIST:
             return InsertNumberedListOperation()
+        if operationType == TextEditorOperationType.INSERT_TABLE:
+            return InsertTableOperation()
         if operationType == TextEditorOperationType.INSERT_LINK:
             return InsertLinkOperation()
         if operationType == TextEditorOperationType.EXPORT_PDF:
@@ -691,6 +717,8 @@ class StandardTextEditorToolbar(TextEditorToolbar):
         self.addStandardOperation(TextEditorOperationType.INSERT_NUMBERED_LIST)
         self.addSeparator()
         self.addStandardOperation(TextEditorOperationType.INSERT_LINK)
+        self.addSeparator()
+        self.addStandardOperation(TextEditorOperationType.INSERT_TABLE)
         self.addSpacer()
         self.addStandardOperation(TextEditorOperationType.EXPORT_PDF)
         self.addStandardOperation(TextEditorOperationType.PRINT)
