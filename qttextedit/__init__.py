@@ -16,7 +16,7 @@ from qtpy.QtWidgets import QMenu, QWidget, QApplication, QToolButton, QFrame, QB
     QInputDialog, QSizePolicy, QGridLayout
 
 from qttextedit.diag import LinkCreationDialog
-from qttextedit.util import select_anchor
+from qttextedit.util import select_anchor, select_previous_character, select_next_character, is_open_quotation
 
 
 class TextColorSelectorWidget(QWidget):
@@ -210,7 +210,7 @@ class EnhancedTextEdit(QTextEdit):
             self.setFontWeight(QFont.Bold if self.fontWeight() == QFont.Normal else QFont.Normal)
         if event.key() == Qt.Key_U and event.modifiers() & Qt.ControlModifier:
             self.setFontUnderline(not self.fontUnderline())
-        if event.text().isalpha() and self._atSentenceStart(cursor) and cursor.atBlockEnd():
+        if event.text().isalpha() and self._atSentenceStart(cursor):
             self.textCursor().insertText(event.text().upper())
             return
         if event.key() == Qt.Key_Return:
@@ -313,15 +313,18 @@ class EnhancedTextEdit(QTextEdit):
     def _atSentenceStart(self, cursor: QTextCursor) -> bool:
         if cursor.atBlockStart():
             return True
-        moved_cursor = QTextCursor(cursor)
-        moved_cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+        moved_cursor = select_previous_character(cursor)
         if moved_cursor.selectedText() == '.':
             return True
-        if moved_cursor.atBlockStart() and moved_cursor.selectedText() == '"':
+        if not cursor.atBlockEnd():
+            right_moved_cursor = select_next_character(cursor)
+            if right_moved_cursor.selectedText().isalpha():
+                return False
+        if moved_cursor.atBlockStart() and is_open_quotation(moved_cursor.selectedText()):
             return True
         if moved_cursor.positionInBlock() == 1:
             return False
-        elif moved_cursor.selectedText() == ' ' or moved_cursor.selectedText() == '"':
+        elif moved_cursor.selectedText() == ' ' or is_open_quotation(moved_cursor.selectedText()):
             moved_cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
             if moved_cursor.selectedText().startswith('.'):
                 return True
