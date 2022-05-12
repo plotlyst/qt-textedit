@@ -5,6 +5,7 @@ from functools import partial
 from typing import List, Dict
 
 import qtawesome
+from PyQt5.QtCore import QPoint
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, line, btn_popup, busy
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal
@@ -91,7 +92,7 @@ class EnhancedTextEdit(QTextEdit):
         self.setTabStopDistance(
             QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
 
-    def contextMenuEvent(self, event: QContextMenuEvent):
+    def createEnhancedContextMenu(self, pos: QPoint) -> QMenu:
         menu = QMenu()
         menu.setToolTipsVisible(True)
         menu.addSeparator()
@@ -112,12 +113,16 @@ class EnhancedTextEdit(QTextEdit):
         action = paste_submenu.addAction('Paste with original style', self.pasteAsOriginalText)
         action.setToolTip('Paste with the original formatting')
 
-        anchor = self.anchorAt(event.pos())
+        anchor = self.anchorAt(pos)
         if anchor:
             menu.addSeparator()
             menu.addAction(qtawesome.icon('fa5s.link'), 'Edit link',
-                           lambda: self._editLink(self.cursorForPosition(event.pos())))
+                           lambda: self._editLink(self.cursorForPosition(pos)))
 
+        return menu
+
+    def contextMenuEvent(self, event: QContextMenuEvent):
+        menu = self.createEnhancedContextMenu(event.pos())
         menu.exec(event.globalPos())
 
     def pasteAsPlainText(self):
