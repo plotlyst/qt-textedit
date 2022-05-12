@@ -5,10 +5,9 @@ from functools import partial
 from typing import List, Dict
 
 import qtawesome
-from PyQt5.QtCore import QPoint
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, line, btn_popup, busy
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, Signal, QPoint
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QKeySequence, QTextListFormat, QTextCharFormat, QTextFormat, QColor
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
