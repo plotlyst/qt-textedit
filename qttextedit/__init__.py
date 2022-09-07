@@ -2,19 +2,19 @@ import re
 from typing import List, Dict
 
 import qtawesome
-from qthandy import vbox, hbox, spacer, vline
+from qthandy import vbox, hbox, spacer, vline, btn_popup_menu
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QTextCharFormat, QTextFormat
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
-    QInputDialog
+    QInputDialog, QToolButton
 
 from qttextedit.diag import LinkCreationDialog
 from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatOperation, BoldOperation, \
     ItalicOperation, UnderlineOperation, StrikethroughOperation, ColorOperation, AlignLeftOperation, \
     AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation, InsertLinkOperation, \
-    ExportPdfOperation, PrintOperation
+    ExportPdfOperation, PrintOperation, TextEditorOperationAction, TextEditorOperationMenu
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, is_open_quotation
 
 
@@ -306,12 +306,21 @@ class TextEditorToolbar(QFrame):
         self.btnGroupAlignment.setExclusive(True)
 
     def addStandardOperation(self, operationType: TextEditorOperationType):
-        opBtn = self._newOperation(operationType)
-        if opBtn:
-            self._standardOperations[operationType] = opBtn
-            self.layout().addWidget(opBtn)
+        opAction = self._newOperation(operationType)
+        if opAction:
+            self._standardOperations[operationType] = opAction
+            btn = QToolButton()
+            btn.setIconSize(QSize(18, 18))
+            btn.setCursor(Qt.PointingHandCursor)
+            if isinstance(opAction, TextEditorOperationAction):
+                btn.setDefaultAction(opAction)
+            elif isinstance(opAction, TextEditorOperationMenu):
+                btn_popup_menu(btn, opAction)
+                btn.setIcon(opAction.icon())
+                btn.setToolTip(opAction.toolTip())
+            self.layout().addWidget(btn)
             if operationType.value.startswith('alignment'):
-                self.btnGroupAlignment.addButton(opBtn)
+                self.btnGroupAlignment.addButton(btn)
 
     def addSeparator(self):
         self.layout().addWidget(vline())
@@ -399,11 +408,6 @@ class StandardTextEditorToolbar(TextEditorToolbar):
             self.setStandardOperationVisible(op, False)
         for op in operations:
             self.setStandardOperationVisible(op, True)
-
-
-# class ToolbarDisplayMode(Enum):
-#     DOCKED = 'docked'
-#     ON_SELECTION = 'on_selection'
 
 
 class RichTextEditor(QWidget):
