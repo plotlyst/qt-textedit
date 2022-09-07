@@ -1,4 +1,7 @@
+import qtawesome
+from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QTextCursor
+from qtpy.QtWidgets import QToolButton
 
 
 def select_anchor(cursor: QTextCursor) -> QTextCursor:
@@ -36,3 +39,19 @@ OPEN_QUOTATIONS = ('"', '"', '“', "«", "‹", "“")
 
 def is_open_quotation(char: str) -> bool:
     return char in OPEN_QUOTATIONS
+
+
+def button(icon: str, tooltip: str = '', shortcut=None, checkable: bool = True) -> QToolButton:
+    btn = QToolButton()
+    btn.setToolTip(tooltip)
+    btn.setIconSize(QSize(18, 18))
+    btn.setCursor(Qt.PointingHandCursor)
+    if icon.startswith('md') or icon.startswith('ri'):
+        btn.setIcon(qtawesome.icon(icon, options=[{'scale_factor': 1.2}]))
+    else:
+        btn.setIcon(qtawesome.icon(icon))
+    if shortcut:
+        btn.setShortcut(shortcut)
+    btn.setCheckable(checkable)
+
+    return btn
