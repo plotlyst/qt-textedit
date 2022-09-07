@@ -20,7 +20,8 @@ class MainWindow(QMainWindow):
 
         self.editor = RichTextEditor()
         self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
-        self.editor.textEdit.setFontPointSize(16)
+        ps = self.editor.textEdit.document().defaultFont().pointSize()
+        self.editor.textEdit.zoomIn(ps * 0.27)
 
         self.sourceViewed = QTextEdit()
         self.sourceViewed.setReadOnly(True)
@@ -30,6 +31,7 @@ class MainWindow(QMainWindow):
         self.widget.layout().addWidget(self.sourceViewed)
 
         self.editor.textEdit.textChanged.connect(lambda: self.sourceViewed.setPlainText(self.editor.textEdit.toHtml()))
+        self.editor.textEdit.setFocus()
 
 
 if __name__ == '__main__':

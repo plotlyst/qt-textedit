@@ -264,10 +264,12 @@ class EnhancedTextEdit(QTextEdit):
             QtGui.QFontMetricsF(font).horizontalAdvance(' ') * 4)
 
     def resetTextColor(self):
-        self.setTextColor(Qt.black)
-
-    def resetTextBackgroundColor(self):
-        self.setTextBackgroundColor(Qt.white)
+        format = QTextCharFormat()
+        format.setFontWeight(self.textCursor().charFormat().fontWeight())
+        format.setFontItalic(self.textCursor().charFormat().fontItalic())
+        format.setFontUnderline(self.textCursor().charFormat().fontUnderline())
+        format.setFontStrikeOut(self.textCursor().charFormat().fontStrikeOut())
+        self.textCursor().setCharFormat(format)
 
     def setHeading(self, heading: int):
         cursor: QTextCursor = self.textCursor()
@@ -467,7 +469,6 @@ class ColorOperation(TextEditorOperation):
         self.wdgTextStyle.backgroundColorSelected.connect(lambda x: textEdit.setTextBackgroundColor(x))
 
         self.wdgTextStyle.reset.connect(textEdit.resetTextColor)
-        self.wdgTextStyle.reset.connect(textEdit.resetTextBackgroundColor)
 
 
 class AlignmentOperation(TextEditorOperation):
