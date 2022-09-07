@@ -218,14 +218,8 @@ class EnhancedTextEdit(QTextEdit):
             self.textCursor().insertText(event.text().upper())
             return
         if event.key() == Qt.Key_Return:
-            self.resetTextColor()
-            # self.resetTextBackgroundColor()
-            level = self.textCursor().blockFormat().headingLevel()
-            if level > 0:  # heading
-                self.textCursor().insertBlock()
-                self.textCursor().insertText('')
-                self.setHeading(0)
-                return
+            self.textCursor().insertBlock(self.textCursor().blockFormat(), QTextCharFormat())
+            return
         # if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
         #     self._showCommands()
         super(EnhancedTextEdit, self).keyPressEvent(event)
