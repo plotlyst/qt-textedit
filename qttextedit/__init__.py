@@ -201,11 +201,9 @@ class EnhancedTextEdit(QTextEdit):
             QtGui.QFontMetricsF(font).horizontalAdvance(' ') * 4)
 
     def resetTextColor(self):
-        format = QTextCharFormat()
-        format.setFontWeight(self.textCursor().charFormat().fontWeight())
-        format.setFontItalic(self.textCursor().charFormat().fontItalic())
-        format.setFontUnderline(self.textCursor().charFormat().fontUnderline())
-        format.setFontStrikeOut(self.textCursor().charFormat().fontStrikeOut())
+        format = self.textCursor().charFormat()
+        format.clearBackground()
+        format.clearForeground()
         self.textCursor().setCharFormat(format)
 
     def setHeading(self, heading: int):
