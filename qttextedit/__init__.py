@@ -282,6 +282,29 @@ class EnhancedTextEdit(QTextEdit):
     # menu.popup(self.textEditor.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
 
+class TextEditorOperationButton(QToolButton):
+    def __init__(self, op: TextEditorOperation, parent=None):
+        super(TextEditorOperationButton, self).__init__(parent)
+        self.op: TextEditorOperation = op
+
+        self.setIconSize(QSize(18, 18))
+        self.setCursor(Qt.PointingHandCursor)
+
+        if isinstance(self.op, TextEditorOperationAction):
+            self.setDefaultAction(self.op)
+        elif isinstance(self.op, TextEditorOperationMenu):
+            btn_popup_menu(self, self.op)
+            self.setIcon(self.op.icon())
+            self.setToolTip(self.op.toolTip())
+        elif isinstance(self.op, TextEditorOperationWidgetAction):
+            menu = QMenu(self)
+            menu.addAction(self.op)
+            self.setIcon(self.op.icon())
+            self.setToolTip(self.op.toolTip())
+            btn_popup_menu(self, menu)
+            self.op.triggered.connect(self.menu().hide)
+
+
 class TextEditorToolbar(QFrame):
     def __init__(self, parent=None):
         super(TextEditorToolbar, self).__init__(parent)
@@ -301,30 +324,15 @@ class TextEditorToolbar(QFrame):
                             }
                         ''')
         hbox(self)
-        self._standardOperations: Dict[TextEditorOperationType, TextEditorOperation] = {}
+        self._standardOperationButtons: Dict[TextEditorOperationType, TextEditorOperationButton] = {}
         self.btnGroupAlignment = QButtonGroup(self)
         self.btnGroupAlignment.setExclusive(True)
 
     def addStandardOperation(self, operationType: TextEditorOperationType):
         opAction = self._newOperation(operationType)
         if opAction:
-            self._standardOperations[operationType] = opAction
-            btn = QToolButton()
-            btn.setIconSize(QSize(18, 18))
-            btn.setCursor(Qt.PointingHandCursor)
-            if isinstance(opAction, TextEditorOperationAction):
-                btn.setDefaultAction(opAction)
-            elif isinstance(opAction, TextEditorOperationMenu):
-                btn_popup_menu(btn, opAction)
-                btn.setIcon(opAction.icon())
-                btn.setToolTip(opAction.toolTip())
-            elif isinstance(opAction, TextEditorOperationWidgetAction):
-                menu = QMenu(btn)
-                menu.addAction(opAction)
-                btn.setIcon(opAction.icon())
-                btn.setToolTip(opAction.toolTip())
-                btn_popup_menu(btn, menu)
-                opAction.triggered.connect(btn.menu().hide)
+            btn = TextEditorOperationButton(opAction)
+            self._standardOperationButtons[operationType] = btn
             self.layout().addWidget(btn)
             if operationType.value.startswith('alignment'):
                 self.btnGroupAlignment.addButton(btn)
@@ -336,23 +344,23 @@ class TextEditorToolbar(QFrame):
         self.layout().addWidget(spacer())
 
     def setStandardOperationVisible(self, operationType: TextEditorOperationType, visible: bool):
-        op = self._getOperationOrFail(operationType)
+        op = self._getOperationButtonOrFail(operationType)
         op.setVisible(visible)
 
     def standardOperation(self, operationType: TextEditorOperationType) -> TextEditorOperation:
-        return self._getOperationOrFail(operationType)
+        return self._getOperationButtonOrFail(operationType).op
 
     def activate(self, textEdit: QTextEdit):
-        for op in self._standardOperations.values():
-            op.activate(textEdit)
+        for btn in self._standardOperationButtons.values():
+            btn.op.activate(textEdit)
 
     def updateFormat(self, textEdit: QTextEdit):
-        for op in self._standardOperations.values():
-            op.updateFormat(textEdit)
+        for btn in self._standardOperationButtons.values():
+            btn.op.updateFormat(textEdit)
 
-    def _getOperationOrFail(self, operationType: TextEditorOperationType) -> TextEditorOperation:
-        if operationType in self._standardOperations:
-            return self._standardOperations[operationType]
+    def _getOperationButtonOrFail(self, operationType: TextEditorOperationType) -> TextEditorOperationButton:
+        if operationType in self._standardOperationButtons:
+            return self._standardOperationButtons[operationType]
         raise ValueError('Operation type is not present in the toolbar: %s', operationType)
 
     def _newOperation(self, operationType: TextEditorOperationType) -> TextEditorOperation:
