@@ -1,7 +1,7 @@
 from qtpy.QtGui import QFont
 
 from qttextedit import EnhancedTextEdit, RichTextEditor, TextEditorOperationType
-from .common import type_text
+from qttextedit.test.common import type_text
 
 
 def test_enhanced_textedit(qtbot):

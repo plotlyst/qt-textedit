@@ -190,9 +190,9 @@ class ColorOperation(TextEditorOperationWidgetAction):
             ['#da1e37', '#e85d04', '#9c6644', '#ffd500', '#2d6a4f', '#74c69d', '#023e8a', '#219ebc', '#7209b7',
              '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'])
         self.setDefaultWidget(self.wdgTextStyle)
-        self.wdgTextStyle.foregroundColorSelected.connect(self.triggered.emit)
-        self.wdgTextStyle.backgroundColorSelected.connect(self.triggered.emit)
-        self.wdgTextStyle.reset.connect(self.triggered.emit)
+        self.wdgTextStyle.foregroundColorSelected.connect(lambda: self.triggered.emit())
+        self.wdgTextStyle.backgroundColorSelected.connect(lambda: self.triggered.emit())
+        self.wdgTextStyle.reset.connect(lambda: self.triggered.emit())
 
     def activate(self, textEdit: QTextEdit):
         self.wdgTextStyle.foregroundColorSelected.connect(lambda x: textEdit.setTextColor(x))

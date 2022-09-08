@@ -10,7 +10,6 @@ from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFor
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton
 
-from qttextedit.diag import LinkCreationDialog
 from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatOperation, BoldOperation, \
     ItalicOperation, UnderlineOperation, StrikethroughOperation, ColorOperation, AlignLeftOperation, \
     AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation, InsertLinkOperation, \
