@@ -30,7 +30,7 @@ def test_bold_operation(qtbot):
     editor.show()
     qtbot.waitExposed(editor)
 
-    editor.toolbar.standardOperation(TextEditorOperationType.BOLD).click()
+    editor.toolbar.standardOperation(TextEditorOperationType.BOLD).trigger()
     assert editor.textEdit.fontWeight() == QFont.Bold
 
 
@@ -40,7 +40,7 @@ def test_italic_operation(qtbot):
     editor.show()
     qtbot.waitExposed(editor)
 
-    editor.toolbar.standardOperation(TextEditorOperationType.ITALIC).click()
+    editor.toolbar.standardOperation(TextEditorOperationType.ITALIC).trigger()
     assert editor.textEdit.fontItalic()
 
 
@@ -50,7 +50,7 @@ def test_underline_operation(qtbot):
     qtbot.addWidget(editor)
     qtbot.waitExposed(editor)
 
-    editor.toolbar.standardOperation(TextEditorOperationType.UNDERLINE).click()
+    editor.toolbar.standardOperation(TextEditorOperationType.UNDERLINE).trigger()
     assert editor.textEdit.fontUnderline()
 
 
@@ -60,7 +60,7 @@ def test_strikethrough_operation(qtbot):
     qtbot.addWidget(editor)
     qtbot.waitExposed(editor)
 
-    editor.toolbar.standardOperation(TextEditorOperationType.STRIKETHROUGH).click()
+    editor.toolbar.standardOperation(TextEditorOperationType.STRIKETHROUGH).trigger()
     assert editor.textEdit.currentFont().strikeOut()
 
 

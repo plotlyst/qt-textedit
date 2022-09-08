@@ -14,7 +14,8 @@ from qttextedit.diag import LinkCreationDialog
 from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatOperation, BoldOperation, \
     ItalicOperation, UnderlineOperation, StrikethroughOperation, ColorOperation, AlignLeftOperation, \
     AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation, InsertLinkOperation, \
-    ExportPdfOperation, PrintOperation, TextEditorOperationAction, TextEditorOperationMenu
+    ExportPdfOperation, PrintOperation, TextEditorOperationAction, TextEditorOperationMenu, \
+    TextEditorOperationWidgetAction
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, is_open_quotation
 
 
@@ -318,6 +319,13 @@ class TextEditorToolbar(QFrame):
                 btn_popup_menu(btn, opAction)
                 btn.setIcon(opAction.icon())
                 btn.setToolTip(opAction.toolTip())
+            elif isinstance(opAction, TextEditorOperationWidgetAction):
+                menu = QMenu(btn)
+                menu.addAction(opAction)
+                btn.setIcon(opAction.icon())
+                btn.setToolTip(opAction.toolTip())
+                btn_popup_menu(btn, menu)
+                opAction.triggered.connect(btn.menu().hide)
             self.layout().addWidget(btn)
             if operationType.value.startswith('alignment'):
                 self.btnGroupAlignment.addButton(btn)

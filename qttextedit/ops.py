@@ -9,10 +9,10 @@ from qtpy.QtCore import Qt, QSize, Signal
 from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QFileDialog
-from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction
+from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction
 
 from qttextedit.diag import LinkCreationDialog
-from qttextedit.util import button
+from qttextedit.util import button, qta_icon
 
 
 class TextEditorOperationType(Enum):
@@ -46,23 +46,24 @@ class TextEditorOperationAction(QAction, TextEditorOperation):
     def __init__(self, icon: str, tooltip: str = '', shortcut=None, checkable: bool = False, parent=None):
         super(TextEditorOperationAction, self).__init__(parent)
         self.setToolTip(tooltip)
-        if icon.startswith('md') or icon.startswith('ri'):
-            self.setIcon(qtawesome.icon(icon, options=[{'scale_factor': 1.2}]))
-        else:
-            self.setIcon(qtawesome.icon(icon))
+        self.setIcon(qta_icon(icon))
         if shortcut:
             self.setShortcut(shortcut)
         self.setCheckable(checkable)
+
+
+class TextEditorOperationWidgetAction(QWidgetAction, TextEditorOperation):
+    def __init__(self, icon: str, tooltip: str = '', parent=None):
+        super(TextEditorOperationWidgetAction, self).__init__(parent)
+        self.setToolTip(tooltip)
+        self.setIcon(qta_icon(icon))
 
 
 class TextEditorOperationMenu(QMenu, TextEditorOperation):
     def __init__(self, icon: str, tooltip: str = '', parent=None):
         super(TextEditorOperationMenu, self).__init__(parent)
         self.setToolTip(tooltip)
-        if icon.startswith('md') or icon.startswith('ri'):
-            self.setIcon(qtawesome.icon(icon, options=[{'scale_factor': 1.2}]))
-        else:
-            self.setIcon(qtawesome.icon(icon))
+        self.setIcon(qta_icon(icon))
 
     @abstractmethod
     def activate(self, textEdit: QTextEdit):
@@ -180,7 +181,7 @@ class TextColorSelectorWidget(QWidget):
         return btn
 
 
-class ColorOperation(TextEditorOperationAction):
+class ColorOperation(TextEditorOperationWidgetAction):
     def __init__(self, parent=None):
         super(ColorOperation, self).__init__('fa5s.highlighter', 'Text color', parent=parent)
         self.wdgTextStyle = TextColorSelectorWidget(
@@ -188,10 +189,10 @@ class ColorOperation(TextEditorOperationAction):
              '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'],
             ['#da1e37', '#e85d04', '#9c6644', '#ffd500', '#2d6a4f', '#74c69d', '#023e8a', '#219ebc', '#7209b7',
              '#deaaff', '#ff87ab', '#4a4e69', '#ced4da', '#000000'])
-        # btn_popup(self, self.wdgTextStyle)
-        # self.wdgTextStyle.foregroundColorSelected.connect(self.menu().hide)
-        # self.wdgTextStyle.backgroundColorSelected.connect(self.menu().hide)
-        # self.wdgTextStyle.reset.connect(self.menu().hide)
+        self.setDefaultWidget(self.wdgTextStyle)
+        self.wdgTextStyle.foregroundColorSelected.connect(self.triggered.emit)
+        self.wdgTextStyle.backgroundColorSelected.connect(self.triggered.emit)
+        self.wdgTextStyle.reset.connect(self.triggered.emit)
 
     def activate(self, textEdit: QTextEdit):
         self.wdgTextStyle.foregroundColorSelected.connect(lambda x: textEdit.setTextColor(x))

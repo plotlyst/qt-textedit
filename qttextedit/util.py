@@ -1,6 +1,6 @@
 import qtawesome
 from qtpy.QtCore import QSize, Qt
-from qtpy.QtGui import QTextCursor
+from qtpy.QtGui import QTextCursor, QIcon
 from qtpy.QtWidgets import QToolButton
 
 
@@ -55,3 +55,9 @@ def button(icon: str, tooltip: str = '', shortcut=None, checkable: bool = True) 
     btn.setCheckable(checkable)
 
     return btn
+
+
+def qta_icon(name: str) -> QIcon:
+    if name.startswith('md') or name.startswith('ri'):
+        return qtawesome.icon(name, options=[{'scale_factor': 1.2}])
+    return qtawesome.icon(name)
