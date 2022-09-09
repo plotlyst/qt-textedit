@@ -24,9 +24,27 @@ class EnhancedTextEdit(QTextEdit):
         super(EnhancedTextEdit, self).__init__(parent)
         self._pasteAsPlain: bool = False
         self._pasteAsOriginal: bool = False
+        self._blockAutoCapitalization: bool = True
+        self._sentenceAutoCapitalization: bool = False
 
         self.setTabStopDistance(
             QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
+
+    def blockAutoCapitalizationEnabled(self) -> bool:
+        return self._blockAutoCapitalization
+
+    def setBlockAutoCapitalizationEnabled(self, enabled: bool):
+        self._blockAutoCapitalization = enabled
+
+    def sentenceAutoCapitalizationEnabled(self) -> bool:
+        return self._sentenceAutoCapitalization
+
+    def setSentenceAutoCapitalizationEnabled(self, enabled: bool):
+        self._sentenceAutoCapitalization = enabled
+
+    def setAutoCapitalizationEnabled(self, enabled: bool):
+        self._blockAutoCapitalization = enabled
+        self._sentenceAutoCapitalization = enabled
 
     def createEnhancedContextMenu(self, pos: QPoint) -> QMenu:
         menu = QMenu()
@@ -151,9 +169,11 @@ class EnhancedTextEdit(QTextEdit):
             self.setFontWeight(QFont.Bold if self.fontWeight() == QFont.Normal else QFont.Normal)
         if event.key() == Qt.Key_U and event.modifiers() & Qt.ControlModifier:
             self.setFontUnderline(not self.fontUnderline())
-        if event.text().isalpha() and self._atSentenceStart(cursor):
-            self.textCursor().insertText(event.text().upper())
-            return
+        if event.text().isalpha():
+            if (self._blockAutoCapitalization and cursor.atBlockStart()) or (
+                    self._sentenceAutoCapitalization and self._atSentenceStart(cursor)):
+                self.textCursor().insertText(event.text().upper())
+                return
         if event.key() == Qt.Key_Return:
             self.textCursor().insertBlock(self.textCursor().blockFormat(), QTextCharFormat())
             return

@@ -20,8 +20,10 @@ class MainWindow(QMainWindow):
 
         self.editor = RichTextEditor()
         self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
+        self.editor.textEdit.setBlockAutoCapitalizationEnabled(True)
+        self.editor.textEdit.setPlaceholderText('Write text')
         ps = self.editor.textEdit.document().defaultFont().pointSize()
-        self.editor.textEdit.zoomIn(ps * 0.27)
+        self.editor.textEdit.zoomIn(ps * 0.47)
 
         self.sourceViewed = QTextEdit()
         self.sourceViewed.setReadOnly(True)
