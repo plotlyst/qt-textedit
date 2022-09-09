@@ -175,6 +175,12 @@ class EnhancedTextEdit(QTextEdit):
                 self.textCursor().insertText(event.text().upper())
                 return
         if event.key() == Qt.Key_Return:
+            if cursor.block().textList() and not cursor.block().text():
+                list_ = cursor.block().textList()
+                list_.remove(cursor.block())
+                cursor.deletePreviousChar()
+                self.textCursor().insertBlock(QTextBlockFormat(), QTextCharFormat())
+                return
             self.textCursor().insertBlock(self.textCursor().blockFormat(), QTextCharFormat())
             return
         # if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
