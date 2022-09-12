@@ -39,8 +39,7 @@ class EnhancedTextEdit(QTextEdit):
         self._sentenceAutoCapitalization: bool = False
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
 
-        self.setTabStopDistance(
-            QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
+        self._adjustTabDistance()
 
     def blockAutoCapitalizationEnabled(self) -> bool:
         return self._blockAutoCapitalization
@@ -248,16 +247,13 @@ class EnhancedTextEdit(QTextEdit):
         font.setStrikeOut(strikethrough)
         self.setCurrentFont(font)
 
-    def setFontPointSize(self, size: int):
-        self.textCursor().select(QTextCursor.Document)
-        font = self.document().defaultFont()
-        font.setPointSize(size)
-        self.document().setDefaultFont(font)
-        super(EnhancedTextEdit, self).setFontPointSize(size)
-        self.textCursor().clearSelection()
+    def zoomIn(self, range: int = ...) -> None:
+        super(EnhancedTextEdit, self).zoomIn(range)
+        self._adjustTabDistance()
 
-        self.setTabStopDistance(
-            QtGui.QFontMetricsF(font).horizontalAdvance(' ') * 4)
+    def zoomOut(self, range: int = ...) -> None:
+        super(EnhancedTextEdit, self).zoomOut(range)
+        self._adjustTabDistance()
 
     def resetTextColor(self):
         format = self.textCursor().charFormat()
@@ -282,6 +278,9 @@ class EnhancedTextEdit(QTextEdit):
         self.mergeCurrentCharFormat(charFormat)
 
         cursor.endEditBlock()
+
+    def _adjustTabDistance(self):
+        self.setTabStopDistance(QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
 
     def _setLinkTooltip(self, anchor: str):
         icon = qtawesome.icon('fa5s.external-link-alt')

@@ -1,5 +1,6 @@
 import sys
 
+from PyQt5.QtGui import QFont
 from qthandy import vbox
 from qtpy.QtWidgets import QMainWindow, QApplication, QWidget
 from qtpy.QtWidgets import QTextEdit
@@ -22,8 +23,10 @@ class MainWindow(QMainWindow):
         self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
         self.editor.textEdit.setBlockAutoCapitalizationEnabled(True)
         self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
+        font = QFont('Times New Roman')
+        self.editor.textEdit.setFont(font)
         self.editor.textEdit.setPlaceholderText('Write text')
-        ps = self.editor.textEdit.document().defaultFont().pointSize()
+        ps = self.editor.textEdit.font().pointSize()
         self.editor.textEdit.zoomIn(ps * 0.47)
 
         self.sourceViewed = QTextEdit()
@@ -34,7 +37,12 @@ class MainWindow(QMainWindow):
         self.widget.layout().addWidget(self.sourceViewed)
 
         self.editor.textEdit.textChanged.connect(lambda: self.sourceViewed.setPlainText(self.editor.textEdit.toHtml()))
+        # self.editor.textEdit.textChanged.connect(lambda: self.zoom())
         self.editor.textEdit.setFocus()
+
+    def zoom(self):
+        ps = self.editor.textEdit.font().pointSize()
+        self.editor.textEdit.zoomIn(ps * 0.1)
 
 
 if __name__ == '__main__':
