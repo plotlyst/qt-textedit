@@ -1,4 +1,5 @@
 import re
+from enum import Enum
 from typing import List, Dict
 
 import qtawesome
@@ -18,6 +19,14 @@ from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatO
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, is_open_quotation
 
 ELLIPSIS = u'\u2026'
+EN_DASH = u'\u2013'
+EM_DASH = u'\u2014'
+
+
+class DashInsertionMode(Enum):
+    NONE = 0
+    INSERT_EN_DASH = 1
+    INSERT_EM_DASH = 2
 
 
 class EnhancedTextEdit(QTextEdit):
@@ -28,6 +37,7 @@ class EnhancedTextEdit(QTextEdit):
         self._pasteAsOriginal: bool = False
         self._blockAutoCapitalization: bool = True
         self._sentenceAutoCapitalization: bool = False
+        self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
 
         self.setTabStopDistance(
             QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
@@ -47,6 +57,12 @@ class EnhancedTextEdit(QTextEdit):
     def setAutoCapitalizationEnabled(self, enabled: bool):
         self._blockAutoCapitalization = enabled
         self._sentenceAutoCapitalization = enabled
+
+    def dashInsertionMode(self) -> DashInsertionMode:
+        return self._dashInsertionMode
+
+    def setDashInsertionMode(self, mode: DashInsertionMode):
+        self._dashInsertionMode = mode
 
     def createEnhancedContextMenu(self, pos: QPoint) -> QMenu:
         menu = QMenu()
@@ -190,6 +206,15 @@ class EnhancedTextEdit(QTextEdit):
             if moved_cursor.selectedText() == '..':
                 moved_cursor.removeSelectedText()
                 cursor.insertText(ELLIPSIS)
+                return
+        if event.key() == Qt.Key_Minus and self._dashInsertionMode != DashInsertionMode.NONE:
+            moved_cursor = select_previous_character(cursor)
+            if moved_cursor.selectedText() == '-':
+                cursor.deletePreviousChar()
+                if self._dashInsertionMode == DashInsertionMode.INSERT_EN_DASH:
+                    cursor.insertText(EN_DASH)
+                elif self._dashInsertionMode == DashInsertionMode.INSERT_EM_DASH:
+                    cursor.insertText(EM_DASH)
                 return
         # if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
         #     self._showCommands()

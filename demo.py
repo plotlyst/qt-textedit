@@ -4,7 +4,7 @@ from qthandy import vbox
 from qtpy.QtWidgets import QMainWindow, QApplication, QWidget
 from qtpy.QtWidgets import QTextEdit
 
-from qttextedit import RichTextEditor
+from qttextedit import RichTextEditor, DashInsertionMode
 
 
 class MainWindow(QMainWindow):
@@ -21,6 +21,7 @@ class MainWindow(QMainWindow):
         self.editor = RichTextEditor()
         self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
         self.editor.textEdit.setBlockAutoCapitalizationEnabled(True)
+        self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
         self.editor.textEdit.setPlaceholderText('Write text')
         ps = self.editor.textEdit.document().defaultFont().pointSize()
         self.editor.textEdit.zoomIn(ps * 0.47)

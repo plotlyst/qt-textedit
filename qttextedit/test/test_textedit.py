@@ -1,6 +1,6 @@
 from qtpy.QtGui import QFont
 
-from qttextedit import EnhancedTextEdit, RichTextEditor, TextEditorOperationType
+from qttextedit import EnhancedTextEdit, RichTextEditor, TextEditorOperationType, DashInsertionMode
 from qttextedit.test.common import type_text
 
 
@@ -15,6 +15,8 @@ def prepare_textedit(qtbot) -> EnhancedTextEdit:
 
 def test_auto_capitalization(qtbot):
     textedit = prepare_textedit(qtbot)
+    assert textedit.blockAutoCapitalizationEnabled()
+    assert not textedit.sentenceAutoCapitalizationEnabled()
 
     type_text(qtbot, textedit, 'test. test')
     assert textedit.toPlainText() == 'Test. test'
@@ -34,6 +36,23 @@ def test_ellipsis(qtbot):
     textedit = prepare_textedit(qtbot)
     type_text(qtbot, textedit, '...')
     assert textedit.toPlainText() == '…'
+
+
+def test_dashes(qtbot):
+    textedit = prepare_textedit(qtbot)
+    assert textedit.dashInsertionMode() == DashInsertionMode.NONE
+    type_text(qtbot, textedit, '--')
+    assert textedit.toPlainText() == '--'
+
+    textedit.clear()
+    textedit.setDashInsertionMode(DashInsertionMode.INSERT_EN_DASH)
+    type_text(qtbot, textedit, '--')
+    assert textedit.toPlainText() == '–'
+
+    textedit.clear()
+    textedit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
+    type_text(qtbot, textedit, '--')
+    assert textedit.toPlainText() == '—'
 
 
 def test_rich_texteditor(qtbot):
