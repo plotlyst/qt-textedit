@@ -17,6 +17,8 @@ from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatO
     TextEditorOperationWidgetAction
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, is_open_quotation
 
+ELLIPSIS = u'\u2026'
+
 
 class EnhancedTextEdit(QTextEdit):
 
@@ -183,6 +185,12 @@ class EnhancedTextEdit(QTextEdit):
                 return
             self.textCursor().insertBlock(self.textCursor().blockFormat(), QTextCharFormat())
             return
+        if event.key() == Qt.Key_Period:
+            moved_cursor = select_previous_character(cursor, amount=2)
+            if moved_cursor.selectedText() == '..':
+                moved_cursor.removeSelectedText()
+                cursor.insertText(ELLIPSIS)
+                return
         # if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
         #     self._showCommands()
         super(EnhancedTextEdit, self).keyPressEvent(event)

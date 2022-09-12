@@ -4,11 +4,17 @@ from qttextedit import EnhancedTextEdit, RichTextEditor, TextEditorOperationType
 from qttextedit.test.common import type_text
 
 
-def test_enhanced_textedit_auto_capitalization(qtbot):
+def prepare_textedit(qtbot) -> EnhancedTextEdit:
     textedit = EnhancedTextEdit()
     qtbot.addWidget(textedit)
     textedit.show()
     qtbot.waitExposed(textedit)
+
+    return textedit
+
+
+def test_auto_capitalization(qtbot):
+    textedit = prepare_textedit(qtbot)
 
     type_text(qtbot, textedit, 'test. test')
     assert textedit.toPlainText() == 'Test. test'
@@ -22,6 +28,12 @@ def test_enhanced_textedit_auto_capitalization(qtbot):
     textedit.setAutoCapitalizationEnabled(False)
     type_text(qtbot, textedit, 'test. test')
     assert textedit.toPlainText() == 'test. test'
+
+
+def test_ellipsis(qtbot):
+    textedit = prepare_textedit(qtbot)
+    type_text(qtbot, textedit, '...')
+    assert textedit.toPlainText() == '…'
 
 
 def test_rich_texteditor(qtbot):

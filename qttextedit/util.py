@@ -20,9 +20,10 @@ def select_anchor(cursor: QTextCursor) -> QTextCursor:
     return pos_cursor
 
 
-def select_previous_character(cursor: QTextCursor) -> QTextCursor:
+def select_previous_character(cursor: QTextCursor, amount: int = 1) -> QTextCursor:
     moved_cursor = QTextCursor(cursor)
-    moved_cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+    for _ in range(amount):
+        moved_cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
 
     return moved_cursor
 
