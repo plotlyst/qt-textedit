@@ -1,7 +1,7 @@
 from qtpy.QtGui import QFont
 
 from qttextedit import EnhancedTextEdit, RichTextEditor, TextEditorOperationType, DashInsertionMode
-from qttextedit.test.common import type_text
+from qttextedit.test.common import type_text, type_enter
 
 
 def prepare_textedit(qtbot) -> EnhancedTextEdit:
@@ -71,6 +71,12 @@ def test_quotes(qtbot):
     textedit.clear()
     type_text(qtbot, textedit, 'Test"')
     assert textedit.toPlainText() == 'Test”'
+
+    textedit.clear()
+    type_text(qtbot, textedit, 'Test')
+    type_enter(qtbot, textedit)
+    type_text(qtbot, textedit, '"')
+    assert textedit.toPlainText() == 'Test\n“”'
 
 
 def test_rich_texteditor(qtbot):

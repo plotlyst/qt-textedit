@@ -57,6 +57,8 @@ def select_next_character(cursor: QTextCursor, amount: int = 1) -> QTextCursor:
 
 
 def has_character_left(cursor: QTextCursor) -> bool:
+    if cursor.atBlockStart():
+        return False
     moved_cursor = select_previous_character(cursor)
     if moved_cursor.selectedText() and moved_cursor.selectedText() != ' ':
         return True
@@ -64,6 +66,8 @@ def has_character_left(cursor: QTextCursor) -> bool:
 
 
 def has_character_right(cursor: QTextCursor) -> bool:
+    if cursor.atBlockEnd():
+        return False
     moved_cursor = select_next_character(cursor)
     if moved_cursor.selectedText() and moved_cursor.selectedText() != ' ':
         return True
