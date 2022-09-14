@@ -16,11 +16,9 @@ from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatO
     AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation, InsertLinkOperation, \
     ExportPdfOperation, PrintOperation, TextEditorOperationAction, TextEditorOperationMenu, \
     TextEditorOperationWidgetAction
-from qttextedit.util import select_anchor, select_previous_character, select_next_character, is_open_quotation
-
-ELLIPSIS = u'\u2026'
-EN_DASH = u'\u2013'
-EM_DASH = u'\u2014'
+from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
+    is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
+    has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION
 
 
 class DashInsertionMode(Enum):
@@ -215,6 +213,28 @@ class EnhancedTextEdit(QTextEdit):
                 elif self._dashInsertionMode == DashInsertionMode.INSERT_EM_DASH:
                     cursor.insertText(EM_DASH)
                 return
+        if event.key() == Qt.Key_Apostrophe:
+            if has_character_left(cursor):
+                self.textCursor().insertText(RIGHT_SINGLE_QUOTATION)
+            elif has_character_right(cursor):
+                self.textCursor().insertText(LEFT_SINGLE_QUOTATION)
+            else:
+                self.textCursor().insertText(LEFT_SINGLE_QUOTATION)
+                self.textCursor().insertText(RIGHT_SINGLE_QUOTATION)
+                cursor.movePosition(QTextCursor.PreviousCharacter)
+                self.setTextCursor(cursor)
+            return
+        if event.key() == Qt.Key_QuoteDbl:
+            if has_character_left(cursor):
+                self.textCursor().insertText(RIGHT_DOUBLE_QUOTATION)
+            elif has_character_right(cursor):
+                self.textCursor().insertText(LEFT_DOUBLE_QUOTATION)
+            else:
+                self.textCursor().insertText(LEFT_DOUBLE_QUOTATION)
+                self.textCursor().insertText(RIGHT_DOUBLE_QUOTATION)
+                cursor.movePosition(QTextCursor.PreviousCharacter)
+                self.setTextCursor(cursor)
+            return
         # if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
         #     self._showCommands()
         super(EnhancedTextEdit, self).keyPressEvent(event)
@@ -319,7 +339,8 @@ class EnhancedTextEdit(QTextEdit):
             return False
         elif moved_cursor.selectedText() == ' ' or is_open_quotation(moved_cursor.selectedText()):
             moved_cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
-            if moved_cursor.selectedText().startswith('.'):
+            print(moved_cursor.selectedText()[0])
+            if is_ending_punctuation(moved_cursor.selectedText()[0]):
                 return True
 
         return False

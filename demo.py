@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
 
         self.editor = RichTextEditor()
         self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
-        self.editor.textEdit.setBlockAutoCapitalizationEnabled(True)
+        self.editor.textEdit.setAutoCapitalizationEnabled(True)
         self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
         font = QFont('Times New Roman')
         self.editor.textEdit.setFont(font)

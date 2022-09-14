@@ -3,6 +3,26 @@ from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QTextCursor, QIcon
 from qtpy.QtWidgets import QToolButton
 
+ELLIPSIS = u'\u2026'
+EN_DASH = u'\u2013'
+EM_DASH = u'\u2014'
+
+LEFT_SINGLE_QUOTATION = u'\u2018'
+RIGHT_SINGLE_QUOTATION = u'\u2019'
+LEFT_DOUBLE_QUOTATION = u'\u201C'
+RIGHT_DOUBLE_QUOTATION = u'\u201D'
+
+OPEN_QUOTATIONS = ('"', LEFT_DOUBLE_QUOTATION, "«", "‹", "“")
+ENDING_PUNCTUATIONS = ('.', '?', '!')
+
+
+def is_open_quotation(char: str) -> bool:
+    return char in OPEN_QUOTATIONS
+
+
+def is_ending_punctuation(char: str) -> bool:
+    return char in ENDING_PUNCTUATIONS
+
 
 def select_anchor(cursor: QTextCursor) -> QTextCursor:
     pos_cursor = QTextCursor(cursor)
@@ -28,18 +48,26 @@ def select_previous_character(cursor: QTextCursor, amount: int = 1) -> QTextCurs
     return moved_cursor
 
 
-def select_next_character(cursor: QTextCursor) -> QTextCursor:
+def select_next_character(cursor: QTextCursor, amount: int = 1) -> QTextCursor:
     moved_cursor = QTextCursor(cursor)
-    moved_cursor.movePosition(QTextCursor.NextCharacter, QTextCursor.KeepAnchor)
+    for _ in range(amount):
+        moved_cursor.movePosition(QTextCursor.NextCharacter, QTextCursor.KeepAnchor)
 
     return moved_cursor
 
 
-OPEN_QUOTATIONS = ('"', '"', '“', "«", "‹", "“")
+def has_character_left(cursor: QTextCursor) -> bool:
+    moved_cursor = select_previous_character(cursor)
+    if moved_cursor.selectedText() and moved_cursor.selectedText() != ' ':
+        return True
+    return False
 
 
-def is_open_quotation(char: str) -> bool:
-    return char in OPEN_QUOTATIONS
+def has_character_right(cursor: QTextCursor) -> bool:
+    moved_cursor = select_next_character(cursor)
+    if moved_cursor.selectedText() and moved_cursor.selectedText() != ' ':
+        return True
+    return False
 
 
 def button(icon: str, tooltip: str = '', shortcut=None, checkable: bool = True) -> QToolButton:

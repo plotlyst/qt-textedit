@@ -55,6 +55,24 @@ def test_dashes(qtbot):
     assert textedit.toPlainText() == '—'
 
 
+def test_quotes(qtbot):
+    textedit = prepare_textedit(qtbot)
+    type_text(qtbot, textedit, "'")
+    assert textedit.toPlainText() == '‘’'
+
+    textedit.clear()
+    type_text(qtbot, textedit, "Test'")
+    assert textedit.toPlainText() == 'Test’'
+
+    textedit.clear()
+    type_text(qtbot, textedit, '"')
+    assert textedit.toPlainText() == '“”'
+
+    textedit.clear()
+    type_text(qtbot, textedit, 'Test"')
+    assert textedit.toPlainText() == 'Test”'
+
+
 def test_rich_texteditor(qtbot):
     editor = RichTextEditor()
     qtbot.addWidget(editor)
