@@ -27,6 +27,17 @@ class DashInsertionMode(Enum):
     INSERT_EM_DASH = 2
 
 
+class TextBlockState(Enum):
+    UNEDITABLE = 10001
+
+
+class TextDeletionState(Enum):
+    ALLOWED = 0
+    DEL_BLOCKED = 1
+    BACKSPACE_BLOCKED = 2
+    DISALLOWED = 3
+
+
 class EnhancedTextEdit(QTextEdit):
 
     def __init__(self, parent=None):
@@ -36,8 +47,11 @@ class EnhancedTextEdit(QTextEdit):
         self._blockAutoCapitalization: bool = True
         self._sentenceAutoCapitalization: bool = False
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
+        self._deletionState: TextDeletionState = TextDeletionState.ALLOWED
 
         self._adjustTabDistance()
+
+        self.cursorPositionChanged.connect(self._cursorPositionChanged)
 
     def blockAutoCapitalizationEnabled(self) -> bool:
         return self._blockAutoCapitalization
@@ -301,6 +315,16 @@ class EnhancedTextEdit(QTextEdit):
 
     def _adjustTabDistance(self):
         self.setTabStopDistance(QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
+
+    def _cursorPositionChanged(self):
+        if self.textCursor().block().userState() == TextBlockState.UNEDITABLE.value:
+            self._deletionState = TextDeletionState.DISALLOWED
+            # cursor = self.textCursor()
+            # if cursor.blockNumber() > 0:
+            #     cursor.movePosition(QTextCursor.PreviousBlock)
+            # else:
+            #     cursor.movePosition(QTextCursor.NextBlock)
+            # self.setTextCursor(cursor)
 
     def _setLinkTooltip(self, anchor: str):
         icon = qtawesome.icon('fa5s.external-link-alt')
