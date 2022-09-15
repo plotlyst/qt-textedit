@@ -3,12 +3,11 @@ from enum import Enum
 from typing import List, Dict
 
 import qtawesome
-from PyQt5.QtGui import QTextBlock
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
-    QTextCharFormat, QTextFormat
+    QTextCharFormat, QTextFormat, QTextBlock
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton
 
@@ -366,7 +365,6 @@ class EnhancedTextEdit(QTextEdit):
             return
         first_block = self.document().findBlock(self.textCursor().selectionStart())
         last_block = self.document().findBlock(self.textCursor().selectionEnd())
-        # print(f'{first_block.blockNumber()} - {last_block.blockNumber()}')
 
         if self.__blocksUneditable(first_block.blockNumber(), last_block.blockNumber()):
             self._editionState = _TextEditionState.DISALLOWED
@@ -419,7 +417,6 @@ class EnhancedTextEdit(QTextEdit):
             return False
         elif moved_cursor.selectedText() == ' ' or is_open_quotation(moved_cursor.selectedText()):
             moved_cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
-            print(moved_cursor.selectedText()[0])
             if is_ending_punctuation(moved_cursor.selectedText()[0]):
                 return True
 
