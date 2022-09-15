@@ -3,7 +3,7 @@ from enum import Enum
 from typing import List, Dict
 
 import qtawesome
-from qthandy import vbox, hbox, spacer, vline, btn_popup_menu
+from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
@@ -613,8 +613,25 @@ class RichTextEditor(QWidget):
 
         self.textEdit.cursorPositionChanged.connect(lambda: self.toolbar.updateFormat(self.textEdit))
 
+        self._widthPercentage: int = 0
+
     def setToolbar(self, toolbar: TextEditorToolbar):
         self.toolbar = toolbar
+
+    def setWidthPercentage(self, percentage: int):
+        if 0 < percentage <= 100:
+            self._widthPercentage = percentage
+            self._resize()
+
+    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
+        if self._widthPercentage:
+            self._resize()
+
+    def _resize(self):
+        margin = self.width() * (100 - self._widthPercentage) // 100
+        margin = margin // 2
+        self.textEdit.setViewportMargins(margin, 0, margin, 0)
+        margins(self.toolbar, left=margin)
 
     def _initTextEdit(self) -> EnhancedTextEdit:
         return EnhancedTextEdit(self)
