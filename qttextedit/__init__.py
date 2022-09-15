@@ -35,7 +35,8 @@ class _TextEditionState(Enum):
     ALLOWED = 0
     DEL_BLOCKED = 1
     BACKSPACE_BLOCKED = 2
-    DISALLOWED = 3
+    REMOVAL_BLOCKED = 3
+    DISALLOWED = 4
 
 
 class EnhancedTextEdit(QTextEdit):
@@ -276,9 +277,11 @@ class EnhancedTextEdit(QTextEdit):
                 cursor.movePosition(QTextCursor.PreviousCharacter)
                 self.setTextCursor(cursor)
             return
-        if event.key() == Qt.Key_Delete and self._editionState == _TextEditionState.DEL_BLOCKED:
+        if event.key() == Qt.Key_Delete and (
+                self._editionState == _TextEditionState.DEL_BLOCKED or self._editionState == _TextEditionState.REMOVAL_BLOCKED):
             return
-        if event.key() == Qt.Key_Backspace and self._editionState == _TextEditionState.BACKSPACE_BLOCKED:
+        if event.key() == Qt.Key_Backspace and (
+                self._editionState == _TextEditionState.BACKSPACE_BLOCKED or self._editionState == _TextEditionState.REMOVAL_BLOCKED):
             return
         # if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
         #     self._showCommands()
@@ -366,7 +369,7 @@ class EnhancedTextEdit(QTextEdit):
             cursor.movePosition(QTextCursor.MoveOperation.PreviousBlock)
             if cursor.block().userState() == TextBlockState.UNEDITABLE.value:
                 if self._editionState == _TextEditionState.DEL_BLOCKED:
-                    self._editionState = _TextEditionState.DISALLOWED
+                    self._editionState = _TextEditionState.REMOVAL_BLOCKED
                 else:
                     self._editionState = _TextEditionState.BACKSPACE_BLOCKED
                 return
