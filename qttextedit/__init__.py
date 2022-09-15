@@ -7,7 +7,7 @@ from qthandy import vbox, hbox, spacer, vline, btn_popup_menu
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
-    QTextCharFormat, QTextFormat
+    QTextCharFormat, QTextFormat, QTextBlock
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton
 
@@ -27,6 +27,17 @@ class DashInsertionMode(Enum):
     INSERT_EM_DASH = 2
 
 
+class TextBlockState(Enum):
+    UNEDITABLE = 10001
+
+
+class _TextEditionState(Enum):
+    ALLOWED = 0
+    DEL_BLOCKED = 1
+    BACKSPACE_BLOCKED = 2
+    DISALLOWED = 3
+
+
 class EnhancedTextEdit(QTextEdit):
 
     def __init__(self, parent=None):
@@ -35,9 +46,15 @@ class EnhancedTextEdit(QTextEdit):
         self._pasteAsOriginal: bool = False
         self._blockAutoCapitalization: bool = True
         self._sentenceAutoCapitalization: bool = False
+        self._uneditableBlocksEnabled: bool = False
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
+        self._editionState: _TextEditionState = _TextEditionState.ALLOWED
 
         self._adjustTabDistance()
+
+        self.cursorPositionChanged.connect(self._cursorPositionChanged)
+        self.textChanged.connect(self._cursorPositionChanged)
+        self.selectionChanged.connect(self._selectionChanged)
 
     def blockAutoCapitalizationEnabled(self) -> bool:
         return self._blockAutoCapitalization
@@ -60,6 +77,14 @@ class EnhancedTextEdit(QTextEdit):
 
     def setDashInsertionMode(self, mode: DashInsertionMode):
         self._dashInsertionMode = mode
+
+    def uneditableBlocksEnabled(self) -> bool:
+        return self._uneditableBlocksEnabled
+
+    def setUneditableBlocksEnabled(self, enabled: bool):
+        self._uneditableBlocksEnabled = enabled
+        if not enabled:
+            self._editionState = _TextEditionState.ALLOWED
 
     def createEnhancedContextMenu(self, pos: QPoint) -> QMenu:
         menu = QMenu()
@@ -106,7 +131,19 @@ class EnhancedTextEdit(QTextEdit):
         self.paste()
         self._pasteAsOriginal = previous
 
+    def selectAll(self):
+        if self.__blocksUneditable(end=self.document().blockCount()):
+            self._editionState = _TextEditionState.DISALLOWED
+        super(EnhancedTextEdit, self).selectAll()
+
+    def cut(self):
+        if self._editionState == _TextEditionState.DISALLOWED:
+            return
+        super(EnhancedTextEdit, self).cut()
+
     def insertFromMimeData(self, source: QMimeData) -> None:
+        if self._editionState == _TextEditionState.DISALLOWED:
+            return
         if self._pasteAsPlain:
             self.insertPlainText(source.text())
         elif self._pasteAsOriginal:
@@ -141,6 +178,10 @@ class EnhancedTextEdit(QTextEdit):
             QDesktopServices.openUrl(QUrl(anchor))
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        if self._editionState == _TextEditionState.DISALLOWED:
+            if event.key() not in (Qt.Key_Up, Qt.Key_Down):
+                return
+
         cursor: QTextCursor = self.textCursor()
         if event.key() == Qt.Key_Tab:
             list_ = cursor.block().textList()
@@ -235,6 +276,10 @@ class EnhancedTextEdit(QTextEdit):
                 cursor.movePosition(QTextCursor.PreviousCharacter)
                 self.setTextCursor(cursor)
             return
+        if event.key() == Qt.Key_Delete and self._editionState == _TextEditionState.DEL_BLOCKED:
+            return
+        if event.key() == Qt.Key_Backspace and self._editionState == _TextEditionState.BACKSPACE_BLOCKED:
+            return
         # if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
         #     self._showCommands()
         super(EnhancedTextEdit, self).keyPressEvent(event)
@@ -302,6 +347,54 @@ class EnhancedTextEdit(QTextEdit):
     def _adjustTabDistance(self):
         self.setTabStopDistance(QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
 
+    def _cursorPositionChanged(self):
+        if not self._uneditableBlocksEnabled:
+            return
+        if self.textCursor().block().userState() == TextBlockState.UNEDITABLE.value:
+            cursor = self.textCursor()
+            self._editionState = _TextEditionState.DISALLOWED
+            cursor.movePosition(QTextCursor.StartOfBlock)
+            self.setTextCursor(cursor)
+            return
+        if self.textCursor().atBlockEnd():
+            cursor = self.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
+            if cursor.block().userState() == TextBlockState.UNEDITABLE.value:
+                self._editionState = _TextEditionState.DEL_BLOCKED
+                return
+        if self.textCursor().atBlockStart():
+            cursor = self.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.PreviousBlock)
+            if cursor.block().userState() == TextBlockState.UNEDITABLE.value:
+                self._editionState = _TextEditionState.BACKSPACE_BLOCKED
+                return
+
+        self._editionState = _TextEditionState.ALLOWED
+
+    def _selectionChanged(self):
+        if not self.textCursor().hasSelection():
+            return
+        if not self._uneditableBlocksEnabled:
+            return
+        first_block = self.document().findBlock(self.textCursor().selectionStart())
+        last_block = self.document().findBlock(self.textCursor().selectionEnd())
+
+        if self.__blocksUneditable(first_block.blockNumber(), last_block.blockNumber()):
+            self._editionState = _TextEditionState.DISALLOWED
+            return
+
+    def __blocksUneditable(self, start: int = 0, end: int = 1) -> bool:
+        if not self._uneditableBlocksEnabled:
+            return False
+        for i in range(start, end):
+            block = self.document().findBlock(i)
+            if self.__blockUneditable(block):
+                return True
+        return False
+
+    def __blockUneditable(self, block: QTextBlock) -> bool:
+        return self._uneditableBlocksEnabled and block.userState() == TextBlockState.UNEDITABLE.value
+
     def _setLinkTooltip(self, anchor: str):
         icon = qtawesome.icon('fa5s.external-link-alt')
         buffer = QBuffer()
@@ -339,7 +432,6 @@ class EnhancedTextEdit(QTextEdit):
             return False
         elif moved_cursor.selectedText() == ' ' or is_open_quotation(moved_cursor.selectedText()):
             moved_cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
-            print(moved_cursor.selectedText()[0])
             if is_ending_punctuation(moved_cursor.selectedText()[0]):
                 return True
 
