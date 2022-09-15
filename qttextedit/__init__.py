@@ -46,6 +46,7 @@ class EnhancedTextEdit(QTextEdit):
         self._pasteAsOriginal: bool = False
         self._blockAutoCapitalization: bool = True
         self._sentenceAutoCapitalization: bool = False
+        self._uneditableBlocksEnabled: bool = False
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
         self._editionState: _TextEditionState = _TextEditionState.ALLOWED
 
@@ -76,6 +77,14 @@ class EnhancedTextEdit(QTextEdit):
 
     def setDashInsertionMode(self, mode: DashInsertionMode):
         self._dashInsertionMode = mode
+
+    def uneditableBlocksEnabled(self) -> bool:
+        return self._uneditableBlocksEnabled
+
+    def setUneditableBlocksEnabled(self, enabled: bool):
+        self._uneditableBlocksEnabled = enabled
+        if not enabled:
+            self._editionState = _TextEditionState.ALLOWED
 
     def createEnhancedContextMenu(self, pos: QPoint) -> QMenu:
         menu = QMenu()
@@ -339,6 +348,8 @@ class EnhancedTextEdit(QTextEdit):
         self.setTabStopDistance(QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
 
     def _cursorPositionChanged(self):
+        if not self._uneditableBlocksEnabled:
+            return
         if self.textCursor().block().userState() == TextBlockState.UNEDITABLE.value:
             cursor = self.textCursor()
             self._editionState = _TextEditionState.DISALLOWED
@@ -363,6 +374,8 @@ class EnhancedTextEdit(QTextEdit):
     def _selectionChanged(self):
         if not self.textCursor().hasSelection():
             return
+        if not self._uneditableBlocksEnabled:
+            return
         first_block = self.document().findBlock(self.textCursor().selectionStart())
         last_block = self.document().findBlock(self.textCursor().selectionEnd())
 
@@ -371,6 +384,8 @@ class EnhancedTextEdit(QTextEdit):
             return
 
     def __blocksUneditable(self, start: int = 0, end: int = 1) -> bool:
+        if not self._uneditableBlocksEnabled:
+            return False
         for i in range(start, end):
             block = self.document().findBlock(i)
             if self.__blockUneditable(block):
@@ -378,7 +393,7 @@ class EnhancedTextEdit(QTextEdit):
         return False
 
     def __blockUneditable(self, block: QTextBlock) -> bool:
-        return block.userState() == TextBlockState.UNEDITABLE.value
+        return self._uneditableBlocksEnabled and block.userState() == TextBlockState.UNEDITABLE.value
 
     def _setLinkTooltip(self, anchor: str):
         icon = qtawesome.icon('fa5s.external-link-alt')
