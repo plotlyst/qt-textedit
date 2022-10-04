@@ -278,10 +278,12 @@ class EnhancedTextEdit(QTextEdit):
                 self.setTextCursor(cursor)
             return
         if event.key() == Qt.Key_Delete and (
-                self._editionState == _TextEditionState.DEL_BLOCKED or self._editionState == _TextEditionState.REMOVAL_BLOCKED):
+                self._editionState == _TextEditionState.DEL_BLOCKED or
+                self._editionState == _TextEditionState.REMOVAL_BLOCKED):
             return
         if event.key() == Qt.Key_Backspace and (
-                self._editionState == _TextEditionState.BACKSPACE_BLOCKED or self._editionState == _TextEditionState.REMOVAL_BLOCKED):
+                self._editionState == _TextEditionState.BACKSPACE_BLOCKED or
+                self._editionState == _TextEditionState.REMOVAL_BLOCKED):
             return
         # if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
         #     self._showCommands()
