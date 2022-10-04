@@ -305,7 +305,7 @@ class EnhancedTextEdit(QTextEdit):
     def setFormat(self, lineSpacing: int = 100, textIndent: int = 0):
         blockFmt = QTextBlockFormat()
         blockFmt.setTextIndent(textIndent)
-        blockFmt.setLineHeight(lineSpacing, QTextBlockFormat.ProportionalHeight)
+        blockFmt.setLineHeight(lineSpacing, 1)
 
         cursor = self.textCursor()
         cursor.clearSelection()
