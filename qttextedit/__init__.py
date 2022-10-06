@@ -380,23 +380,25 @@ class EnhancedTextEdit(QTextEdit):
 
     def _selectionChanged(self):
         if not self.textCursor().hasSelection():
+            self._editionState = _TextEditionState.ALLOWED
             return
         if not self._uneditableBlocksEnabled:
             return
         first_block = self.document().findBlock(self.textCursor().selectionStart())
         last_block = self.document().findBlock(self.textCursor().selectionEnd())
 
-        if self.__blocksUneditable(first_block.blockNumber(), last_block.blockNumber()):
+        if self.__blocksUneditable(first_block, last_block):
             self._editionState = _TextEditionState.DISALLOWED
             return
 
-    def __blocksUneditable(self, start: int = 0, end: int = 1) -> bool:
+    def __blocksUneditable(self, firstBlock: QTextBlock, lastBlock: QTextBlock) -> bool:
         if not self._uneditableBlocksEnabled:
             return False
-        for i in range(start, end):
-            block = self.document().findBlock(i)
+        block = firstBlock
+        while block.isValid() and block.blockNumber() <= lastBlock.blockNumber():
             if self.__blockUneditable(block):
                 return True
+            block = block.next()
         return False
 
     def __blockUneditable(self, block: QTextBlock) -> bool:
