@@ -572,6 +572,11 @@ class TextEditorToolbar(QFrame):
             return PrintOperation()
 
 
+class TextEditorSettingsWidget(QWidget):
+    def __init__(self, parent=None):
+        super(TextEditorSettingsWidget, self).__init__(parent)
+
+
 class StandardTextEditorToolbar(TextEditorToolbar):
     def __init__(self, parent=None):
         super(StandardTextEditorToolbar, self).__init__(parent)
