@@ -57,5 +57,3 @@ def test_separate_settings_btn(qtbot):
     assert wdg.value() == 100
     wdg.setValue(50)
     assert editor.widthPercentage() == 50
-
-    qtbot.stop()
