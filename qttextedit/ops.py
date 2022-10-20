@@ -424,7 +424,7 @@ class TextEditorSettingsWidget(QWidget):
         vbox(self)
 
         self._sections: Dict[TextEditorSettingsSection, AbstractSettingsSectionWidget] = {}
-        self._addDefaultSection(TextEditorSettingsSection.FONT_SIZE)
+        # self._addDefaultSection(TextEditorSettingsSection.FONT_SIZE)
         self._addDefaultSection(TextEditorSettingsSection.WIDTH)
 
     def attach(self, editor):

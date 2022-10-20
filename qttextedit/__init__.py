@@ -598,7 +598,7 @@ class StandardTextEditorToolbar(TextEditorToolbar):
         self.addStandardOperation(TextEditorOperationType.EXPORT_PDF)
         self.addStandardOperation(TextEditorOperationType.PRINT)
         self.addSeparator()
-        # self.addStandardOperation(TextEditorOperationType.EDITING_SETTINGS)
+        self.addStandardOperation(TextEditorOperationType.EDITING_SETTINGS)
 
     def setStandardOperations(self, operations: List[TextEditorOperationType]):
         for op in TextEditorOperationType:

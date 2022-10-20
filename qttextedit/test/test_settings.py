@@ -21,7 +21,7 @@ def prepare_richtext_editor(qtbot):
     return widget, editor, settings
 
 
-def _test_page_width(qtbot):
+def test_page_width(qtbot):
     widget, editor, settings = prepare_richtext_editor(qtbot)
     settings.setSectionVisible(TextEditorSettingsSection.WIDTH, False)
     type_text(qtbot, editor, 'Test text')
@@ -43,7 +43,7 @@ def _test_font_size(qtbot):
     assert editor.textEdit.font().pointSize() == 18
 
 
-def _test_separate_settings_btn(qtbot):
+def test_separate_settings_btn(qtbot):
     widget, editor, settings = prepare_richtext_editor(qtbot)
     type_text(qtbot, editor, 'Test text')
 
