@@ -607,26 +607,40 @@ class StandardTextEditorToolbar(TextEditorToolbar):
             self.setStandardOperationVisible(op, True)
 
 
+class TextEditorSettingsButton(TextEditorOperationButton):
+    def __init__(self, parent=None):
+        self._settingsOp = TextEditingSettingsOperation()
+        super(TextEditorSettingsButton, self).__init__(self._settingsOp, parent)
+
+    def settingsWidget(self) -> TextEditorSettingsWidget:
+        return self._settingsOp.settingsWidget()
+
+
 class RichTextEditor(QWidget):
     def __init__(self, parent=None):
         super(RichTextEditor, self).__init__(parent)
         vbox(self, 0, 0)
         self._widthPercentage: int = 0
-
-        self.toolbar = StandardTextEditorToolbar(self)
-        self.textEdit = self._initTextEdit()
-        self.toolbar.activate(self.textEdit, self)
         self._settings: Optional[TextEditorSettingsWidget] = None
 
-        self.layout().addWidget(self.toolbar)
+        self._toolbar = StandardTextEditorToolbar(self)
+        self.textEdit = self._initTextEdit()
+        self._toolbar.activate(self.textEdit, self)
+
+        self.layout().addWidget(self._toolbar)
         self.layout().addWidget(self.textEdit)
 
-        self.textEdit.cursorPositionChanged.connect(lambda: self.toolbar.updateFormat(self.textEdit))
+        self.textEdit.cursorPositionChanged.connect(lambda: self._toolbar.updateFormat(self.textEdit))
+
+    def toolbar(self) -> TextEditorToolbar:
+        return self._toolbar
 
     def setToolbar(self, toolbar: TextEditorToolbar):
-        self.toolbar = toolbar
+        self._toolbar = toolbar
 
     def attachSettingsWidget(self, widget: TextEditorSettingsWidget):
+        if self._settings:
+            self._settings.detach()
         self._settings = widget
         widget.attach(self)
 
@@ -646,7 +660,7 @@ class RichTextEditor(QWidget):
         margin = self.width() * (100 - self._widthPercentage) // 100
         margin = margin // 2
         self.textEdit.setViewportMargins(margin, 0, margin, 0)
-        margins(self.toolbar, left=margin)
+        margins(self._toolbar, left=margin)
 
     def _initTextEdit(self) -> EnhancedTextEdit:
         return EnhancedTextEdit(self)

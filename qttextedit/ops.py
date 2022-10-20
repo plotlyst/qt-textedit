@@ -346,8 +346,17 @@ class AbstractSettingsSectionWidget(QWidget):
         self._editor = editor
         self._activate()
 
+    def detach(self):
+        if self._editor:
+            self._deactivate()
+        self._editor = None
+
     @abstractmethod
     def _activate(self):
+        pass
+
+    @abstractmethod
+    def _deactivate(self):
         pass
 
 
@@ -367,10 +376,37 @@ class SliderSectionWidget(AbstractSettingsSectionWidget):
     def setValue(self, value: int):
         self._slider.setValue(value)
 
+    @abstractmethod
+    def _activate(self):
+        pass
+
+    def _deactivate(self):
+        self._slider.valueChanged.disconnect()
+
+
+class PageWidthSectionSettingWidget(SliderSectionWidget):
+    def __init__(self, parent=None):
+        super(PageWidthSectionSettingWidget, self).__init__('Page Width', 20, 100, parent)
+
     def _activate(self):
         w = self._editor.widthPercentage()
         self._slider.setValue(w if w else 100)
         self._slider.valueChanged.connect(self._editor.setWidthPercentage)
+
+
+class FontSizeSectionSettingWidget(SliderSectionWidget):
+    def __init__(self, parent=None):
+        super(FontSizeSectionSettingWidget, self).__init__('Font Size', 7, 32, parent)
+
+    def _activate(self):
+        size = self._editor.textEdit.font().pointSize()
+        self._slider.setValue(size)
+        self._slider.valueChanged.connect(self._valueChanged)
+
+    def _valueChanged(self, value: int):
+        font = self._editor.textEdit.font()
+        font.setPointSize(value)
+        self._editor.textEdit.setFont(font)
 
 
 class TextEditorSettingsWidget(QWidget):
@@ -388,6 +424,11 @@ class TextEditorSettingsWidget(QWidget):
         for wdg in self._sections.values():
             wdg.attach(self._editor)
 
+    def detach(self):
+        self._editor = None
+        for wdg in self._sections.values():
+            wdg.detach()
+
     def section(self, section: TextEditorSettingsSection) -> AbstractSettingsSectionWidget:
         return self._sections.get(section)
 
@@ -401,9 +442,9 @@ class TextEditorSettingsWidget(QWidget):
 
     def _addDefaultSection(self, section: TextEditorSettingsSection):
         if section == TextEditorSettingsSection.FONT_SIZE:
-            wdg = SliderSectionWidget('Font Size', 7, 64, self)
+            wdg = FontSizeSectionSettingWidget(self)
         elif section == TextEditorSettingsSection.WIDTH:
-            wdg = SliderSectionWidget('Page Width', 30, 100, self)
+            wdg = PageWidthSectionSettingWidget(self)
         else:
             raise ValueError('Unsupported Section type %s', section)
         if self._editor:
@@ -417,6 +458,9 @@ class TextEditingSettingsOperation(TextEditorOperationWidgetAction):
         super(TextEditingSettingsOperation, self).__init__('fa5s.bars', 'Text editing settings', parent)
         self._wdgEditor = TextEditorSettingsWidget()
         self.setDefaultWidget(self._wdgEditor)
+    
+    def settingsWidget(self) -> TextEditorSettingsWidget:
+        return self._wdgEditor
 
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         if editor is None:
