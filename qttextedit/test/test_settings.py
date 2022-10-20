@@ -15,6 +15,8 @@ def prepare_richtext_editor(qtbot):
     widget.layout().addWidget(settings)
     editor.attachSettingsWidget(settings)
     qtbot.addWidget(widget)
+    widget.show()
+    qtbot.waitExposed(widget)
 
     return widget, editor, settings
 
@@ -41,7 +43,7 @@ def test_font_size(qtbot):
     assert editor.textEdit.font().pointSize() == 18
 
 
-def _test_separate_settings_btn(qtbot):
+def test_separate_settings_btn(qtbot):
     widget, editor, settings = prepare_richtext_editor(qtbot)
     type_text(qtbot, editor, 'Test text')
 
@@ -55,3 +57,5 @@ def _test_separate_settings_btn(qtbot):
     assert wdg.value() == 100
     wdg.setValue(50)
     assert editor.widthPercentage() == 50
+
+    qtbot.stop()

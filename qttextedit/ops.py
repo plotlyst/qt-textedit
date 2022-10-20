@@ -381,7 +381,8 @@ class SliderSectionWidget(AbstractSettingsSectionWidget):
         pass
 
     def _deactivate(self):
-        self._slider.valueChanged.disconnect()
+        pass
+        # self._slider.valueChanged.disconnect()
 
 
 class PageWidthSectionSettingWidget(SliderSectionWidget):
@@ -391,7 +392,12 @@ class PageWidthSectionSettingWidget(SliderSectionWidget):
     def _activate(self):
         w = self._editor.widthPercentage()
         self._slider.setValue(w if w else 100)
-        self._slider.valueChanged.connect(self._editor.setWidthPercentage)
+        self._slider.valueChanged.connect(self._valueChanged)
+
+    def _valueChanged(self, value: int):
+        if self._editor is None:
+            return
+        self._editor.setWidthPercentage(value)
 
 
 class FontSizeSectionSettingWidget(SliderSectionWidget):
@@ -404,6 +410,8 @@ class FontSizeSectionSettingWidget(SliderSectionWidget):
         self._slider.valueChanged.connect(self._valueChanged)
 
     def _valueChanged(self, value: int):
+        if self._editor is None:
+            return
         font = self._editor.textEdit.font()
         font.setPointSize(value)
         self._editor.textEdit.setFont(font)
@@ -458,7 +466,7 @@ class TextEditingSettingsOperation(TextEditorOperationWidgetAction):
         super(TextEditingSettingsOperation, self).__init__('fa5s.bars', 'Text editing settings', parent)
         self._wdgEditor = TextEditorSettingsWidget()
         self.setDefaultWidget(self._wdgEditor)
-    
+
     def settingsWidget(self) -> TextEditorSettingsWidget:
         return self._wdgEditor
 
