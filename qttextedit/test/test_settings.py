@@ -15,8 +15,6 @@ def prepare_richtext_editor(qtbot):
     widget.layout().addWidget(settings)
     editor.attachSettingsWidget(settings)
     qtbot.addWidget(widget)
-    widget.show()
-    qtbot.waitExposed(widget)
 
     return widget, editor, settings
 
