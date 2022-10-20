@@ -15,6 +15,8 @@ def prepare_richtext_editor(qtbot):
     widget.show()
     qtbot.waitExposed(widget)
 
+    qtbot.wait(15)
+
     op: TextEditingSettingsOperation = editor.toolbar().standardOperation(TextEditorOperationType.EDITING_SETTINGS)
     return widget, editor, op.settingsWidget()
 

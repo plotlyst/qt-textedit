@@ -5,7 +5,7 @@ from typing import List, Optional, Dict
 
 import qtawesome
 from qthandy import busy, vbox, line, bold
-from qtpy.QtCore import Qt, QSize, Signal
+from qtpy.QtCore import Qt, QSize, Signal, QTimer
 from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
@@ -473,4 +473,4 @@ class TextEditingSettingsOperation(TextEditorOperationWidgetAction):
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         if editor is None:
             raise ValueError('RichTextEditor object must be passed to TextEditingSettingsOperation')
-        editor.attachSettingsWidget(self._wdgEditor)
+        QTimer.singleShot(10, lambda: editor.attachSettingsWidget(self._wdgEditor))
