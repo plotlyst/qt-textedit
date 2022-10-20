@@ -625,11 +625,11 @@ class RichTextEditor(QWidget):
 
         self._toolbar = StandardTextEditorToolbar(self)
         self.textEdit = self._initTextEdit()
-        self._toolbar.activate(self.textEdit, self)
 
         self.layout().addWidget(self._toolbar)
         self.layout().addWidget(self.textEdit)
 
+        self._toolbar.activate(self.textEdit, self)
         self.textEdit.cursorPositionChanged.connect(lambda: self._toolbar.updateFormat(self.textEdit))
 
     def toolbar(self) -> TextEditorToolbar:
