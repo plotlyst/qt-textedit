@@ -1,15 +1,15 @@
 from abc import abstractmethod
 from enum import Enum
 from functools import partial
-from typing import List
+from typing import List, Optional, Dict
 
 import qtawesome
-from qthandy import busy, vbox, line
+from qthandy import busy, vbox, line, bold
 from qtpy.QtCore import Qt, QSize, Signal
-from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor
+from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
-from qtpy.QtWidgets import QFileDialog
-from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction
+from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
+    QFileDialog, QLabel, QSlider
 
 from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import button, qta_icon
@@ -30,12 +30,13 @@ class TextEditorOperationType(Enum):
     COLOR = 'color'
     EXPORT_PDF = 'export_pdf'
     PRINT = 'print'
+    EDITING_SETTINGS = 'editing_settings'
 
 
 class TextEditorOperation:
 
     @abstractmethod
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         pass
 
     def updateFormat(self, textEdit: QTextEdit):
@@ -51,12 +52,20 @@ class TextEditorOperationAction(QAction, TextEditorOperation):
             self.setShortcut(shortcut)
         self.setCheckable(checkable)
 
+    @abstractmethod
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
+        pass
+
 
 class TextEditorOperationWidgetAction(QWidgetAction, TextEditorOperation):
     def __init__(self, icon: str, tooltip: str = '', parent=None):
         super(TextEditorOperationWidgetAction, self).__init__(parent)
         self.setToolTip(tooltip)
         self.setIcon(qta_icon(icon))
+
+    @abstractmethod
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
+        pass
 
 
 class TextEditorOperationMenu(QMenu, TextEditorOperation):
@@ -66,7 +75,7 @@ class TextEditorOperationMenu(QMenu, TextEditorOperation):
         self.setIcon(qta_icon(icon))
 
     @abstractmethod
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         pass
 
 
@@ -74,7 +83,7 @@ class FormatOperation(TextEditorOperationMenu):
     def __init__(self, parent=None):
         super(FormatOperation, self).__init__('mdi.format-text', 'Format text', parent=parent)
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.addAction(qtawesome.icon('mdi.format-header-1', options=[{'scale_factor': 1.4}]), '',
                        lambda: textEdit.setHeading(1))
         self.addAction(qtawesome.icon('mdi.format-header-2', options=[{'scale_factor': 1.3}]), '',
@@ -91,7 +100,7 @@ class BoldOperation(TextEditorOperationAction):
         super(BoldOperation, self).__init__('fa5s.bold', 'Bold', shortcut=QKeySequence.Bold, checkable=True,
                                             parent=parent)
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda x: textEdit.setFontWeight(QFont.Bold if x else QFont.Normal))
 
     def updateFormat(self, textEdit: QTextEdit):
@@ -103,7 +112,7 @@ class ItalicOperation(TextEditorOperationAction):
         super(ItalicOperation, self).__init__('fa5s.italic', 'Italic', shortcut=QKeySequence.Italic, checkable=True,
                                               parent=parent)
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda x: textEdit.setFontItalic(x))
 
     def updateFormat(self, textEdit: QTextEdit):
@@ -116,7 +125,7 @@ class UnderlineOperation(TextEditorOperationAction):
                                                  checkable=True,
                                                  parent=parent)
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda x: textEdit.setFontUnderline(x))
 
     def updateFormat(self, textEdit: QTextEdit):
@@ -128,7 +137,7 @@ class StrikethroughOperation(TextEditorOperationAction):
         super(StrikethroughOperation, self).__init__('fa5s.strikethrough', 'Strikethrough', checkable=True,
                                                      parent=parent)
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(textEdit.setStrikethrough)
 
     def updateFormat(self, textEdit: QTextEdit):
@@ -194,7 +203,7 @@ class ColorOperation(TextEditorOperationWidgetAction):
         self.wdgTextStyle.backgroundColorSelected.connect(lambda: self.triggered.emit())
         self.wdgTextStyle.reset.connect(lambda: self.triggered.emit())
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.wdgTextStyle.foregroundColorSelected.connect(lambda x: textEdit.setTextColor(x))
         self.wdgTextStyle.backgroundColorSelected.connect(lambda x: textEdit.setTextBackgroundColor(x))
 
@@ -203,7 +212,7 @@ class ColorOperation(TextEditorOperationWidgetAction):
 
 class AlignmentOperation(TextEditorOperationAction):
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda: textEdit.setAlignment(self.alignment()))
 
     def updateFormat(self, textEdit: QTextEdit):
@@ -242,7 +251,7 @@ class InsertListOperation(TextEditorOperationAction):
     def __init__(self, parent=None):
         super(InsertListOperation, self).__init__('fa5s.list', 'Insert list', parent=parent)
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda: textEdit.textCursor().createList(QTextListFormat.ListDisc))
 
 
@@ -250,7 +259,7 @@ class InsertNumberedListOperation(TextEditorOperationAction):
     def __init__(self, parent=None):
         super(InsertNumberedListOperation, self).__init__('fa5s.list-ol', 'Insert numbered list', parent=parent)
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda: textEdit.textCursor().createList(QTextListFormat.ListDecimal))
 
 
@@ -258,7 +267,7 @@ class InsertLinkOperation(TextEditorOperationAction):
     def __init__(self, parent=None):
         super(InsertLinkOperation, self).__init__('fa5s.link', 'Insert link', parent=parent)
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda: self._insertLink(textEdit))
 
     def _insertLink(self, textEdit: QTextEdit):
@@ -273,7 +282,7 @@ class ExportPdfOperation(TextEditorOperationAction):
         super(ExportPdfOperation, self).__init__('mdi.file-export-outline', 'Export to PDF', parent=parent)
         self._title = 'document'
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda: self._exportPdf(textEdit))
 
     def title(self) -> str:
@@ -301,7 +310,7 @@ class PrintOperation(TextEditorOperationAction):
     def __init__(self, parent=None):
         super(PrintOperation, self).__init__('mdi.printer', 'Print', parent=parent)
 
-    def activate(self, textEdit: QTextEdit):
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda: self._print(textEdit))
 
     @busy
@@ -313,3 +322,103 @@ class PrintOperation(TextEditorOperationAction):
         dialog = QPrintDialog(printer, textEdit)
         if dialog.exec_() == QPrintDialog.Accepted:
             textEdit.print(printer)
+
+
+class TextEditorSettingsSection(Enum):
+    FONT = 'font'
+    FONT_SIZE = 'font_size'
+    WIDTH = 'width'
+    LINE_SPACE = 'line_space'
+
+
+class AbstractSettingsSectionWidget(QWidget):
+    def __init__(self, name: str, parent=None):
+        super(AbstractSettingsSectionWidget, self).__init__(parent)
+        self._editor = None
+
+        vbox(self)
+        lbl = QLabel(name)
+        # incr_font(lbl)
+        bold(lbl)
+        self.layout().addWidget(lbl, alignment=Qt.AlignLeft)
+
+    def attach(self, editor):
+        self._editor = editor
+        self._activate()
+
+    @abstractmethod
+    def _activate(self):
+        pass
+
+
+class SliderSectionWidget(AbstractSettingsSectionWidget):
+    def __init__(self, name: str, min_: int, max_: int, parent=None):
+        super(SliderSectionWidget, self).__init__(name, parent)
+        self._slider = QSlider(Qt.Horizontal)
+        self._slider.setCursor(Qt.PointingHandCursor)
+        self._slider.setMinimum(min_)
+        self._slider.setMaximum(max_)
+        # self._slider.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.layout().addWidget(self._slider)
+
+    def value(self) -> int:
+        return self._slider.value()
+
+    def setValue(self, value: int):
+        self._slider.setValue(value)
+
+    def _activate(self):
+        w = self._editor.widthPercentage()
+        self._slider.setValue(w if w else 100)
+        self._slider.valueChanged.connect(self._editor.setWidthPercentage)
+
+
+class TextEditorSettingsWidget(QWidget):
+    def __init__(self, parent=None):
+        super(TextEditorSettingsWidget, self).__init__(parent)
+        self._editor = None
+        vbox(self)
+
+        self._sections: Dict[TextEditorSettingsSection, AbstractSettingsSectionWidget] = {}
+        self._addDefaultSection(TextEditorSettingsSection.FONT_SIZE)
+        self._addDefaultSection(TextEditorSettingsSection.WIDTH)
+
+    def attach(self, editor):
+        self._editor = editor
+        for wdg in self._sections.values():
+            wdg.attach(self._editor)
+
+    def section(self, section: TextEditorSettingsSection) -> AbstractSettingsSectionWidget:
+        return self._sections.get(section)
+
+    def setSectionVisible(self, section: TextEditorSettingsSection, visible: bool):
+        wdg = self._sections.get(section)
+        if wdg:
+            wdg.setVisible(visible)
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        pass
+
+    def _addDefaultSection(self, section: TextEditorSettingsSection):
+        if section == TextEditorSettingsSection.FONT_SIZE:
+            wdg = SliderSectionWidget('Font Size', 7, 64, self)
+        elif section == TextEditorSettingsSection.WIDTH:
+            wdg = SliderSectionWidget('Page Width', 30, 100, self)
+        else:
+            raise ValueError('Unsupported Section type %s', section)
+        if self._editor:
+            wdg.attach(self._editor)
+        self._sections[section] = wdg
+        self.layout().addWidget(wdg)
+
+
+class TextEditingSettingsOperation(TextEditorOperationWidgetAction):
+    def __init__(self, parent=None):
+        super(TextEditingSettingsOperation, self).__init__('fa5s.bars', 'Text editing settings', parent)
+        self._wdgEditor = TextEditorSettingsWidget()
+        self.setDefaultWidget(self._wdgEditor)
+
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
+        if editor is None:
+            raise ValueError('RichTextEditor object must be passed to TextEditingSettingsOperation')
+        editor.attachSettingsWidget(self._wdgEditor)

@@ -1,7 +1,13 @@
 from qtpy.QtCore import Qt
 
+from qttextedit import RichTextEditor
 
-def type_text(qtbot, textedit, text: str):
+
+def type_text(qtbot, editor, text: str):
+    if isinstance(editor, RichTextEditor):
+        textedit = editor.textEdit
+    else:
+        textedit = editor
     for c in text:
         qtbot.keyPress(textedit, c)
 
