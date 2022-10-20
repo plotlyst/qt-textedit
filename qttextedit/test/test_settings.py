@@ -1,8 +1,8 @@
 from qthandy import vbox
 from qtpy.QtWidgets import QWidget
 
-from qttextedit import RichTextEditor, TextEditorSettingsWidget, TextEditorOperationType, TextEditorSettingsButton
-from qttextedit.ops import TextEditorSettingsSection
+from qttextedit import RichTextEditor, TextEditorOperationType, TextEditorSettingsButton
+from qttextedit.ops import TextEditorSettingsSection, TextEditingSettingsOperation
 from qttextedit.test.common import type_text
 
 
@@ -11,21 +11,20 @@ def prepare_richtext_editor(qtbot):
     vbox(widget)
     editor = RichTextEditor()
     widget.layout().addWidget(editor)
-    settings = TextEditorSettingsWidget()
-    widget.layout().addWidget(settings)
-    editor.attachSettingsWidget(settings)
     qtbot.addWidget(widget)
     widget.show()
     qtbot.waitExposed(widget)
 
-    return widget, editor, settings
+    op: TextEditingSettingsOperation = editor.toolbar().standardOperation(TextEditorOperationType.EDITING_SETTINGS)
+    return widget, editor, op.settingsWidget()
 
 
-def _test_page_width(qtbot):
+def test_page_width(qtbot):
     widget, editor, settings = prepare_richtext_editor(qtbot)
     settings.setSectionVisible(TextEditorSettingsSection.WIDTH, False)
     type_text(qtbot, editor, 'Test text')
 
+    # qtbot.stop()
     assert editor.widthPercentage() == 0
     wdg = settings.section(TextEditorSettingsSection.WIDTH)
     assert wdg.value() == 100
@@ -33,7 +32,7 @@ def _test_page_width(qtbot):
     assert editor.widthPercentage() == 50
 
 
-def _test_font_size(qtbot):
+def test_font_size(qtbot):
     widget, editor, settings = prepare_richtext_editor(qtbot)
     type_text(qtbot, editor, 'Test text')
 
@@ -43,7 +42,7 @@ def _test_font_size(qtbot):
     assert editor.textEdit.font().pointSize() == 18
 
 
-def _test_separate_settings_btn(qtbot):
+def test_separate_settings_btn(qtbot):
     widget, editor, settings = prepare_richtext_editor(qtbot)
     type_text(qtbot, editor, 'Test text')
 
