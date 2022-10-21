@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import qtawesome
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins
@@ -15,7 +15,7 @@ from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatO
     ItalicOperation, UnderlineOperation, StrikethroughOperation, ColorOperation, AlignLeftOperation, \
     AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation, InsertLinkOperation, \
     ExportPdfOperation, PrintOperation, TextEditorOperationAction, TextEditorOperationMenu, \
-    TextEditorOperationWidgetAction
+    TextEditorOperationWidgetAction, TextEditingSettingsOperation, TextEditorSettingsWidget
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION
@@ -528,9 +528,9 @@ class TextEditorToolbar(QFrame):
     def standardOperation(self, operationType: TextEditorOperationType) -> TextEditorOperation:
         return self._getOperationButtonOrFail(operationType).op
 
-    def activate(self, textEdit: QTextEdit):
+    def activate(self, textEdit: QTextEdit, editor: Optional['RichTextEditor'] = None):
         for btn in self._standardOperationButtons.values():
-            btn.op.activate(textEdit)
+            btn.op.activateOperation(textEdit, editor)
 
     def updateFormat(self, textEdit: QTextEdit):
         for btn in self._standardOperationButtons.values():
@@ -570,6 +570,8 @@ class TextEditorToolbar(QFrame):
             return ExportPdfOperation()
         if operationType == TextEditorOperationType.PRINT:
             return PrintOperation()
+        if operationType == TextEditorOperationType.EDITING_SETTINGS:
+            return TextEditingSettingsOperation()
 
 
 class StandardTextEditorToolbar(TextEditorToolbar):
@@ -595,6 +597,8 @@ class StandardTextEditorToolbar(TextEditorToolbar):
         self.addSpacer()
         self.addStandardOperation(TextEditorOperationType.EXPORT_PDF)
         self.addStandardOperation(TextEditorOperationType.PRINT)
+        self.addSeparator()
+        self.addStandardOperation(TextEditorOperationType.EDITING_SETTINGS)
 
     def setStandardOperations(self, operations: List[TextEditorOperationType]):
         for op in TextEditorOperationType:
@@ -603,24 +607,48 @@ class StandardTextEditorToolbar(TextEditorToolbar):
             self.setStandardOperationVisible(op, True)
 
 
+class TextEditorSettingsButton(TextEditorOperationButton):
+    def __init__(self, parent=None):
+        self._settingsOp = TextEditingSettingsOperation()
+        super(TextEditorSettingsButton, self).__init__(self._settingsOp, parent)
+
+    def settingsWidget(self) -> TextEditorSettingsWidget:
+        return self._settingsOp.settingsWidget()
+
+
 class RichTextEditor(QWidget):
     def __init__(self, parent=None):
         super(RichTextEditor, self).__init__(parent)
         vbox(self, 0, 0)
+        self._widthPercentage: int = 0
+        self._settings: Optional[TextEditorSettingsWidget] = None
 
-        self.toolbar = StandardTextEditorToolbar(self)
+        self._toolbar = StandardTextEditorToolbar(self)
         self.textEdit = self._initTextEdit()
-        self.toolbar.activate(self.textEdit)
 
-        self.layout().addWidget(self.toolbar)
+        self.layout().addWidget(self._toolbar)
         self.layout().addWidget(self.textEdit)
 
-        self.textEdit.cursorPositionChanged.connect(lambda: self.toolbar.updateFormat(self.textEdit))
+        self._toolbar.activate(self.textEdit, self)
+        self.textEdit.cursorPositionChanged.connect(lambda: self._toolbar.updateFormat(self.textEdit))
 
-        self._widthPercentage: int = 0
+    def toolbar(self) -> TextEditorToolbar:
+        return self._toolbar
 
     def setToolbar(self, toolbar: TextEditorToolbar):
-        self.toolbar = toolbar
+        self._toolbar = toolbar
+
+    def settingsWidget(self) -> Optional[TextEditorSettingsWidget]:
+        return self._settings
+
+    def attachSettingsWidget(self, widget: TextEditorSettingsWidget):
+        if self._settings:
+            self._settings.detach()
+        self._settings = widget
+        widget.attach(self)
+
+    def widthPercentage(self) -> int:
+        return self._widthPercentage
 
     def setWidthPercentage(self, percentage: int):
         if 0 < percentage <= 100:
@@ -635,7 +663,7 @@ class RichTextEditor(QWidget):
         margin = self.width() * (100 - self._widthPercentage) // 100
         margin = margin // 2
         self.textEdit.setViewportMargins(margin, 0, margin, 0)
-        margins(self.toolbar, left=margin)
+        margins(self._toolbar, left=margin)
 
     def _initTextEdit(self) -> EnhancedTextEdit:
         return EnhancedTextEdit(self)
