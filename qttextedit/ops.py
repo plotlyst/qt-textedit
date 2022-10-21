@@ -473,4 +473,8 @@ class TextEditingSettingsOperation(TextEditorOperationWidgetAction):
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         if editor is None:
             raise ValueError('RichTextEditor object must be passed to TextEditingSettingsOperation')
-        QTimer.singleShot(10, lambda: editor.attachSettingsWidget(self._wdgEditor))
+        QTimer.singleShot(5, lambda: self._delayedActivation(editor))
+
+    def _delayedActivation(self, editor):
+        if editor.settingsWidget() is None:
+            editor.attachSettingsWidget(self._wdgEditor)

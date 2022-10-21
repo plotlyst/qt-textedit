@@ -638,6 +638,9 @@ class RichTextEditor(QWidget):
     def setToolbar(self, toolbar: TextEditorToolbar):
         self._toolbar = toolbar
 
+    def settingsWidget(self) -> Optional[TextEditorSettingsWidget]:
+        return self._settings
+
     def attachSettingsWidget(self, widget: TextEditorSettingsWidget):
         if self._settings:
             self._settings.detach()
