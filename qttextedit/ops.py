@@ -338,7 +338,6 @@ class AbstractSettingsSectionWidget(QWidget):
 
         vbox(self)
         lbl = QLabel(name)
-        # incr_font(lbl)
         bold(lbl)
         self.layout().addWidget(lbl, alignment=Qt.AlignLeft)
 
@@ -367,7 +366,6 @@ class SliderSectionWidget(AbstractSettingsSectionWidget):
         self._slider.setCursor(Qt.PointingHandCursor)
         self._slider.setMinimum(min_)
         self._slider.setMaximum(max_)
-        # self._slider.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.layout().addWidget(self._slider)
 
     def value(self) -> int:
@@ -381,8 +379,7 @@ class SliderSectionWidget(AbstractSettingsSectionWidget):
         pass
 
     def _deactivate(self):
-        pass
-        # self._slider.valueChanged.disconnect()
+        self._slider.valueChanged.disconnect()
 
 
 class PageWidthSectionSettingWidget(SliderSectionWidget):
