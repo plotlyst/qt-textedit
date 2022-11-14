@@ -4,12 +4,12 @@ from functools import partial
 from typing import List, Optional, Dict
 
 import qtawesome
-from qthandy import busy, vbox, line, bold
+from qthandy import busy, vbox, line, bold, flow
 from qtpy.QtCore import Qt, QSize, Signal, QTimer
 from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
-    QFileDialog, QLabel, QSlider
+    QFileDialog, QLabel, QSlider, QButtonGroup, QPushButton, QRadioButton
 
 from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import button, qta_icon
@@ -397,6 +397,45 @@ class PageWidthSectionSettingWidget(SliderSectionWidget):
         self._editor.setWidthPercentage(value)
 
 
+DEFAULT_FONT_FAMILIES = ['Times New Roman', 'Helvetica', "Arial", "Courier New"]
+
+
+class FontSectionSettingWidget(AbstractSettingsSectionWidget):
+
+    def __init__(self, parent=None):
+        super().__init__('Font', parent)
+        self._fontContainer = QWidget()
+        flow(self._fontContainer)
+
+        self._btnGroupFonts = QButtonGroup()
+        self._btnGroupFonts.setExclusive(True)
+
+        for f in DEFAULT_FONT_FAMILIES:
+            btn = QRadioButton(f, self)
+            btn.setCheckable(True)
+            self._btnGroupFonts.addButton(btn)
+            self._fontContainer.layout().addWidget(btn)
+
+        self.layout().addWidget(self._fontContainer)
+
+        self._btnGroupFonts.buttonToggled.connect(self._changeFont)
+
+    def _activate(self):
+        font_: QFont = self._editor.font()
+        for btn in self._btnGroupFonts.buttons():
+            if btn.text() == font_.family():
+                btn.setChecked(True)
+
+    def _deactivate(self):
+        pass
+
+    def _changeFont(self, btn: QPushButton, toggled):
+        if toggled:
+            font_: QFont = self._editor.font()
+            font_.setFamily(btn.text())
+            self._editor.setFont(font_)
+
+
 class FontSizeSectionSettingWidget(SliderSectionWidget):
     def __init__(self, parent=None):
         super(FontSizeSectionSettingWidget, self).__init__('Font Size', 7, 32, parent)
@@ -421,6 +460,7 @@ class TextEditorSettingsWidget(QWidget):
         vbox(self)
 
         self._sections: Dict[TextEditorSettingsSection, AbstractSettingsSectionWidget] = {}
+        self._addDefaultSection(TextEditorSettingsSection.FONT)
         self._addDefaultSection(TextEditorSettingsSection.FONT_SIZE)
         self._addDefaultSection(TextEditorSettingsSection.WIDTH)
 
@@ -448,6 +488,8 @@ class TextEditorSettingsWidget(QWidget):
     def _addDefaultSection(self, section: TextEditorSettingsSection):
         if section == TextEditorSettingsSection.FONT_SIZE:
             wdg = FontSizeSectionSettingWidget(self)
+        elif section == TextEditorSettingsSection.FONT:
+            wdg = FontSectionSettingWidget(self)
         elif section == TextEditorSettingsSection.WIDTH:
             wdg = PageWidthSectionSettingWidget(self)
         else:
