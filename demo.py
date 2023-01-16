@@ -24,6 +24,18 @@ class MainWindow(QMainWindow):
         self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
 
         self.editor.textEdit.setPlaceholderText('Write text')
+        # self.editor.textEdit.insertHtml('<a name="comment" href="ref://2725472a-a750-44a6-afec-958f1b267db7">First</a>')
+        # self.editor.textEdit.insertHtml(
+        #     '<p style="-qt-user-state:272547275; word-spacing:25px;">Test</p>')
+
+        # cursor: QTextCursor = self.editor.textEdit.textCursor()
+        # linkFormat: QTextCharFormat = cursor.charFormat()
+        # linkFormat.setAnchor(True)
+        # linkFormat.setAnchorHref("http://www.google.com")
+        # linkFormat.setAnchorNames(["comment|highlight"])
+        # linkFormat.setUnderlineColor(QColor('red'))
+        # cursor.insertText("Google", linkFormat)
+
         ps = self.editor.textEdit.font().pointSize()
         self.editor.textEdit.zoomIn(ps * 0.47)
 

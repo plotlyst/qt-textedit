@@ -120,6 +120,24 @@ class EnhancedTextEdit(QTextEdit):
         menu = self.createEnhancedContextMenu(event.pos())
         menu.exec(event.globalPos())
 
+    # def paintEvent(self, event: QtGui.QPaintEvent) -> None:
+    #     super(EnhancedTextEdit, self).paintEvent(event)
+    #     painter = QPainter(self.viewport())
+    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    #     painter.setPen(QPen(QColor('grey'), self.font().pointSize(), Qt.PenStyle.SolidLine))
+    #     painter.setBrush(QColor('grey'))
+    #     # painter.begin()
+    #     # painter.setPen(QPen(Qt.GlobalColor.black), 12, Qt.PenStyle.SolidLine)
+    #     # self.textCursor().position()
+    #     # rect = self.cursorRect(self.textCursor())
+    #     # print(rect)
+    #     rect = self.cursorRect(self.textCursor())
+    #
+    #     metrics = QFontMetrics(self.font())
+    #     # icon: QIcon = qtawesome.icon('ei.adult')
+    #     # icon.paint(painter, rect.x() + rect.width(), rect.y(), 20, 20)
+    #     painter.drawText(rect.x() + rect.width(), rect.y() + rect.height() - metrics.descent(), 'Painted text')
+
     def pasteAsPlainText(self):
         previous = self._pasteAsPlain
         self._pasteAsPlain = True
