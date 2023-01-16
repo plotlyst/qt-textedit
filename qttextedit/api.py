@@ -18,7 +18,8 @@ from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatO
     TextEditorOperationWidgetAction, TextEditingSettingsOperation, TextEditorSettingsWidget
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
-    has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION
+    has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
+    SHORT_ARROW_LEFT_RIGHT
 
 
 class DashInsertionMode(Enum):
@@ -254,6 +255,22 @@ class EnhancedTextEdit(QTextEdit):
                     cursor.insertText(EN_DASH)
                 elif self._dashInsertionMode == DashInsertionMode.INSERT_EM_DASH:
                     cursor.insertText(EM_DASH)
+                return
+        if event.key() == Qt.Key_Greater:
+            moved_cursor = select_previous_character(cursor, 2)
+            if moved_cursor.selectedText() == '<-':
+                cursor.deletePreviousChar()
+                cursor.deletePreviousChar()
+                cursor.insertText(LONG_ARROW_LEFT_RIGHT)
+                return
+            moved_cursor = select_previous_character(cursor)
+            if moved_cursor.selectedText() == '-':
+                cursor.deletePreviousChar()
+                cursor.insertText(HEAVY_ARROW_RIGHT)
+                return
+            if moved_cursor.selectedText() == '<':
+                cursor.deletePreviousChar()
+                cursor.insertText(SHORT_ARROW_LEFT_RIGHT)
                 return
         if event.key() == Qt.Key_Apostrophe:
             if has_character_left(cursor):
