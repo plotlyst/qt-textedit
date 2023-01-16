@@ -240,6 +240,7 @@ class EnhancedTextEdit(QTextEdit):
                 self.textCursor().insertBlock(QTextBlockFormat(), QTextCharFormat())
                 return
             self.textCursor().insertBlock(self.textCursor().blockFormat(), QTextCharFormat())
+            self.ensureCursorVisible()
             return
         if event.key() == Qt.Key_Period:
             moved_cursor = select_previous_character(cursor, amount=2)
