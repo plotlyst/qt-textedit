@@ -89,6 +89,9 @@ class EnhancedTextEdit(QTextEdit):
         self._blockFormatMenu = QMenu()
         self._blockFormatMenu.addAction(qta_icon('fa5.copy'), 'Duplicate',
                                         lambda: self._duplicateBlock(self._blockFormatPosition))
+        self._blockFormatMenu.addSeparator()
+        self._blockFormatMenu.addAction(qta_icon('fa5s.trash-alt'), 'Delete',
+                                        lambda: self._deleteBlock(self._blockFormatPosition))
 
         self._btnBlockFormat = _SideBarButton('ph.dots-six-vertical-bold', 'Click to open menu')
         self._btnBlockFormat.setParent(self)
@@ -546,8 +549,20 @@ class EnhancedTextEdit(QTextEdit):
         cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
         fragment = cursor.selection()
 
+        cursor.beginEditBlock()
         self._insertBlock(blockNumber)
         self.textCursor().insertFragment(fragment)
+        cursor.endEditBlock()
+
+    def _deleteBlock(self, blockNumber: int):
+        block: QTextBlock = self.document().findBlockByNumber(blockNumber)
+        cursor = QTextCursor(block)
+        cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
+        cursor.beginEditBlock()
+        cursor.removeSelectedText()
+        if block.isValid():
+            cursor.deleteChar()
+        cursor.endEditBlock()
 
 
 # def _showCommands(self, point: QPoint):
