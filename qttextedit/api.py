@@ -378,10 +378,15 @@ class EnhancedTextEdit(QTextEdit):
     #                                            self._quickFormatPopup.height())
     #         qtanim.fade_in(self._quickFormatPopup, duration=150)
 
-    def setFormat(self, lineSpacing: int = 100, textIndent: int = 0):
+    def setFormat(self, lineSpacing: int = 100, textIndent: int = 0, margin_left: int = 0, margin_top: int = 0,
+                  margin_right: int = 0, margin_bottom: int = 0):
         blockFmt = QTextBlockFormat()
         blockFmt.setTextIndent(textIndent)
         blockFmt.setLineHeight(lineSpacing, 1)
+        blockFmt.setLeftMargin(margin_left)
+        blockFmt.setTopMargin(margin_top)
+        blockFmt.setRightMargin(margin_right)
+        blockFmt.setBottomMargin(margin_bottom)
 
         cursor = self.textCursor()
         cursor.clearSelection()
