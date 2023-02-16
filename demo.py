@@ -1,10 +1,13 @@
 import sys
 
+from PyQt5.QtGui import QTextCharFormat, QTextCursor
 from qthandy import vbox
 from qtpy.QtWidgets import QMainWindow, QApplication, QWidget
 from qtpy.QtWidgets import QTextEdit
 
 from qttextedit import RichTextEditor, DashInsertionMode, TextBlockState
+from qttextedit.api import IconTextFormat
+from qttextedit.util import OBJECT_REPLACEMENT_CHARACTER
 
 
 class MainWindow(QMainWindow):
@@ -24,6 +27,25 @@ class MainWindow(QMainWindow):
         self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
 
         self.editor.textEdit.setPlaceholderText('Write text')
+
+        self.editor.textEdit.textCursor().insertText('Test')
+        iconCharFormat = QTextCharFormat()
+        iconCharFormat.setObjectType(IconTextFormat)
+        iconCharFormat.setProperty(1, 'bin')
+        iconCharFormat.setToolTip('Bin')
+        iconCharFormat.setAnchor(True)
+        iconCharFormat.setAnchorHref('bin')
+
+        self.editor.textEdit.textCursor().insertText(OBJECT_REPLACEMENT_CHARACTER, iconCharFormat)
+
+        self.editor.textEdit.textCursor().insertHtml(f'<img src="bin">{OBJECT_REPLACEMENT_CHARACTER}</img>')
+        cursor = self.editor.textEdit.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.PreviousCharacter,
+                            QTextCursor.MoveMode.KeepAnchor)
+        self.editor.textEdit.textCursor().mergeCharFormat(iconCharFormat)
+        self.editor.textEdit.setTextCursor(cursor)
+        self.editor.textEdit.mergeCurrentCharFormat(iconCharFormat)
+
         ps = self.editor.textEdit.font().pointSize()
         self.editor.textEdit.zoomIn(ps * 0.47)
 

@@ -3,6 +3,8 @@ from enum import Enum
 from typing import List, Dict, Optional
 
 import qtawesome
+from PyQt5.QtCore import QSizeF, QRectF, QObject
+from PyQt5.QtGui import QTextObjectInterface, QTextDocument, QPainter
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent
@@ -107,6 +109,8 @@ class EnhancedTextEdit(QTextEdit):
         self._btnBlockFormat.setHidden(True)
         btn_popup_menu(self._btnBlockFormat, self._blockFormatMenu)
 
+        self._iconTextObject = IconTextObject(self)
+        self.document().documentLayout().registerHandler(IconTextFormat, self._iconTextObject)
         self.document().setDocumentMargin(40)
 
         self._adjustTabDistance()
@@ -590,6 +594,22 @@ class EnhancedTextEdit(QTextEdit):
         menu.aboutToHide.connect(self.textCursor().deletePreviousChar)
 
         menu.popup(self.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+
+
+class IconTextObject(QObject, QTextObjectInterface):
+    def __init__(self, parent=None):
+        super(IconTextObject, self).__init__(parent)
+
+    def intrinsicSize(self, doc: 'QTextDocument', posInDocument: int, format: 'QTextFormat') -> QSizeF:
+        return QSizeF(25, 25)
+
+    def drawObject(self, painter: 'QPainter', rect: QRectF, doc: 'QTextDocument', posInDocument: int,
+                   format: 'QTextFormat') -> None:
+        icon = qta_icon('fa5s.trash-alt')
+        icon.paint(painter, rect.toRect())
+
+
+IconTextFormat = QTextFormat.FormatType.UserFormat + 1
 
 
 class TextEditorOperationButton(QToolButton):
