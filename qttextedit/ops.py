@@ -285,7 +285,7 @@ class AlignRightOperation(AlignmentOperation):
 
 class InsertListOperation(TextEditorOperationAction):
     def __init__(self, parent=None):
-        super(InsertListOperation, self).__init__('fa5s.list', 'Insert list', parent=parent)
+        super(InsertListOperation, self).__init__('fa5s.list', 'Bulleted list', 'Insert list', parent=parent)
 
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda: textEdit.textCursor().createList(QTextListFormat.ListDisc))
@@ -293,7 +293,8 @@ class InsertListOperation(TextEditorOperationAction):
 
 class InsertNumberedListOperation(TextEditorOperationAction):
     def __init__(self, parent=None):
-        super(InsertNumberedListOperation, self).__init__('fa5s.list-ol', 'Insert numbered list', parent=parent)
+        super(InsertNumberedListOperation, self).__init__('fa5s.list-ol', 'Numbered list', 'Insert numbered list',
+                                                          parent=parent)
 
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda: textEdit.textCursor().createList(QTextListFormat.ListDecimal))
