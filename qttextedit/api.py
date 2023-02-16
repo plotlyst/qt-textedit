@@ -107,6 +107,8 @@ class EnhancedTextEdit(QTextEdit):
         self._btnBlockFormat.setHidden(True)
         btn_popup_menu(self._btnBlockFormat, self._blockFormatMenu)
 
+        self.document().setDocumentMargin(40)
+
         self._adjustTabDistance()
 
         self.cursorPositionChanged.connect(self._cursorPositionChanged)
