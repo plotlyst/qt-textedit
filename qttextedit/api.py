@@ -424,6 +424,8 @@ class EnhancedTextEdit(QTextEdit):
     def setHeading(self, heading: int):
         cursor: QTextCursor = self.textCursor()
         cursor.beginEditBlock()
+        cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
+        self.setTextCursor(cursor)
 
         blockFormat: QTextBlockFormat = cursor.blockFormat()
         blockFormat.setHeadingLevel(heading)
@@ -433,10 +435,11 @@ class EnhancedTextEdit(QTextEdit):
         charFormat = QTextCharFormat()
         charFormat.setFontWeight(QFont.Bold if heading else QFont.Normal)
         charFormat.setProperty(QTextFormat.FontSizeAdjustment, sizeAdjustment)
-        cursor.select(QTextCursor.LineUnderCursor)
         cursor.mergeBlockCharFormat(charFormat)
         self.mergeCurrentCharFormat(charFormat)
 
+        cursor.clearSelection()
+        self.setTextCursor(cursor)
         cursor.endEditBlock()
 
     def _adjustTabDistance(self):
