@@ -84,6 +84,7 @@ class EnhancedTextEdit(QTextEdit):
         self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below')
         self._btnPlus.setParent(self)
         self._btnPlus.setHidden(True)
+        self._btnPlus.clicked.connect(lambda: self._insertBlock(self._blockFormatPosition))
 
         self._btnBlockFormat = _SideBarButton('ph.dots-six-vertical-bold', 'Click to open menu')
         self._btnBlockFormat.setParent(self)
@@ -526,6 +527,13 @@ class EnhancedTextEdit(QTextEdit):
                 return True
 
         return False
+
+    def _insertBlock(self, blockNumber: int):
+        block: QTextBlock = self.document().findBlockByNumber(blockNumber)
+        cursor = QTextCursor(block)
+        cursor.movePosition(QTextCursor.EndOfBlock)
+        cursor.insertBlock()
+        self.setTextCursor(cursor)
 
     # def _showCommands(self, point: QPoint):
     #     def trigger(func):
