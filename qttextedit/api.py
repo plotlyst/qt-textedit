@@ -86,9 +86,14 @@ class EnhancedTextEdit(QTextEdit):
         self._btnPlus.setHidden(True)
         self._btnPlus.clicked.connect(lambda: self._insertBlock(self._blockFormatPosition))
 
+        self._blockFormatMenu = QMenu()
+        self._blockFormatMenu.addAction(qta_icon('fa5.copy'), 'Duplicate',
+                                        lambda: self._duplicateBlock(self._blockFormatPosition))
+
         self._btnBlockFormat = _SideBarButton('ph.dots-six-vertical-bold', 'Click to open menu')
         self._btnBlockFormat.setParent(self)
         self._btnBlockFormat.setHidden(True)
+        btn_popup_menu(self._btnBlockFormat, self._blockFormatMenu)
 
         self._adjustTabDistance()
 
@@ -535,18 +540,28 @@ class EnhancedTextEdit(QTextEdit):
         cursor.insertBlock()
         self.setTextCursor(cursor)
 
-    # def _showCommands(self, point: QPoint):
-    #     def trigger(func):
-    #         self.textEditor.textCursor().deletePreviousChar()
-    #         func()
+    def _duplicateBlock(self, blockNumber: int):
+        block: QTextBlock = self.document().findBlockByNumber(blockNumber)
+        cursor = QTextCursor(block)
+        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+        fragment = cursor.selection()
 
-    # rect = self.textEditor.cursorRect(self.textEditor.textCursor())
-    #
-    # menu = QMenu(self.textEditor)
-    # menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(1)))
-    # menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
-    #
-    # menu.popup(self.textEditor.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+        self._insertBlock(blockNumber)
+        self.textCursor().insertFragment(fragment)
+
+
+# def _showCommands(self, point: QPoint):
+#     def trigger(func):
+#         self.textEditor.textCursor().deletePreviousChar()
+#         func()
+
+# rect = self.textEditor.cursorRect(self.textEditor.textCursor())
+#
+# menu = QMenu(self.textEditor)
+# menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(1)))
+# menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
+#
+# menu.popup(self.textEditor.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
 
 class TextEditorOperationButton(QToolButton):
