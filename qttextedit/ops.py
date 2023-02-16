@@ -44,8 +44,12 @@ class TextEditorOperation:
 
 
 class TextEditorOperationAction(QAction, TextEditorOperation):
-    def __init__(self, icon: str, tooltip: str = '', shortcut=None, checkable: bool = False, parent=None):
+    def __init__(self, icon: str, text: str = '', tooltip: str = '', shortcut=None, checkable: bool = False,
+                 parent=None):
         super(TextEditorOperationAction, self).__init__(parent)
+        self.setText(text)
+        if not tooltip:
+            tooltip = text
         self.setToolTip(tooltip)
         self.setIcon(qta_icon(icon))
         if shortcut:
@@ -84,15 +88,47 @@ class FormatOperation(TextEditorOperationMenu):
         super(FormatOperation, self).__init__('mdi.format-text', 'Format text', parent=parent)
 
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
-        self.addAction(qtawesome.icon('mdi.format-header-1', options=[{'scale_factor': 1.4}]), '',
-                       lambda: textEdit.setHeading(1))
-        self.addAction(qtawesome.icon('mdi.format-header-2', options=[{'scale_factor': 1.3}]), '',
-                       lambda: textEdit.setHeading(2))
-        self.addAction(qtawesome.icon('mdi.format-header-3', options=[{'scale_factor': 1.2}]), '',
-                       lambda: textEdit.setHeading(3))
+        for h_clazz in [TextOperation, Heading1Operation, Heading2Operation, Heading3Operation]:
+            action = h_clazz(self)
+            action.activateOperation(textEdit, editor)
+            self.addAction(action)
         self.addSeparator()
-        self.addAction(qtawesome.icon('mdi.format-clear', options=[{'scale_factor': 1.2}]), '',
-                       lambda: textEdit.setHeading(0))
+
+
+class TextOperation(TextEditorOperationAction):
+    def __init__(self, parent=None):
+        super(TextOperation, self).__init__('mdi.format-text', 'Text', parent=parent)
+
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
+        self.triggered.connect(lambda: textEdit.setHeading(0))
+
+
+class HeadingOperation(TextEditorOperationAction):
+
+    def __init__(self, heading: int, parent=None):
+        self._heading = heading
+        super(HeadingOperation, self).__init__(f'mdi.format-header-{heading}', f'Heading {heading}', parent=parent)
+
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
+        self.triggered.connect(lambda: textEdit.setHeading(self._heading))
+
+
+class Heading1Operation(HeadingOperation):
+
+    def __init__(self, parent=None):
+        super(Heading1Operation, self).__init__(1, parent)
+
+
+class Heading2Operation(HeadingOperation):
+
+    def __init__(self, parent=None):
+        super(Heading2Operation, self).__init__(2, parent)
+
+
+class Heading3Operation(HeadingOperation):
+
+    def __init__(self, parent=None):
+        super(Heading3Operation, self).__init__(3, parent)
 
 
 class BoldOperation(TextEditorOperationAction):
