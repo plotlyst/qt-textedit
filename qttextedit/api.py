@@ -381,8 +381,8 @@ class EnhancedTextEdit(QTextEdit):
                 self._editionState == _TextEditionState.BACKSPACE_BLOCKED or
                 self._editionState == _TextEditionState.REMOVAL_BLOCKED):
             return
-        # if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
-        #     self._showCommands()
+        if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
+            self._showCommands()
         super(EnhancedTextEdit, self).keyPressEvent(event)
 
     # def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -578,19 +578,18 @@ class EnhancedTextEdit(QTextEdit):
             cursor.deleteChar()
         cursor.endEditBlock()
 
+    def _showCommands(self):
+        rect = self.cursorRect()
 
-# def _showCommands(self, point: QPoint):
-#     def trigger(func):
-#         self.textEditor.textCursor().deletePreviousChar()
-#         func()
+        menu = QMenu(self)
+        for op_clazz in [Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
+                         InsertNumberedListOperation]:
+            action = op_clazz(menu)
+            action.activateOperation(self)
+            menu.addAction(action)
+        menu.aboutToHide.connect(self.textCursor().deletePreviousChar)
 
-# rect = self.textEditor.cursorRect(self.textEditor.textCursor())
-#
-# menu = QMenu(self.textEditor)
-# menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(1)))
-# menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
-#
-# menu.popup(self.textEditor.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+        menu.popup(self.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
 
 class TextEditorOperationButton(QToolButton):
