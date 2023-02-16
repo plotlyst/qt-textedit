@@ -222,8 +222,8 @@ class EnhancedTextEdit(QTextEdit):
 
             beginningCursor = QTextCursor(cursor.block())
             rect = self.cursorRect(beginningCursor)
-            self._btnPlus.setGeometry(0, rect.y(), 20, 20)
-            self._btnBlockFormat.setGeometry(20, rect.y(), 20, 20)
+            self._btnPlus.setGeometry(self.viewportMargins().left(), rect.y(), 20, 20)
+            self._btnBlockFormat.setGeometry(self.viewportMargins().left() + 20, rect.y(), 20, 20)
             self._btnPlus.setVisible(True)
             self._btnBlockFormat.setVisible(True)
 
