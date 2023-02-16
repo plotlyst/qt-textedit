@@ -3,9 +3,9 @@ from enum import Enum
 from typing import List, Dict, Optional
 
 import qtawesome
-from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins
+from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QTextCharFormat, QTextFormat, QTextBlock
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
@@ -19,7 +19,7 @@ from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatO
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
-    SHORT_ARROW_LEFT_RIGHT
+    SHORT_ARROW_LEFT_RIGHT, qta_icon
 
 
 class DashInsertionMode(Enum):
@@ -40,6 +40,34 @@ class _TextEditionState(Enum):
     DISALLOWED = 4
 
 
+class _SideBarButton(QToolButton):
+    def __init__(self, icon_name: str, tooltip: str = '', parent=None):
+        super(_SideBarButton, self).__init__(parent)
+        self.setIcon(qta_icon(icon_name))
+        self.setToolTip(tooltip)
+        self.setProperty('textedit-sidebar-button', True)
+        self.setStyleSheet('''
+        
+        QToolButton:pressed[textedit-sidebar-button=true] {
+            border: 1px solid grey
+        }
+        
+        QToolButton[textedit-sidebar-button] {
+            border-radius: 10px;
+            border: 1px hidden lightgrey;
+            padding: 1px;
+        }
+        QToolButton::menu-indicator[textedit-sidebar-button] {
+            width:0px;
+        }
+        QToolButton:hover[textedit-sidebar-button] {
+            background: lightgrey;
+        }
+        ''')
+        translucent(self)
+        self.setIconSize(QSize(18, 18))
+
+
 class EnhancedTextEdit(QTextEdit):
 
     def __init__(self, parent=None):
@@ -51,6 +79,15 @@ class EnhancedTextEdit(QTextEdit):
         self._uneditableBlocksEnabled: bool = False
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
         self._editionState: _TextEditionState = _TextEditionState.ALLOWED
+        self._blockFormatPosition: int = -1
+
+        self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below')
+        self._btnPlus.setParent(self)
+        self._btnPlus.setHidden(True)
+
+        self._btnBlockFormat = _SideBarButton('ph.dots-six-vertical-bold', 'Click to open menu')
+        self._btnBlockFormat.setParent(self)
+        self._btnBlockFormat.setHidden(True)
 
         self._adjustTabDistance()
 
@@ -158,19 +195,29 @@ class EnhancedTextEdit(QTextEdit):
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         super(EnhancedTextEdit, self).mouseMoveEvent(event)
 
-        cursor = self.cursorForPosition(event.pos())
+        cursor: QTextCursor = self.cursorForPosition(event.pos())
+
+        if self._blockFormatPosition != cursor.blockNumber():
+            self._blockFormatPosition = cursor.blockNumber()
+
+            beginningCursor = QTextCursor(cursor.block())
+            rect = self.cursorRect(beginningCursor)
+            self._btnPlus.setGeometry(rect.x() - 40, rect.y(), 20, 20)
+            self._btnBlockFormat.setGeometry(rect.x() - 20, rect.y(), 20, 20)
+            self._btnPlus.setVisible(True)
+            self._btnBlockFormat.setVisible(True)
+
         if cursor.atBlockStart() or cursor.atBlockEnd():
             QApplication.restoreOverrideCursor()
-            return
-
-        anchor = self.anchorAt(event.pos())
-        if anchor:
-            if QApplication.overrideCursor() is None:
-                QApplication.setOverrideCursor(Qt.PointingHandCursor)
-                self._setLinkTooltip(anchor)
         else:
-            QApplication.restoreOverrideCursor()
-            self.setToolTip('')
+            anchor = self.anchorAt(event.pos())
+            if anchor:
+                if QApplication.overrideCursor() is None:
+                    QApplication.setOverrideCursor(Qt.PointingHandCursor)
+                    self._setLinkTooltip(anchor)
+            else:
+                QApplication.restoreOverrideCursor()
+                self.setToolTip('')
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         super(EnhancedTextEdit, self).mouseReleaseEvent(event)
@@ -178,6 +225,17 @@ class EnhancedTextEdit(QTextEdit):
         anchor = self.anchorAt(event.pos())
         if anchor and not self.textCursor().selectedText():
             QDesktopServices.openUrl(QUrl(anchor))
+
+    def enterEvent(self, event: QEvent) -> None:
+        super(EnhancedTextEdit, self).enterEvent(event)
+        if self._blockFormatPosition >= 0:
+            self._btnPlus.setVisible(True)
+            self._btnBlockFormat.setVisible(True)
+
+    def leaveEvent(self, event: QEvent) -> None:
+        super(EnhancedTextEdit, self).leaveEvent(event)
+        self._btnPlus.setHidden(True)
+        self._btnBlockFormat.setHidden(True)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:

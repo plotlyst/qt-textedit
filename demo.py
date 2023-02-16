@@ -22,6 +22,7 @@ class MainWindow(QMainWindow):
         self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
         self.editor.textEdit.setAutoCapitalizationEnabled(True)
         self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
+        self.editor.textEdit.document().setDocumentMargin(40)
 
         self.editor.textEdit.setPlaceholderText('Write text')
         ps = self.editor.textEdit.font().pointSize()
