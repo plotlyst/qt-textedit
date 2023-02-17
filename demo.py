@@ -35,7 +35,6 @@ class MainWindow(QMainWindow):
         self.widget.layout().addWidget(self.sourceViewed)
 
         self.editor.textEdit.textChanged.connect(lambda: self.sourceViewed.setPlainText(self.editor.textEdit.toHtml()))
-        # self.editor.textEdit.textChanged.connect(lambda: self.zoom())
         self.editor.textEdit.setFocus()
 
     def insertNonEditableBlock(self):

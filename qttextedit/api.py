@@ -16,7 +16,9 @@ from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatO
     AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation, InsertLinkOperation, \
     ExportPdfOperation, PrintOperation, TextEditorOperationAction, TextEditorOperationMenu, \
     TextEditorOperationWidgetAction, TextEditingSettingsOperation, TextEditorSettingsWidget, TextOperation, \
-    Heading1Operation, Heading2Operation, Heading3Operation, InsertDividerOperation
+    Heading1Operation, Heading2Operation, Heading3Operation, InsertDividerOperation, InsertRedBannerOperation, \
+    InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation, InsertPurpleBannerOperation, \
+    InsertGrayBannerOperation
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
@@ -89,6 +91,7 @@ class EnhancedTextEdit(QTextEdit):
         self._btnPlus.clicked.connect(lambda: self._insertBlock(self._blockFormatPosition))
 
         self._blockFormatMenu = QMenu()
+        self._blockFormatMenu.setToolTipsVisible(True)
         self._blockFormatMenu.addAction(qta_icon('fa5.copy'), 'Duplicate',
                                         lambda: self._duplicateBlock(self._blockFormatPosition))
         self._convertIntoMenu = QMenu('Convert into')
@@ -590,8 +593,12 @@ class EnhancedTextEdit(QTextEdit):
         rect = self.cursorRect()
 
         menu = QMenu(self)
+        menu.setToolTipsVisible(True)
         for op_clazz in [Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
-                         InsertNumberedListOperation, InsertDividerOperation]:
+                         InsertNumberedListOperation, InsertDividerOperation, InsertGrayBannerOperation,
+                         InsertRedBannerOperation,
+                         InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation,
+                         InsertPurpleBannerOperation]:
             action = op_clazz(menu)
             action.activateOperation(self)
             menu.addAction(action)

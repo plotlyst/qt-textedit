@@ -6,7 +6,7 @@ from typing import List, Optional, Dict
 import qtawesome
 from qthandy import busy, vbox, line, bold, flow
 from qtpy.QtCore import Qt, QSize, Signal, QTimer
-from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent
+from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent, QTextFrameFormat
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
     QFileDialog, QLabel, QSlider, QButtonGroup, QPushButton, QRadioButton
@@ -44,14 +44,15 @@ class TextEditorOperation:
 
 
 class TextEditorOperationAction(QAction, TextEditorOperation):
-    def __init__(self, icon: str, text: str = '', tooltip: str = '', shortcut=None, checkable: bool = False,
+    def __init__(self, icon: str, text: str = '', tooltip: str = '', icon_color: str = 'black', shortcut=None,
+                 checkable: bool = False,
                  parent=None):
         super(TextEditorOperationAction, self).__init__(parent)
         self.setText(text)
         if not tooltip:
             tooltip = text
         self.setToolTip(tooltip)
-        self.setIcon(qta_icon(icon))
+        self.setIcon(qta_icon(icon, icon_color))
         if shortcut:
             self.setShortcut(shortcut)
         self.setCheckable(checkable)
@@ -307,6 +308,57 @@ class InsertDividerOperation(TextEditorOperationAction):
 
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda: textEdit.textCursor().insertHtml('<hr></hr>'))
+
+
+class InsertBannerOperation(TextEditorOperationAction):
+    def __init__(self, borderColor: str, bgColor: str, title: str, parent=None):
+        super(InsertBannerOperation, self).__init__('fa5.bookmark', f'{title} Banner', f'Insert {title.lower()} banner',
+                                                    icon_color=borderColor,
+                                                    parent=parent)
+        self._borderColor = borderColor
+        self._bgColor = bgColor
+
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
+        frameFormat = QTextFrameFormat()
+        frameFormat.setBorder(2)
+        frameFormat.setLeftMargin(5)
+        frameFormat.setRightMargin(5)
+        frameFormat.setTopMargin(1)
+        frameFormat.setBottomMargin(1)
+        frameFormat.setBorderStyle(QTextFrameFormat.BorderStyle.BorderStyle_Inset)
+        frameFormat.setBorderBrush(QColor(self._borderColor))
+        frameFormat.setBackground(QColor(self._bgColor))
+        self.triggered.connect(lambda: textEdit.textCursor().insertFrame(frameFormat))
+
+
+class InsertRedBannerOperation(InsertBannerOperation):
+    def __init__(self, parent=None):
+        super(InsertRedBannerOperation, self).__init__('#F0344A', '#FDE0E3', 'Red', parent)
+
+
+class InsertGrayBannerOperation(InsertBannerOperation):
+    def __init__(self, parent=None):
+        super(InsertGrayBannerOperation, self).__init__('#6C757D', '#EAEBED', 'Gray', parent)
+
+
+class InsertBlueBannerOperation(InsertBannerOperation):
+    def __init__(self, parent=None):
+        super(InsertBlueBannerOperation, self).__init__('#00669D', '#D0EFFF', 'Blue', parent)
+
+
+class InsertGreenBannerOperation(InsertBannerOperation):
+    def __init__(self, parent=None):
+        super(InsertGreenBannerOperation, self).__init__('#2D6A4F', '#C9E8DA', 'Green', parent)
+
+
+class InsertYellowBannerOperation(InsertBannerOperation):
+    def __init__(self, parent=None):
+        super(InsertYellowBannerOperation, self).__init__('#EDB600', '#FFF7DB', 'Yellow', parent)
+
+
+class InsertPurpleBannerOperation(InsertBannerOperation):
+    def __init__(self, parent=None):
+        super(InsertPurpleBannerOperation, self).__init__('#7B2CBF', '#ECDFF8', 'Purple', parent)
 
 
 class InsertLinkOperation(TextEditorOperationAction):
