@@ -84,11 +84,15 @@ class EnhancedTextEdit(QTextEdit):
         self._editionState: _TextEditionState = _TextEditionState.ALLOWED
         self._blockFormatPosition: int = -1
         self._defaultBlockFormat = QTextBlockFormat()
+        self._currentHoveredTable: Optional[QTextTable] = None
+        self._currentHoveredTableCell: Optional[QTextTableCell] = None
 
-        self._btnTablePlusAbove = _SideBarButton('fa5s.plus', 'Click to add a new above', parent=self)
+        self._btnTablePlusAbove = _SideBarButton('fa5s.plus', 'Insert a new row above', parent=self)
         self._btnTablePlusAbove.setHidden(True)
-        self._btnTablePlusBelow = _SideBarButton('fa5s.plus', 'Click to add a new below', parent=self)
+        self._btnTablePlusBelow = _SideBarButton('fa5s.plus', 'Insert a new row below', parent=self)
         self._btnTablePlusBelow.setHidden(True)
+        self._btnTablePlusAbove.clicked.connect(self._insertRowAbove)
+        self._btnTablePlusBelow.clicked.connect(self._insertRowBelow)
 
         self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below', parent=self)
         self._btnPlus.setHidden(True)
@@ -225,9 +229,9 @@ class EnhancedTextEdit(QTextEdit):
         cursor: QTextCursor = self.cursorForPosition(event.pos())
         beginningCursor = QTextCursor(cursor.block())
         rect = self.cursorRect(beginningCursor)
-        if cursor.currentTable():
-            table: QTextTable = cursor.currentTable()
-            cell: QTextTableCell = table.cellAt(cursor)
+        self._currentHoveredTable = cursor.currentTable()
+        if self._currentHoveredTable:
+            self._currentHoveredTableCell = self._currentHoveredTable.cellAt(cursor)
             self._btnPlus.setHidden(True)
             self._btnBlockFormat.setHidden(True)
 
@@ -235,18 +239,20 @@ class EnhancedTextEdit(QTextEdit):
             self._btnTablePlusAbove.setVisible(True)
             beginningCursor.movePosition(QTextCursor.EndOfBlock)
             self._btnTablePlusBelow.setGeometry(rect.x() - 12, self.cursorRect(beginningCursor).y() + rect.height() - 8,
-                                                16,
-                                                16)
+                                                16, 16)
             self._btnTablePlusBelow.setVisible(True)
-        elif self._blockFormatPosition != cursor.blockNumber():
+        else:
             self._btnTablePlusAbove.setHidden(True)
             self._btnTablePlusBelow.setHidden(True)
-            self._blockFormatPosition = cursor.blockNumber()
+            if self._blockFormatPosition != cursor.blockNumber():
+                self._btnTablePlusAbove.setHidden(True)
+                self._btnTablePlusBelow.setHidden(True)
+                self._blockFormatPosition = cursor.blockNumber()
 
-            self._btnPlus.setGeometry(self.viewportMargins().left(), rect.y(), 20, 20)
-            self._btnBlockFormat.setGeometry(self.viewportMargins().left() + 20, rect.y(), 20, 20)
-            self._btnPlus.setVisible(True)
-            self._btnBlockFormat.setVisible(True)
+                self._btnPlus.setGeometry(self.viewportMargins().left(), rect.y(), 20, 20)
+                self._btnBlockFormat.setGeometry(self.viewportMargins().left() + 20, rect.y(), 20, 20)
+                self._btnPlus.setVisible(True)
+                self._btnBlockFormat.setVisible(True)
 
         if cursor.atBlockStart() or cursor.atBlockEnd():
             QApplication.restoreOverrideCursor()
@@ -277,6 +283,8 @@ class EnhancedTextEdit(QTextEdit):
         super(EnhancedTextEdit, self).leaveEvent(event)
         self._btnPlus.setHidden(True)
         self._btnBlockFormat.setHidden(True)
+        self._btnTablePlusAbove.setHidden(True)
+        self._btnTablePlusBelow.setHidden(True)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
@@ -614,6 +622,16 @@ class EnhancedTextEdit(QTextEdit):
         if block.isValid():
             cursor.deleteChar()
         cursor.endEditBlock()
+
+    def _insertRowAbove(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.insertRows(self._currentHoveredTableCell.row(), 1)
+
+    def _insertRowBelow(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.insertRows(self._currentHoveredTableCell.row() + 1, 1)
 
     def _showCommands(self):
         rect = self.cursorRect()
