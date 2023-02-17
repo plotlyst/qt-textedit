@@ -318,6 +318,8 @@ class EnhancedTextEdit(QTextEdit):
                 self.textCursor().insertBlock(QTextBlockFormat(), QTextCharFormat())
                 return
             self.textCursor().insertBlock(self.textCursor().blockFormat(), QTextCharFormat())
+            if self.textCursor().blockFormat().headingLevel():
+                self.setHeading(0)
             self.ensureCursorVisible()
             return
         if event.key() == Qt.Key_Period:
