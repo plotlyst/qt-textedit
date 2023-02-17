@@ -81,6 +81,7 @@ class EnhancedTextEdit(QTextEdit):
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
         self._editionState: _TextEditionState = _TextEditionState.ALLOWED
         self._blockFormatPosition: int = -1
+        self._defaultBlockFormat = QTextBlockFormat()
 
         self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below')
         self._btnPlus.setParent(self)
@@ -311,16 +312,7 @@ class EnhancedTextEdit(QTextEdit):
                 self.textCursor().insertText(event.text().upper())
                 return
         if event.key() == Qt.Key_Return:
-            if cursor.block().textList() and not cursor.block().text():
-                list_ = cursor.block().textList()
-                list_.remove(cursor.block())
-                cursor.deletePreviousChar()
-                self.textCursor().insertBlock(QTextBlockFormat(), QTextCharFormat())
-                return
-            self.textCursor().insertBlock(self.textCursor().blockFormat(), QTextCharFormat())
-            if self.textCursor().blockFormat().headingLevel():
-                self.setHeading(0)
-            self.ensureCursorVisible()
+            self._insertNewBlock(cursor)
             return
         if event.key() == Qt.Key_Period:
             moved_cursor = select_previous_character(cursor, amount=2)
@@ -400,8 +392,8 @@ class EnhancedTextEdit(QTextEdit):
     #                                            self._quickFormatPopup.height())
     #         qtanim.fade_in(self._quickFormatPopup, duration=150)
 
-    def setFormat(self, lineSpacing: int = 100, textIndent: int = 0, margin_left: int = 0, margin_top: int = 0,
-                  margin_right: int = 0, margin_bottom: int = 0):
+    def setBlockFormat(self, lineSpacing: int = 100, textIndent: int = 0, margin_left: int = 0, margin_top: int = 0,
+                       margin_right: int = 0, margin_bottom: int = 0):
         blockFmt = QTextBlockFormat()
         blockFmt.setTextIndent(textIndent)
         blockFmt.setLineHeight(lineSpacing, 1)
@@ -409,6 +401,8 @@ class EnhancedTextEdit(QTextEdit):
         blockFmt.setTopMargin(margin_top)
         blockFmt.setRightMargin(margin_right)
         blockFmt.setBottomMargin(margin_bottom)
+
+        self._defaultBlockFormat = blockFmt
 
         cursor = self.textCursor()
         cursor.clearSelection()
@@ -556,8 +550,20 @@ class EnhancedTextEdit(QTextEdit):
         block: QTextBlock = self.document().findBlockByNumber(blockNumber)
         cursor = QTextCursor(block)
         cursor.movePosition(QTextCursor.EndOfBlock)
-        cursor.insertBlock()
+        self._insertNewBlock(cursor)
         self.setTextCursor(cursor)
+
+    def _insertNewBlock(self, cursor: QTextCursor):
+        if cursor.block().textList() and not cursor.block().text():
+            list_ = cursor.block().textList()
+            list_.remove(cursor.block())
+            cursor.deletePreviousChar()
+            cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
+        elif cursor.block().textList():
+            cursor.insertBlock(cursor.blockFormat(), QTextCharFormat())
+        else:
+            cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
+        self.ensureCursorVisible()
 
     def _duplicateBlock(self, blockNumber: int):
         block: QTextBlock = self.document().findBlockByNumber(blockNumber)
