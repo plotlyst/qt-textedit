@@ -186,8 +186,13 @@ class EnhancedTextEdit(QTextEdit):
         anchor = self.anchorAt(pos)
         if anchor:
             menu.addSeparator()
-            menu.addAction(qtawesome.icon('fa5s.link'), 'Edit link',
+            menu.addAction(qta_icon('fa5s.link'), 'Edit link',
                            lambda: self._editLink(self.cursorForPosition(pos)))
+
+        if self._currentHoveredTable is not None:
+            menu.addSeparator()
+            menu.addAction(qta_icon('mdi.table-row-remove', 'red'), 'Delete row', self._removeRow)
+            menu.addAction(qta_icon('mdi.table-column-remove', 'red'), 'Delete column', self._removeColumn)
 
         return menu
 
@@ -666,6 +671,18 @@ class EnhancedTextEdit(QTextEdit):
         if self._currentHoveredTableCell is None:
             return
         self._currentHoveredTable.insertColumns(self._currentHoveredTableCell.column() + 1, 1)
+        self._resizeTableColumns(self._currentHoveredTable)
+
+    def _removeRow(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.removeRows(self._currentHoveredTableCell.row(), 1)
+        self._resizeTableColumns(self._currentHoveredTable)
+
+    def _removeColumn(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.removeColumns(self._currentHoveredTableCell.column(), 1)
         self._resizeTableColumns(self._currentHoveredTable)
 
     def _resizeTableColumns(self, table: QTextTable):
