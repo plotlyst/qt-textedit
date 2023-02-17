@@ -443,7 +443,7 @@ class EnhancedTextEdit(QTextEdit):
         blockFormat: QTextBlockFormat = cursor.blockFormat()
         blockFormat.setHeadingLevel(heading)
         cursor.setBlockFormat(blockFormat)
-        sizeAdjustment = 5 - heading if heading else 0
+        sizeAdjustment = 4 - heading if heading else 0
 
         charFormat = QTextCharFormat()
         charFormat.setFontWeight(QFont.Bold if heading else QFont.Normal)
