@@ -6,7 +6,8 @@ from typing import List, Optional, Dict
 import qtawesome
 from qthandy import busy, vbox, line, bold, flow
 from qtpy.QtCore import Qt, QSize, Signal, QTimer
-from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent, QTextFrameFormat
+from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent, QTextFrameFormat, QTextTableFormat, \
+    QTextLength
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
     QFileDialog, QLabel, QSlider, QButtonGroup, QPushButton, QRadioButton
@@ -26,6 +27,7 @@ class TextEditorOperationType(Enum):
     ALIGNMENT_RIGHT = 'alignment_right'
     INSERT_LIST = 'insert_list'
     INSERT_NUMBERED_LIST = 'insert_numbered_list'
+    INSERT_TABLE = 'insert_table'
     INSERT_LINK = 'insert_link'
     COLOR = 'color'
     EXPORT_PDF = 'export_pdf'
@@ -299,6 +301,30 @@ class InsertNumberedListOperation(TextEditorOperationAction):
 
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         self.triggered.connect(lambda: textEdit.textCursor().createList(QTextListFormat.ListDecimal))
+
+
+class InsertTableOperation(TextEditorOperationAction):
+    def __init__(self, parent=None):
+        super(InsertTableOperation, self).__init__('fa5s.table', 'Table', 'Insert table', parent=parent)
+
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
+        self.triggered.connect(lambda: self._insertTable(textEdit))
+
+    def _insertTable(self, textEdit: QTextEdit):
+        col_number = 3
+
+        format = QTextTableFormat()
+        format.setLeftMargin(10)
+        format.setBorder(1)
+        format.setBorderStyle(QTextTableFormat.BorderStyle_Ridge)
+        format.setCellPadding(2)
+        format.setCellSpacing(0)
+        constraints = []
+        for _ in range(col_number):
+            constraints.append(QTextLength(QTextLength.PercentageLength, 25))
+        format.setColumnWidthConstraints(constraints)
+
+        textEdit.textCursor().insertTable(3, col_number, format)
 
 
 class InsertDividerOperation(TextEditorOperationAction):

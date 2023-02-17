@@ -7,7 +7,7 @@ from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, transluc
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
-    QTextCharFormat, QTextFormat, QTextBlock
+    QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton
 
@@ -18,7 +18,7 @@ from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatO
     TextEditorOperationWidgetAction, TextEditingSettingsOperation, TextEditorSettingsWidget, TextOperation, \
     Heading1Operation, Heading2Operation, Heading3Operation, InsertDividerOperation, InsertRedBannerOperation, \
     InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation, InsertPurpleBannerOperation, \
-    InsertGrayBannerOperation
+    InsertGrayBannerOperation, InsertTableOperation
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
@@ -44,9 +44,9 @@ class _TextEditionState(Enum):
 
 
 class _SideBarButton(QToolButton):
-    def __init__(self, icon_name: str, tooltip: str = '', parent=None):
+    def __init__(self, icon_name: str, tooltip: str = '', icon_color: str = 'black', parent=None):
         super(_SideBarButton, self).__init__(parent)
-        self.setIcon(qta_icon(icon_name))
+        self.setIcon(qta_icon(icon_name, icon_color))
         self.setToolTip(tooltip)
         self.setProperty('textedit-sidebar-button', True)
         self.setStyleSheet('''
@@ -84,9 +84,23 @@ class EnhancedTextEdit(QTextEdit):
         self._editionState: _TextEditionState = _TextEditionState.ALLOWED
         self._blockFormatPosition: int = -1
         self._defaultBlockFormat = QTextBlockFormat()
+        self._currentHoveredTable: Optional[QTextTable] = None
+        self._currentHoveredTableCell: Optional[QTextTableCell] = None
 
-        self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below')
-        self._btnPlus.setParent(self)
+        self._btnTablePlusAbove = _SideBarButton('fa5s.plus', 'Insert a new row above', parent=self)
+        self._btnTablePlusAbove.setHidden(True)
+        self._btnTablePlusBelow = _SideBarButton('fa5s.plus', 'Insert a new row below', parent=self)
+        self._btnTablePlusBelow.setHidden(True)
+        self._btnTablePlusAbove.clicked.connect(self._insertRowAbove)
+        self._btnTablePlusBelow.clicked.connect(self._insertRowBelow)
+        self._btnTablePlusLeft = _SideBarButton('fa5s.plus', 'Insert a new column to the left', parent=self)
+        self._btnTablePlusLeft.setHidden(True)
+        self._btnTablePlusRight = _SideBarButton('fa5s.plus', 'Insert a new column to the right', parent=self)
+        self._btnTablePlusRight.setHidden(True)
+        self._btnTablePlusLeft.clicked.connect(self._insertColumnLeft)
+        self._btnTablePlusRight.clicked.connect(self._insertColumnRight)
+
+        self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below', parent=self)
         self._btnPlus.setHidden(True)
         self._btnPlus.clicked.connect(lambda: self._insertBlock(self._blockFormatPosition))
 
@@ -106,8 +120,7 @@ class EnhancedTextEdit(QTextEdit):
         self._blockFormatMenu.addAction(qta_icon('fa5s.trash-alt'), 'Delete',
                                         lambda: self._deleteBlock(self._blockFormatPosition))
 
-        self._btnBlockFormat = _SideBarButton('ph.dots-six-vertical-bold', 'Click to open menu')
-        self._btnBlockFormat.setParent(self)
+        self._btnBlockFormat = _SideBarButton('ph.dots-six-vertical-bold', 'Click to open menu', parent=self)
         self._btnBlockFormat.setHidden(True)
         btn_popup_menu(self._btnBlockFormat, self._blockFormatMenu)
 
@@ -173,8 +186,13 @@ class EnhancedTextEdit(QTextEdit):
         anchor = self.anchorAt(pos)
         if anchor:
             menu.addSeparator()
-            menu.addAction(qtawesome.icon('fa5s.link'), 'Edit link',
+            menu.addAction(qta_icon('fa5s.link'), 'Edit link',
                            lambda: self._editLink(self.cursorForPosition(pos)))
+
+        if self._currentHoveredTable is not None:
+            menu.addSeparator()
+            menu.addAction(qta_icon('mdi.table-row-remove', 'red'), 'Delete row', self._removeRow)
+            menu.addAction(qta_icon('mdi.table-column-remove', 'red'), 'Delete column', self._removeColumn)
 
         return menu
 
@@ -220,16 +238,47 @@ class EnhancedTextEdit(QTextEdit):
         super(EnhancedTextEdit, self).mouseMoveEvent(event)
 
         cursor: QTextCursor = self.cursorForPosition(event.pos())
+        beginningCursor = QTextCursor(cursor.block())
+        rect = self.cursorRect(beginningCursor)
+        self._currentHoveredTable = cursor.currentTable()
+        if self._currentHoveredTable:
+            self._currentHoveredTableCell = self._currentHoveredTable.cellAt(cursor)
+            self._btnPlus.setHidden(True)
+            self._btnBlockFormat.setHidden(True)
 
-        if self._blockFormatPosition != cursor.blockNumber():
-            self._blockFormatPosition = cursor.blockNumber()
+            self._btnTablePlusAbove.setGeometry(rect.x() - 16, rect.y() - 10, 16, 16)
+            self._btnTablePlusAbove.setVisible(True)
+            beginningCursor.movePosition(QTextCursor.EndOfBlock)
+            self._btnTablePlusBelow.setGeometry(rect.x() - 16, self.cursorRect(beginningCursor).y() + rect.height() - 8,
+                                                16, 16)
+            self._btnTablePlusBelow.setVisible(True)
 
-            beginningCursor = QTextCursor(cursor.block())
-            rect = self.cursorRect(beginningCursor)
-            self._btnPlus.setGeometry(self.viewportMargins().left(), rect.y(), 20, 20)
-            self._btnBlockFormat.setGeometry(self.viewportMargins().left() + 20, rect.y(), 20, 20)
-            self._btnPlus.setVisible(True)
-            self._btnBlockFormat.setVisible(True)
+            constraint: QTextLength = self._currentHoveredTable.format().columnWidthConstraints()[
+                self._currentHoveredTableCell.column()]
+            cell_width = self.document().size().width() * constraint.rawValue() / 100
+
+            self._btnTablePlusLeft.setGeometry(rect.x() - 8, rect.y() - 18, 16, 16)
+            self._btnTablePlusLeft.setVisible(True)
+
+            self._btnTablePlusRight.setGeometry(
+                rect.x() + cell_width - self._currentHoveredTable.format().leftMargin() - 20,
+                rect.y() - 18, 16, 16)
+            self._btnTablePlusRight.setVisible(True)
+
+        else:
+            self._btnTablePlusAbove.setHidden(True)
+            self._btnTablePlusBelow.setHidden(True)
+            self._btnTablePlusLeft.setHidden(True)
+            self._btnTablePlusRight.setHidden(True)
+            if self._blockFormatPosition != cursor.blockNumber():
+                self._btnTablePlusAbove.setHidden(True)
+                self._btnTablePlusBelow.setHidden(True)
+                self._blockFormatPosition = cursor.blockNumber()
+
+                self._btnPlus.setGeometry(self.viewportMargins().left(), rect.y(), 20, 20)
+                self._btnBlockFormat.setGeometry(self.viewportMargins().left() + 20, rect.y(), 20, 20)
+                self._btnPlus.setVisible(True)
+                self._btnBlockFormat.setVisible(True)
 
         if cursor.atBlockStart() or cursor.atBlockEnd():
             QApplication.restoreOverrideCursor()
@@ -260,6 +309,10 @@ class EnhancedTextEdit(QTextEdit):
         super(EnhancedTextEdit, self).leaveEvent(event)
         self._btnPlus.setHidden(True)
         self._btnBlockFormat.setHidden(True)
+        self._btnTablePlusAbove.setHidden(True)
+        self._btnTablePlusBelow.setHidden(True)
+        self._btnTablePlusLeft.setHidden(True)
+        self._btnTablePlusRight.setHidden(True)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
@@ -552,7 +605,11 @@ class EnhancedTextEdit(QTextEdit):
     def _insertBlock(self, blockNumber: int):
         block: QTextBlock = self.document().findBlockByNumber(blockNumber)
         cursor = QTextCursor(block)
-        cursor.movePosition(QTextCursor.EndOfBlock)
+        if cursor.currentTable():
+            print('table')
+            return
+        else:
+            cursor.movePosition(QTextCursor.EndOfBlock)
         self._insertNewBlock(cursor)
         self.setTextCursor(cursor)
 
@@ -564,6 +621,11 @@ class EnhancedTextEdit(QTextEdit):
             cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
         elif cursor.block().textList():
             cursor.insertBlock(cursor.blockFormat(), QTextCharFormat())
+        # elif cursor.currentTable():
+        #     print('table')
+        #     table: QTextTable = cursor.currentTable()
+        #     cell: QTextTableCell = table.cellAt(cursor)
+        #     table.insertRows(cell.row(), 1)
         else:
             cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
         self.ensureCursorVisible()
@@ -589,13 +651,62 @@ class EnhancedTextEdit(QTextEdit):
             cursor.deleteChar()
         cursor.endEditBlock()
 
+    def _insertRowAbove(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.insertRows(self._currentHoveredTableCell.row(), 1)
+
+    def _insertRowBelow(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.insertRows(self._currentHoveredTableCell.row() + 1, 1)
+
+    def _insertColumnLeft(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.insertColumns(self._currentHoveredTableCell.column(), 1)
+        self._resizeTableColumns(self._currentHoveredTable)
+
+    def _insertColumnRight(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.insertColumns(self._currentHoveredTableCell.column() + 1, 1)
+        self._resizeTableColumns(self._currentHoveredTable)
+
+    def _removeRow(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.removeRows(self._currentHoveredTableCell.row(), 1)
+        self._resizeTableColumns(self._currentHoveredTable)
+
+    def _removeColumn(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.removeColumns(self._currentHoveredTableCell.column(), 1)
+        self._resizeTableColumns(self._currentHoveredTable)
+
+    def _resizeTableColumns(self, table: QTextTable):
+        format: QTextTableFormat = table.format()
+        format.clearColumnWidthConstraints()
+
+        constraints = []
+        if table.columns() > 3:
+            percent = 100 // table.columns()
+        else:
+            percent = 25
+        for _ in range(table.columns()):
+            constraints.append(QTextLength(QTextLength.PercentageLength, percent))
+        format.setColumnWidthConstraints(constraints)
+        table.setFormat(format)
+
     def _showCommands(self):
         rect = self.cursorRect()
 
         menu = QMenu(self)
         menu.setToolTipsVisible(True)
         for op_clazz in [Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
-                         InsertNumberedListOperation, InsertDividerOperation, InsertGrayBannerOperation,
+                         InsertNumberedListOperation, InsertTableOperation, InsertDividerOperation,
+                         InsertGrayBannerOperation,
                          InsertRedBannerOperation,
                          InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation,
                          InsertPurpleBannerOperation]:
@@ -711,6 +822,8 @@ class TextEditorToolbar(QFrame):
             return InsertListOperation()
         if operationType == TextEditorOperationType.INSERT_NUMBERED_LIST:
             return InsertNumberedListOperation()
+        if operationType == TextEditorOperationType.INSERT_TABLE:
+            return InsertTableOperation()
         if operationType == TextEditorOperationType.INSERT_LINK:
             return InsertLinkOperation()
         if operationType == TextEditorOperationType.EXPORT_PDF:
@@ -739,6 +852,8 @@ class StandardTextEditorToolbar(TextEditorToolbar):
         self.addSeparator()
         self.addStandardOperation(TextEditorOperationType.INSERT_LIST)
         self.addStandardOperation(TextEditorOperationType.INSERT_NUMBERED_LIST)
+        self.addSeparator()
+        self.addStandardOperation(TextEditorOperationType.INSERT_TABLE)
         self.addSeparator()
         self.addStandardOperation(TextEditorOperationType.INSERT_LINK)
         self.addSpacer()
