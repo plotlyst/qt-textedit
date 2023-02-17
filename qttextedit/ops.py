@@ -300,6 +300,15 @@ class InsertNumberedListOperation(TextEditorOperationAction):
         self.triggered.connect(lambda: textEdit.textCursor().createList(QTextListFormat.ListDecimal))
 
 
+class InsertDividerOperation(TextEditorOperationAction):
+    def __init__(self, parent=None):
+        super(InsertDividerOperation, self).__init__('ri.separator', 'Divider', 'Insert horizontal divider',
+                                                     parent=parent)
+
+    def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
+        self.triggered.connect(lambda: textEdit.textCursor().insertHtml('<hr></hr>'))
+
+
 class InsertLinkOperation(TextEditorOperationAction):
     def __init__(self, parent=None):
         super(InsertLinkOperation, self).__init__('fa5s.link', 'Insert link', parent=parent)

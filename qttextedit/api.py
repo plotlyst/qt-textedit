@@ -16,7 +16,7 @@ from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatO
     AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation, InsertLinkOperation, \
     ExportPdfOperation, PrintOperation, TextEditorOperationAction, TextEditorOperationMenu, \
     TextEditorOperationWidgetAction, TextEditingSettingsOperation, TextEditorSettingsWidget, TextOperation, \
-    Heading1Operation, Heading2Operation, Heading3Operation
+    Heading1Operation, Heading2Operation, Heading3Operation, InsertDividerOperation
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
@@ -591,7 +591,7 @@ class EnhancedTextEdit(QTextEdit):
 
         menu = QMenu(self)
         for op_clazz in [Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
-                         InsertNumberedListOperation]:
+                         InsertNumberedListOperation, InsertDividerOperation]:
             action = op_clazz(menu)
             action.activateOperation(self)
             menu.addAction(action)
