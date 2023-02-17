@@ -7,7 +7,7 @@ from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, transluc
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
-    QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell
+    QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton
 
@@ -93,6 +93,12 @@ class EnhancedTextEdit(QTextEdit):
         self._btnTablePlusBelow.setHidden(True)
         self._btnTablePlusAbove.clicked.connect(self._insertRowAbove)
         self._btnTablePlusBelow.clicked.connect(self._insertRowBelow)
+        self._btnTablePlusLeft = _SideBarButton('fa5s.plus', 'Insert a new column to the left', parent=self)
+        self._btnTablePlusLeft.setHidden(True)
+        self._btnTablePlusRight = _SideBarButton('fa5s.plus', 'Insert a new column to the right', parent=self)
+        self._btnTablePlusRight.setHidden(True)
+        self._btnTablePlusLeft.clicked.connect(self._insertColumnLeft)
+        self._btnTablePlusRight.clicked.connect(self._insertColumnRight)
 
         self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below', parent=self)
         self._btnPlus.setHidden(True)
@@ -235,15 +241,30 @@ class EnhancedTextEdit(QTextEdit):
             self._btnPlus.setHidden(True)
             self._btnBlockFormat.setHidden(True)
 
-            self._btnTablePlusAbove.setGeometry(rect.x() - 12, rect.y() - 10, 16, 16)
+            self._btnTablePlusAbove.setGeometry(rect.x() - 16, rect.y() - 10, 16, 16)
             self._btnTablePlusAbove.setVisible(True)
             beginningCursor.movePosition(QTextCursor.EndOfBlock)
-            self._btnTablePlusBelow.setGeometry(rect.x() - 12, self.cursorRect(beginningCursor).y() + rect.height() - 8,
+            self._btnTablePlusBelow.setGeometry(rect.x() - 16, self.cursorRect(beginningCursor).y() + rect.height() - 8,
                                                 16, 16)
             self._btnTablePlusBelow.setVisible(True)
+
+            constraint: QTextLength = self._currentHoveredTable.format().columnWidthConstraints()[
+                self._currentHoveredTableCell.column()]
+            cell_width = self.document().size().width() * constraint.rawValue() / 100
+
+            self._btnTablePlusLeft.setGeometry(rect.x() - 8, rect.y() - 18, 16, 16)
+            self._btnTablePlusLeft.setVisible(True)
+
+            self._btnTablePlusRight.setGeometry(
+                rect.x() + cell_width - self._currentHoveredTable.format().leftMargin() - 20,
+                rect.y() - 18, 16, 16)
+            self._btnTablePlusRight.setVisible(True)
+
         else:
             self._btnTablePlusAbove.setHidden(True)
             self._btnTablePlusBelow.setHidden(True)
+            self._btnTablePlusLeft.setHidden(True)
+            self._btnTablePlusRight.setHidden(True)
             if self._blockFormatPosition != cursor.blockNumber():
                 self._btnTablePlusAbove.setHidden(True)
                 self._btnTablePlusBelow.setHidden(True)
@@ -285,6 +306,8 @@ class EnhancedTextEdit(QTextEdit):
         self._btnBlockFormat.setHidden(True)
         self._btnTablePlusAbove.setHidden(True)
         self._btnTablePlusBelow.setHidden(True)
+        self._btnTablePlusLeft.setHidden(True)
+        self._btnTablePlusRight.setHidden(True)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
@@ -632,6 +655,32 @@ class EnhancedTextEdit(QTextEdit):
         if self._currentHoveredTableCell is None:
             return
         self._currentHoveredTable.insertRows(self._currentHoveredTableCell.row() + 1, 1)
+
+    def _insertColumnLeft(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.insertColumns(self._currentHoveredTableCell.column(), 1)
+        self._resizeTableColumns(self._currentHoveredTable)
+
+    def _insertColumnRight(self):
+        if self._currentHoveredTableCell is None:
+            return
+        self._currentHoveredTable.insertColumns(self._currentHoveredTableCell.column() + 1, 1)
+        self._resizeTableColumns(self._currentHoveredTable)
+
+    def _resizeTableColumns(self, table: QTextTable):
+        format: QTextTableFormat = table.format()
+        format.clearColumnWidthConstraints()
+
+        constraints = []
+        if table.columns() > 3:
+            percent = 100 // table.columns()
+        else:
+            percent = 25
+        for _ in range(table.columns()):
+            constraints.append(QTextLength(QTextLength.PercentageLength, percent))
+        format.setColumnWidthConstraints(constraints)
+        table.setFormat(format)
 
     def _showCommands(self):
         rect = self.cursorRect()
