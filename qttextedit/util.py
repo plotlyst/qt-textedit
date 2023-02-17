@@ -91,7 +91,7 @@ def button(icon: str, tooltip: str = '', shortcut=None, checkable: bool = True) 
     return btn
 
 
-def qta_icon(name: str) -> QIcon:
+def qta_icon(name: str, color: str = 'black') -> QIcon:
     if name.startswith('md') or name.startswith('ri'):
-        return qtawesome.icon(name, options=[{'scale_factor': 1.2}])
-    return qtawesome.icon(name)
+        return qtawesome.icon(name, options=[{'scale_factor': 1.2}], color=color)
+    return qtawesome.icon(name, color=color)
