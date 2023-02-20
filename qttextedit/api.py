@@ -80,6 +80,7 @@ class EnhancedTextEdit(QTextEdit):
         self._blockAutoCapitalization: bool = True
         self._sentenceAutoCapitalization: bool = False
         self._uneditableBlocksEnabled: bool = False
+        self._sidebarEnabled: bool = True
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
         self._editionState: _TextEditionState = _TextEditionState.ALLOWED
         self._blockFormatPosition: int = -1
@@ -161,6 +162,12 @@ class EnhancedTextEdit(QTextEdit):
         self._uneditableBlocksEnabled = enabled
         if not enabled:
             self._editionState = _TextEditionState.ALLOWED
+
+    def sidebarEnabled(self) -> bool:
+        return self._sidebarEnabled
+
+    def setSidebarEnabled(self, value: bool):
+        self._sidebarEnabled = value
 
     def createEnhancedContextMenu(self, pos: QPoint) -> QMenu:
         menu = QMenu()
@@ -270,9 +277,7 @@ class EnhancedTextEdit(QTextEdit):
             self._btnTablePlusBelow.setHidden(True)
             self._btnTablePlusLeft.setHidden(True)
             self._btnTablePlusRight.setHidden(True)
-            if self._blockFormatPosition != cursor.blockNumber():
-                self._btnTablePlusAbove.setHidden(True)
-                self._btnTablePlusBelow.setHidden(True)
+            if self._sidebarEnabled and self._blockFormatPosition != cursor.blockNumber():
                 self._blockFormatPosition = cursor.blockNumber()
 
                 self._btnPlus.setGeometry(self.viewportMargins().left(), rect.y(), 20, 20)
