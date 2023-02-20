@@ -103,7 +103,7 @@ class EnhancedTextEdit(QTextEdit):
 
         self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below', parent=self)
         self._btnPlus.setHidden(True)
-        self._btnPlus.clicked.connect(lambda: self._insertBlock(self._blockFormatPosition))
+        self._btnPlus.clicked.connect(lambda: self._insertBlock(self._blockFormatPosition, showCommands=True))
 
         self._blockFormatMenu = QMenu()
         self._blockFormatMenu.setToolTipsVisible(True)
@@ -611,18 +611,18 @@ class EnhancedTextEdit(QTextEdit):
 
         return False
 
-    def _insertBlock(self, blockNumber: int):
+    def _insertBlock(self, blockNumber: int, showCommands: bool = False):
         block: QTextBlock = self.document().findBlockByNumber(blockNumber)
         cursor = QTextCursor(block)
         if cursor.currentTable():
-            print('table')
+            self._insertRowBelow()
             return
         else:
             cursor.movePosition(QTextCursor.EndOfBlock)
-        self._insertNewBlock(cursor)
+        self._insertNewBlock(cursor, showCommands)
         self.setTextCursor(cursor)
 
-    def _insertNewBlock(self, cursor: QTextCursor):
+    def _insertNewBlock(self, cursor: QTextCursor, showCommands: bool = False):
         if cursor.block().textList() and not cursor.block().text():
             list_ = cursor.block().textList()
             list_.remove(cursor.block())
@@ -630,13 +630,10 @@ class EnhancedTextEdit(QTextEdit):
             cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
         elif cursor.block().textList():
             cursor.insertBlock(cursor.blockFormat(), QTextCharFormat())
-        # elif cursor.currentTable():
-        #     print('table')
-        #     table: QTextTable = cursor.currentTable()
-        #     cell: QTextTableCell = table.cellAt(cursor)
-        #     table.insertRows(cell.row(), 1)
         else:
             cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
+            if showCommands:
+                self._showCommands()
         self.ensureCursorVisible()
 
     def _duplicateBlock(self, blockNumber: int):
@@ -709,6 +706,10 @@ class EnhancedTextEdit(QTextEdit):
         table.setFormat(format)
 
     def _showCommands(self):
+        def cleanUp():
+            if not self.textCursor().atBlockStart():
+                self.textCursor().deletePreviousChar()
+
         rect = self.cursorRect()
 
         menu = QMenu(self)
@@ -722,7 +723,7 @@ class EnhancedTextEdit(QTextEdit):
             action = op_clazz(menu)
             action.activateOperation(self)
             menu.addAction(action)
-        menu.aboutToHide.connect(self.textCursor().deletePreviousChar)
+        menu.aboutToHide.connect(cleanUp)
 
         menu.popup(self.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
