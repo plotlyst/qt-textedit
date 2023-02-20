@@ -169,6 +169,9 @@ class EnhancedTextEdit(QTextEdit):
     def setSidebarEnabled(self, value: bool):
         self._sidebarEnabled = value
 
+    def setDocumentMargin(self, value: int):
+        self.document().setDocumentMargin(value)
+
     def createEnhancedContextMenu(self, pos: QPoint) -> QMenu:
         menu = QMenu()
         menu.setToolTipsVisible(True)
