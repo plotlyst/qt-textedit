@@ -256,10 +256,11 @@ class EnhancedTextEdit(QTextEdit):
             self._btnPlus.setHidden(True)
             self._btnBlockFormat.setHidden(True)
 
-            self._btnTablePlusAbove.setGeometry(rect.x() - 16, rect.y() - 10, 16, 16)
+            self._btnTablePlusAbove.setGeometry(self.viewportMargins().left() + rect.x() - 16, rect.y() - 10, 16, 16)
             self._btnTablePlusAbove.setVisible(True)
             beginningCursor.movePosition(QTextCursor.EndOfBlock)
-            self._btnTablePlusBelow.setGeometry(rect.x() - 16, self.cursorRect(beginningCursor).y() + rect.height() - 8,
+            self._btnTablePlusBelow.setGeometry(self.viewportMargins().left() + rect.x() - 16,
+                                                self.cursorRect(beginningCursor).y() + rect.height() - 8,
                                                 16, 16)
             self._btnTablePlusBelow.setVisible(True)
 
@@ -267,11 +268,11 @@ class EnhancedTextEdit(QTextEdit):
                 self._currentHoveredTableCell.column()]
             cell_width = self.document().size().width() * constraint.rawValue() / 100
 
-            self._btnTablePlusLeft.setGeometry(rect.x() - 8, rect.y() - 18, 16, 16)
+            self._btnTablePlusLeft.setGeometry(self.viewportMargins().left() + rect.x() - 8, rect.y() - 18, 16, 16)
             self._btnTablePlusLeft.setVisible(True)
 
             self._btnTablePlusRight.setGeometry(
-                rect.x() + cell_width - self._currentHoveredTable.format().leftMargin() - 20,
+                self.viewportMargins().left() + rect.x() + cell_width - self._currentHoveredTable.format().leftMargin() - 20,
                 rect.y() - 18, 16, 16)
             self._btnTablePlusRight.setVisible(True)
 
