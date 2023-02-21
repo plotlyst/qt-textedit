@@ -188,6 +188,7 @@ class EnhancedTextEdit(QTextEdit):
 
         menu.addSeparator()
         paste_submenu = menu.addMenu('Paste as...')
+        paste_submenu.setToolTipsVisible(True)
         action = paste_submenu.addAction('Paste as plain text', self.pasteAsPlainText)
         action.setToolTip('Paste as plain text without any formatting')
         action = paste_submenu.addAction('Paste with original style', self.pasteAsOriginalText)
