@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from typing import Dict, Optional, Any, Type, Tuple
+from typing import Dict, Optional, Any, Type
 
 import qtawesome
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent
@@ -814,8 +814,7 @@ class TextEditorToolbar(QFrame):
         for btn in self._textEditorOperations.values():
             btn.op.updateFormat(textEdit)
 
-    def _initOperation(self, operationType: Type[TextEditorOperation]) -> Tuple[
-        TextEditorOperation, TextEditorOperationButton]:
+    def _initOperation(self, operationType: Type[TextEditorOperation]):
         operation = operationType()
         btn = TextEditorOperationButton(operation)
         self._textEditorOperations[operationType] = btn
