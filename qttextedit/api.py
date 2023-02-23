@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from typing import Dict, Optional, Any, Type
+from typing import Dict, Optional, Any, Type, Tuple
 
 import qtawesome
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent
@@ -776,13 +776,22 @@ class TextEditorToolbar(QFrame):
         self.btnGroupAlignment.setExclusive(True)
 
     def addTextEditorOperation(self, operationType: Type[TextEditorOperation]):
-        operation = operationType()
-        if operation:
-            btn = TextEditorOperationButton(operation)
-            self._textEditorOperations[operationType] = btn
-            self.layout().addWidget(btn)
-            if isinstance(operation, AlignmentOperation):
-                self.btnGroupAlignment.addButton(btn)
+        operation, btn = self._initOperation(operationType)
+        self.layout().addWidget(btn)
+
+    def insertTextEditorOperationBefore(self, reference: Type[TextEditorOperation],
+                                        operationType: Type[TextEditorOperation]):
+        refBtn = self._getOperationButtonOrFail(reference)
+        i = self.layout().indexOf(refBtn)
+        _, btn = self._initOperation(operationType)
+        self.layout().insertWidget(i, btn)
+
+    def insertTextEditorOperationAfter(self, reference: Type[TextEditorOperation],
+                                       operationType: Type[TextEditorOperation]):
+        refBtn = self._getOperationButtonOrFail(reference)
+        i = self.layout().indexOf(refBtn)
+        _, btn = self._initOperation(operationType)
+        self.layout().insertWidget(i + 1, btn)
 
     def addSeparator(self):
         self.layout().addWidget(vline())
@@ -804,6 +813,17 @@ class TextEditorToolbar(QFrame):
     def updateFormat(self, textEdit: QTextEdit):
         for btn in self._textEditorOperations.values():
             btn.op.updateFormat(textEdit)
+
+    def _initOperation(self, operationType: Type[TextEditorOperation]) -> Tuple[
+        TextEditorOperation, TextEditorOperationButton]:
+        operation = operationType()
+        btn = TextEditorOperationButton(operation)
+        self._textEditorOperations[operationType] = btn
+
+        if isinstance(operation, AlignmentOperation):
+            self.btnGroupAlignment.addButton(btn)
+
+        return operation, btn
 
     def _getOperationButtonOrFail(self, operationType: Type[TextEditorOperation]) -> TextEditorOperationButton:
         if operationType in self._textEditorOperations:
