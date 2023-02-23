@@ -1,6 +1,7 @@
 from qtpy.QtGui import QFont
 
-from qttextedit import EnhancedTextEdit, RichTextEditor, TextEditorOperationType, DashInsertionMode
+from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode
+from qttextedit.ops import BoldOperation, ItalicOperation, ColorOperation, UnderlineOperation, StrikethroughOperation
 from qttextedit.test.common import type_text, type_enter
 
 
@@ -91,41 +92,41 @@ def test_quotes(qtbot):
 def test_rich_texteditor(qtbot):
     editor = prepare_richtext_editor(qtbot)
 
-    assert editor.toolbar().standardOperation(TextEditorOperationType.BOLD).isVisible()
+    assert editor.toolbar().textEditorOperation(BoldOperation).isVisible()
 
 
 def test_bold_operation(qtbot):
     editor = prepare_richtext_editor(qtbot)
 
-    editor.toolbar().standardOperation(TextEditorOperationType.BOLD).trigger()
+    editor.toolbar().textEditorOperation(BoldOperation).trigger()
     assert editor.textEdit.fontWeight() == QFont.Bold
 
 
 def test_italic_operation(qtbot):
     editor = prepare_richtext_editor(qtbot)
 
-    editor.toolbar().standardOperation(TextEditorOperationType.ITALIC).trigger()
+    editor.toolbar().textEditorOperation(ItalicOperation).trigger()
     assert editor.textEdit.fontItalic()
 
 
 def test_underline_operation(qtbot):
     editor = prepare_richtext_editor(qtbot)
 
-    editor.toolbar().standardOperation(TextEditorOperationType.UNDERLINE).trigger()
+    editor.toolbar().textEditorOperation(UnderlineOperation).trigger()
     assert editor.textEdit.fontUnderline()
 
 
 def test_strikethrough_operation(qtbot):
     editor = prepare_richtext_editor(qtbot)
 
-    editor.toolbar().standardOperation(TextEditorOperationType.STRIKETHROUGH).trigger()
+    editor.toolbar().textEditorOperation(StrikethroughOperation).trigger()
     assert editor.textEdit.currentFont().strikeOut()
 
 
 def test_foreground_color(qtbot):
     editor = prepare_richtext_editor(qtbot)
 
-    color_op = editor.toolbar().standardOperation(TextEditorOperationType.COLOR)
+    color_op: ColorOperation = editor.toolbar().textEditorOperation(ColorOperation)
     item = color_op.wdgTextStyle.wdgForeground.layout().itemAt(0)
     item.widget().click()
 
@@ -135,7 +136,7 @@ def test_foreground_color(qtbot):
 def test_background_color(qtbot):
     editor = prepare_richtext_editor(qtbot)
 
-    color_op = editor.toolbar().standardOperation(TextEditorOperationType.COLOR)
+    color_op: ColorOperation = editor.toolbar().textEditorOperation(ColorOperation)
     item = color_op.wdgTextStyle.wdgBackground.layout().itemAt(0)
     item.widget().click()
 

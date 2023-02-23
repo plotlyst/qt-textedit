@@ -1,7 +1,7 @@
 from qthandy import vbox
 from qtpy.QtWidgets import QWidget
 
-from qttextedit import RichTextEditor, TextEditorOperationType, TextEditorSettingsButton
+from qttextedit import RichTextEditor, TextEditorSettingsButton
 from qttextedit.ops import TextEditorSettingsSection, TextEditingSettingsOperation
 from qttextedit.test.common import type_text
 
@@ -17,7 +17,7 @@ def prepare_richtext_editor(qtbot):
 
     qtbot.wait(15)
 
-    op: TextEditingSettingsOperation = editor.toolbar().standardOperation(TextEditorOperationType.EDITING_SETTINGS)
+    op: TextEditingSettingsOperation = editor.toolbar().textEditorOperation(TextEditingSettingsOperation)
     return widget, editor, op.settingsWidget()
 
 
@@ -26,7 +26,6 @@ def test_page_width(qtbot):
     settings.setSectionVisible(TextEditorSettingsSection.WIDTH, False)
     type_text(qtbot, editor, 'Test text')
 
-    # qtbot.stop()
     assert editor.widthPercentage() == 0
     wdg = settings.section(TextEditorSettingsSection.WIDTH)
     assert wdg.value() == 100
@@ -48,7 +47,7 @@ def test_separate_settings_btn(qtbot):
     widget, editor, settings = prepare_richtext_editor(qtbot)
     type_text(qtbot, editor, 'Test text')
 
-    editor.toolbar().setStandardOperationVisible(TextEditorOperationType.EDITING_SETTINGS, False)
+    editor.toolbar().setTextEditorOperationVisible(TextEditingSettingsOperation, False)
 
     btn = TextEditorSettingsButton(widget)
     widget.layout().addWidget(btn)

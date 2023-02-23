@@ -16,25 +16,6 @@ from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import button, qta_icon
 
 
-class TextEditorOperationType(Enum):
-    BOLD = 'bold'
-    ITALIC = 'italic'
-    UNDERLINE = 'underline'
-    STRIKETHROUGH = 'strikethrough'
-    FORMAT = 'format'
-    ALIGNMENT_LEFT = 'alignment_left'
-    ALIGNMENT_CENTER = 'alignment_center'
-    ALIGNMENT_RIGHT = 'alignment_right'
-    INSERT_LIST = 'insert_list'
-    INSERT_NUMBERED_LIST = 'insert_numbered_list'
-    INSERT_TABLE = 'insert_table'
-    INSERT_LINK = 'insert_link'
-    COLOR = 'color'
-    EXPORT_PDF = 'export_pdf'
-    PRINT = 'print'
-    EDITING_SETTINGS = 'editing_settings'
-
-
 class TextEditorOperation:
 
     @abstractmethod

@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from typing import List, Dict, Optional
+from typing import Dict, Optional, Any, Type
 
 import qtawesome
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent
@@ -11,14 +11,14 @@ from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFor
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton
 
-from qttextedit.ops import TextEditorOperationType, TextEditorOperation, FormatOperation, BoldOperation, \
-    ItalicOperation, UnderlineOperation, StrikethroughOperation, ColorOperation, AlignLeftOperation, \
-    AlignCenterOperation, AlignRightOperation, InsertListOperation, InsertNumberedListOperation, InsertLinkOperation, \
-    ExportPdfOperation, PrintOperation, TextEditorOperationAction, TextEditorOperationMenu, \
+from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumberedListOperation, \
+    TextEditorOperationAction, TextEditorOperationMenu, \
     TextEditorOperationWidgetAction, TextEditingSettingsOperation, TextEditorSettingsWidget, TextOperation, \
     Heading1Operation, Heading2Operation, Heading3Operation, InsertDividerOperation, InsertRedBannerOperation, \
     InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation, InsertPurpleBannerOperation, \
-    InsertGrayBannerOperation, InsertTableOperation
+    InsertGrayBannerOperation, InsertTableOperation, AlignmentOperation, FormatOperation, BoldOperation, \
+    ItalicOperation, UnderlineOperation, StrikethroughOperation, ColorOperation, AlignLeftOperation, \
+    AlignCenterOperation, AlignRightOperation, InsertLinkOperation, ExportPdfOperation, PrintOperation
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
@@ -771,17 +771,17 @@ class TextEditorToolbar(QFrame):
                             }
                         ''')
         hbox(self)
-        self._standardOperationButtons: Dict[TextEditorOperationType, TextEditorOperationButton] = {}
+        self._textEditorOperations: Dict[Any, TextEditorOperationButton] = {}
         self.btnGroupAlignment = QButtonGroup(self)
         self.btnGroupAlignment.setExclusive(True)
 
-    def addStandardOperation(self, operationType: TextEditorOperationType):
-        opAction = self._newOperation(operationType)
-        if opAction:
-            btn = TextEditorOperationButton(opAction)
-            self._standardOperationButtons[operationType] = btn
+    def addTextEditorOperation(self, operationType: Type[TextEditorOperation]):
+        operation = operationType()
+        if operation:
+            btn = TextEditorOperationButton(operation)
+            self._textEditorOperations[operationType] = btn
             self.layout().addWidget(btn)
-            if operationType.value.startswith('alignment'):
+            if isinstance(operation, AlignmentOperation):
                 self.btnGroupAlignment.addButton(btn)
 
     def addSeparator(self):
@@ -790,94 +790,54 @@ class TextEditorToolbar(QFrame):
     def addSpacer(self):
         self.layout().addWidget(spacer())
 
-    def setStandardOperationVisible(self, operationType: TextEditorOperationType, visible: bool):
+    def setTextEditorOperationVisible(self, operationType: Type[TextEditorOperation], visible: bool):
         op = self._getOperationButtonOrFail(operationType)
         op.setVisible(visible)
 
-    def standardOperation(self, operationType: TextEditorOperationType) -> TextEditorOperation:
+    def textEditorOperation(self, operationType: Type[TextEditorOperation]) -> TextEditorOperation:
         return self._getOperationButtonOrFail(operationType).op
 
     def activate(self, textEdit: QTextEdit, editor: Optional['RichTextEditor'] = None):
-        for btn in self._standardOperationButtons.values():
+        for btn in self._textEditorOperations.values():
             btn.op.activateOperation(textEdit, editor)
 
     def updateFormat(self, textEdit: QTextEdit):
-        for btn in self._standardOperationButtons.values():
+        for btn in self._textEditorOperations.values():
             btn.op.updateFormat(textEdit)
 
-    def _getOperationButtonOrFail(self, operationType: TextEditorOperationType) -> TextEditorOperationButton:
-        if operationType in self._standardOperationButtons:
-            return self._standardOperationButtons[operationType]
+    def _getOperationButtonOrFail(self, operationType: Type[TextEditorOperation]) -> TextEditorOperationButton:
+        if operationType in self._textEditorOperations:
+            return self._textEditorOperations[operationType]
         raise ValueError('Operation type is not present in the toolbar: %s', operationType)
-
-    def _newOperation(self, operationType: TextEditorOperationType) -> TextEditorOperation:
-        if operationType == TextEditorOperationType.FORMAT:
-            return FormatOperation()
-        if operationType == TextEditorOperationType.BOLD:
-            return BoldOperation()
-        if operationType == TextEditorOperationType.ITALIC:
-            return ItalicOperation()
-        if operationType == TextEditorOperationType.UNDERLINE:
-            return UnderlineOperation()
-        if operationType == TextEditorOperationType.STRIKETHROUGH:
-            return StrikethroughOperation()
-        if operationType == TextEditorOperationType.COLOR:
-            return ColorOperation()
-        if operationType == TextEditorOperationType.ALIGNMENT_LEFT:
-            return AlignLeftOperation()
-        if operationType == TextEditorOperationType.ALIGNMENT_CENTER:
-            return AlignCenterOperation()
-        if operationType == TextEditorOperationType.ALIGNMENT_RIGHT:
-            return AlignRightOperation()
-        if operationType == TextEditorOperationType.INSERT_LIST:
-            return InsertListOperation()
-        if operationType == TextEditorOperationType.INSERT_NUMBERED_LIST:
-            return InsertNumberedListOperation()
-        if operationType == TextEditorOperationType.INSERT_TABLE:
-            return InsertTableOperation()
-        if operationType == TextEditorOperationType.INSERT_LINK:
-            return InsertLinkOperation()
-        if operationType == TextEditorOperationType.EXPORT_PDF:
-            return ExportPdfOperation()
-        if operationType == TextEditorOperationType.PRINT:
-            return PrintOperation()
-        if operationType == TextEditorOperationType.EDITING_SETTINGS:
-            return TextEditingSettingsOperation()
 
 
 class StandardTextEditorToolbar(TextEditorToolbar):
     def __init__(self, parent=None):
         super(StandardTextEditorToolbar, self).__init__(parent)
-        self.addStandardOperation(TextEditorOperationType.FORMAT)
+        self.addTextEditorOperation(FormatOperation)
         self.addSeparator()
-        self.addStandardOperation(TextEditorOperationType.BOLD)
-        self.addStandardOperation(TextEditorOperationType.ITALIC)
-        self.addStandardOperation(TextEditorOperationType.UNDERLINE)
-        self.addStandardOperation(TextEditorOperationType.STRIKETHROUGH)
+        self.addTextEditorOperation(BoldOperation)
+        self.addTextEditorOperation(ItalicOperation)
+        self.addTextEditorOperation(UnderlineOperation)
+        self.addTextEditorOperation(StrikethroughOperation)
         self.addSeparator()
-        self.addStandardOperation(TextEditorOperationType.COLOR)
+        self.addTextEditorOperation(ColorOperation)
         self.addSeparator()
-        self.addStandardOperation(TextEditorOperationType.ALIGNMENT_LEFT)
-        self.addStandardOperation(TextEditorOperationType.ALIGNMENT_CENTER)
-        self.addStandardOperation(TextEditorOperationType.ALIGNMENT_RIGHT)
+        self.addTextEditorOperation(AlignLeftOperation)
+        self.addTextEditorOperation(AlignCenterOperation)
+        self.addTextEditorOperation(AlignRightOperation)
         self.addSeparator()
-        self.addStandardOperation(TextEditorOperationType.INSERT_LIST)
-        self.addStandardOperation(TextEditorOperationType.INSERT_NUMBERED_LIST)
+        self.addTextEditorOperation(InsertListOperation)
+        self.addTextEditorOperation(InsertNumberedListOperation)
         self.addSeparator()
-        self.addStandardOperation(TextEditorOperationType.INSERT_TABLE)
+        self.addTextEditorOperation(InsertTableOperation)
         self.addSeparator()
-        self.addStandardOperation(TextEditorOperationType.INSERT_LINK)
+        self.addTextEditorOperation(InsertLinkOperation)
         self.addSpacer()
-        self.addStandardOperation(TextEditorOperationType.EXPORT_PDF)
-        self.addStandardOperation(TextEditorOperationType.PRINT)
+        self.addTextEditorOperation(ExportPdfOperation)
+        self.addTextEditorOperation(PrintOperation)
         self.addSeparator()
-        self.addStandardOperation(TextEditorOperationType.EDITING_SETTINGS)
-
-    def setStandardOperations(self, operations: List[TextEditorOperationType]):
-        for op in TextEditorOperationType:
-            self.setStandardOperationVisible(op, False)
-        for op in operations:
-            self.setStandardOperationVisible(op, True)
+        self.addTextEditorOperation(TextEditingSettingsOperation)
 
 
 class TextEditorSettingsButton(TextEditorOperationButton):
@@ -897,13 +857,17 @@ class RichTextEditor(QWidget):
         self._settings: Optional[TextEditorSettingsWidget] = None
 
         self._toolbar = StandardTextEditorToolbar(self)
-        self.textEdit = self._initTextEdit()
+        self._textedit = self._initTextEdit()
 
         self.layout().addWidget(self._toolbar)
-        self.layout().addWidget(self.textEdit)
+        self.layout().addWidget(self._textedit)
 
-        self._toolbar.activate(self.textEdit, self)
-        self.textEdit.cursorPositionChanged.connect(lambda: self._toolbar.updateFormat(self.textEdit))
+        self._toolbar.activate(self._textedit, self)
+        self._textedit.cursorPositionChanged.connect(lambda: self._toolbar.updateFormat(self._textedit))
+
+    @property
+    def textEdit(self):
+        return self._textedit
 
     def toolbar(self) -> TextEditorToolbar:
         return self._toolbar
@@ -935,7 +899,7 @@ class RichTextEditor(QWidget):
     def _resize(self):
         margin = self.width() * (100 - self._widthPercentage) // 100
         margin = margin // 2
-        self.textEdit.setViewportMargins(margin, 0, margin, 0)
+        self._textedit.setViewportMargins(margin, 0, margin, 0)
         margins(self._toolbar, left=margin)
 
     def _initTextEdit(self) -> EnhancedTextEdit:
