@@ -267,6 +267,15 @@ class AlignRightOperation(AlignmentOperation):
         return Qt.AlignRight
 
 
+class AlignJustifyOperation(AlignmentOperation):
+    def __init__(self, parent=None):
+        super(AlignJustifyOperation, self).__init__('fa5s.align-justify', 'Align justify', checkable=True,
+                                                    parent=parent)
+
+    def alignment(self):
+        return Qt.AlignJustify
+
+
 class InsertListOperation(TextEditorOperationAction):
     def __init__(self, parent=None):
         super(InsertListOperation, self).__init__('fa5s.list', 'Bulleted list', 'Insert list', parent=parent)
