@@ -10,6 +10,7 @@ REQUIREMENTS: dict = {
     'core': [
         'qtpy',
         'qtawesome',
+        'qt-handy',
     ],
     'test': [
         'pytest',
