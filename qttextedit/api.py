@@ -5,11 +5,11 @@ from typing import Dict, Optional, Any, Type
 import qtawesome
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
-    QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat
+    QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat, QKeyEvent
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
-    QInputDialog, QToolButton
+    QInputDialog, QToolButton, QLineEdit
 
 from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumberedListOperation, \
     TextEditorOperationAction, TextEditorOperationMenu, \
@@ -868,6 +868,33 @@ class TextEditorSettingsButton(TextEditorOperationButton):
         return self._settingsOp.settingsWidget()
 
 
+class TextFindWidget(QFrame):
+    find = Signal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        vbox(self)
+        self._lineText = QLineEdit()
+        self._lineText.setPlaceholderText('Find...')
+        self._lineText.setClearButtonEnabled(True)
+        self._lineText.setMaximumWidth(150)
+        self.layout().addWidget(self._lineText)
+        margins(self, left=10)
+        self.setStyleSheet('''TextFindWidget {
+                                background-color: white;
+                            }''')
+
+        self._lineText.textChanged.connect(self.find.emit)
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key_Return and self._lineText.text():
+            print('find again')
+            self.find.emit(self._lineText.text())
+
+    def activate(self):
+        self._lineText.setFocus()
+
+
 class RichTextEditor(QWidget):
     def __init__(self, parent=None):
         super(RichTextEditor, self).__init__(parent)
@@ -876,9 +903,13 @@ class RichTextEditor(QWidget):
         self._settings: Optional[TextEditorSettingsWidget] = None
 
         self._toolbar = StandardTextEditorToolbar(self)
+        self._wdgFind = TextFindWidget(self)
+        self._wdgFind.setHidden(True)
         self._textedit = self._initTextEdit()
+        self._wdgFind.find.connect(self._find)
 
         self.layout().addWidget(self._toolbar)
+        self.layout().addWidget(self._wdgFind)
         self.layout().addWidget(self._textedit)
 
         self._toolbar.activate(self._textedit, self)
@@ -887,6 +918,13 @@ class RichTextEditor(QWidget):
     @property
     def textEdit(self):
         return self._textedit
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key_F and event.modifiers() & Qt.ControlModifier:
+            self._wdgFind.setVisible(True)
+            self._wdgFind.activate()
+        elif event.key() == Qt.Key_Escape and self._wdgFind.isVisible():
+            self._wdgFind.setHidden(True)
 
     def toolbar(self) -> TextEditorToolbar:
         return self._toolbar
@@ -923,3 +961,17 @@ class RichTextEditor(QWidget):
 
     def _initTextEdit(self) -> EnhancedTextEdit:
         return EnhancedTextEdit(self)
+
+    def _find(self, text: str):
+        # print(self._textedit.textCursor())
+        # print(self._textedit.textCursor().isNull())
+        # print(self._textedit.textCursor().position())
+        # if not self._textedit.textCursor().isNull():
+        cursor: QTextCursor = self._textedit.document().find(text, position=self._textedit.textCursor().position())
+        # else:
+        #     cursor = self._textedit.document().find(text)
+        if not cursor.isNull():
+            print('set cursor')
+            print(cursor.position())
+            self._textedit.setTextCursor(cursor)
+            self._textedit.ensureCursorVisible()
