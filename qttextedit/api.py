@@ -888,7 +888,7 @@ class TextFindWidget(QFrame):
         self.layout().addWidget(spacer())
         self.layout().addWidget(self._icon)
         self.layout().addWidget(self._lineText)
-        margins(self, left=10)
+        margins(self, right=10)
         self.setStyleSheet('''TextFindWidget {
                                 background-color: white;
                             }''')
