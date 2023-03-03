@@ -2,14 +2,16 @@ import re
 from enum import Enum
 from typing import Dict, Optional, Any, Type
 
+import qtanim
 import qtawesome
-from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent
+from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent, transparent
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
-    QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat
+    QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat, QKeyEvent, \
+    QColor
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
-    QInputDialog, QToolButton
+    QInputDialog, QToolButton, QLineEdit
 
 from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumberedListOperation, \
     TextEditorOperationAction, TextEditorOperationMenu, \
@@ -868,6 +870,49 @@ class TextEditorSettingsButton(TextEditorOperationButton):
         return self._settingsOp.settingsWidget()
 
 
+class TextFindWidget(QFrame):
+    find = Signal(str)
+    findNext = Signal(str)
+    closed = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        hbox(self)
+        self._icon = QToolButton()
+        transparent(self._icon)
+        self._icon.setIcon(qta_icon('mdi.magnify'))
+        self._lineText = QLineEdit()
+        self._lineText.setPlaceholderText('Find...')
+        self._lineText.setClearButtonEnabled(True)
+        self._lineText.setMaximumWidth(150)
+        self.layout().addWidget(spacer())
+        self.layout().addWidget(self._icon)
+        self.layout().addWidget(self._lineText)
+        margins(self, right=10)
+        self.setStyleSheet('''TextFindWidget {
+                                background-color: white;
+                            }''')
+
+        self._lineText.textChanged.connect(self.find.emit)
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key_Return and self._lineText.text():
+            self.findNext.emit(self._lineText.text())
+        elif event.key() == Qt.Key_Escape:
+            self.closed.emit()
+
+    def activate(self):
+        self._lineText.setFocus()
+
+    def showZeroFind(self):
+        qtanim.glow(self._lineText, duration=300)
+        qtanim.glow(self._icon, duration=300)
+
+    def showFindOver(self):
+        qtanim.glow(self._lineText, color=QColor('#ffb703'))
+        qtanim.glow(self._icon, color=QColor('#ffb703'))
+
+
 class RichTextEditor(QWidget):
     def __init__(self, parent=None):
         super(RichTextEditor, self).__init__(parent)
@@ -876,9 +921,17 @@ class RichTextEditor(QWidget):
         self._settings: Optional[TextEditorSettingsWidget] = None
 
         self._toolbar = StandardTextEditorToolbar(self)
+        self._wdgFind = TextFindWidget(self)
+        self._wdgFind.setHidden(True)
+        self._findCursor: Optional[QTextCursor] = None
+
         self._textedit = self._initTextEdit()
+        self._wdgFind.find.connect(self._find)
+        self._wdgFind.findNext.connect(self._findNext)
+        self._wdgFind.closed.connect(lambda: self._wdgFind.setHidden(True))
 
         self.layout().addWidget(self._toolbar)
+        self.layout().addWidget(self._wdgFind)
         self.layout().addWidget(self._textedit)
 
         self._toolbar.activate(self._textedit, self)
@@ -887,6 +940,13 @@ class RichTextEditor(QWidget):
     @property
     def textEdit(self):
         return self._textedit
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key_F and event.modifiers() & Qt.ControlModifier:
+            self._wdgFind.setVisible(True)
+            self._wdgFind.activate()
+        elif event.key() == Qt.Key_Escape and self._wdgFind.isVisible():
+            self._wdgFind.setHidden(True)
 
     def toolbar(self) -> TextEditorToolbar:
         return self._toolbar
@@ -923,3 +983,32 @@ class RichTextEditor(QWidget):
 
     def _initTextEdit(self) -> EnhancedTextEdit:
         return EnhancedTextEdit(self)
+
+    def _find(self, text: str):
+        if not text:
+            self._findCursor = None
+            return
+        match: QTextCursor = self._textedit.document().find(text)
+        if match.isNull():
+            self._wdgFind.showZeroFind()
+        else:
+            self._findCursor = match
+            self._textedit.setTextCursor(self._findCursor)
+            self._textedit.ensureCursorVisible()
+
+    def _findNext(self, text: str):
+        if self._findCursor is None:
+            match: QTextCursor = self._textedit.document().find(text)
+        else:
+            match = self._textedit.document().find(text, position=self._findCursor.position())
+
+        if match.isNull():
+            if self._findCursor is None:
+                self._wdgFind.showZeroFind()
+            else:
+                self._wdgFind.showFindOver()
+                self._findCursor = QTextCursor(self._textedit.document())
+        else:
+            self._findCursor = match
+            self._textedit.setTextCursor(self._findCursor)
+            self._textedit.ensureCursorVisible()
