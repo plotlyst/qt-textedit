@@ -4,7 +4,7 @@ from functools import partial
 from typing import List, Optional, Dict
 
 import qtawesome
-from qthandy import busy, vbox, line, bold, flow, margins
+from qthandy import busy, vbox, line, bold, flow, margins, vspacer
 from qtpy.QtCore import Qt, QSize, Signal, QTimer
 from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent, QTextFrameFormat, QTextTableFormat, \
     QTextLength
@@ -519,6 +519,7 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
     def __init__(self, parent=None):
         super().__init__('Font', parent)
         self._fontContainer = QWidget()
+        self._fontContainer.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         flow(self._fontContainer)
         margins(self._fontContainer, left=10)
 
@@ -580,6 +581,7 @@ class TextEditorSettingsWidget(QTabWidget):
         self._addDefaultSection(TextEditorSettingsSection.FONT)
         self._addDefaultSection(TextEditorSettingsSection.FONT_SIZE)
         self._addDefaultSection(TextEditorSettingsSection.WIDTH)
+        self._defaultTab.layout().addWidget(vspacer())
 
     def attach(self, editor):
         self._editor = editor
