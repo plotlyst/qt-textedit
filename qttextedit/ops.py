@@ -520,6 +520,7 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
         super().__init__('Font', parent)
         self._fontContainer = QWidget()
         flow(self._fontContainer)
+        margins(self._fontContainer, left=10)
 
         self._btnGroupFonts = QButtonGroup()
         self._btnGroupFonts.setExclusive(True)
