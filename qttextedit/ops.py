@@ -4,13 +4,13 @@ from functools import partial
 from typing import List, Optional, Dict
 
 import qtawesome
-from qthandy import busy, vbox, line, bold, flow
+from qthandy import busy, vbox, line, bold, flow, margins
 from qtpy.QtCore import Qt, QSize, Signal, QTimer
 from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent, QTextFrameFormat, QTextTableFormat, \
     QTextLength
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
-    QFileDialog, QLabel, QSlider, QButtonGroup, QPushButton, QRadioButton
+    QFileDialog, QLabel, QSlider, QButtonGroup, QPushButton, QRadioButton, QTabWidget
 
 from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import button, qta_icon
@@ -568,11 +568,13 @@ class FontSizeSectionSettingWidget(SliderSectionWidget):
         self._editor.textEdit.setFont(font)
 
 
-class TextEditorSettingsWidget(QWidget):
+class TextEditorSettingsWidget(QTabWidget):
     def __init__(self, parent=None):
         super(TextEditorSettingsWidget, self).__init__(parent)
         self._editor = None
-        vbox(self)
+        self._defaultTab = QWidget(self)
+        self.addTab(self._defaultTab, qta_icon('mdi.format-text'), '')
+        vbox(self._defaultTab)
 
         self._sections: Dict[TextEditorSettingsSection, AbstractSettingsSectionWidget] = {}
         self._addDefaultSection(TextEditorSettingsSection.FONT)
@@ -612,7 +614,7 @@ class TextEditorSettingsWidget(QWidget):
         if self._editor:
             wdg.attach(self._editor)
         self._sections[section] = wdg
-        self.layout().addWidget(wdg)
+        self._defaultTab.layout().addWidget(wdg)
 
 
 class TextEditingSettingsOperation(TextEditorOperationWidgetAction):
