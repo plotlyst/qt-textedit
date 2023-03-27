@@ -537,7 +537,7 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
         self._btnGroupFonts.buttonToggled.connect(self._changeFont)
 
     def _activate(self):
-        font_: QFont = self._editor.font()
+        font_: QFont = self._editor.textEdit.font()
         for btn in self._btnGroupFonts.buttons():
             if btn.text() == font_.family():
                 btn.setChecked(True)
@@ -547,9 +547,9 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
 
     def _changeFont(self, btn: QPushButton, toggled):
         if toggled:
-            font_: QFont = self._editor.font()
+            font_: QFont = self._editor.textEdit.font()
             font_.setFamily(btn.text())
-            self._editor.setFont(font_)
+            self._editor.textEdit.setFont(font_)
 
 
 class FontSizeSectionSettingWidget(SliderSectionWidget):
