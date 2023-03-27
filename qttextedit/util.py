@@ -100,4 +100,4 @@ def qta_icon(name: str, color: str = 'black') -> QIcon:
 
 
 def remove_font(html: str) -> str:
-    return re.sub('font-(family|size):(\'|")?(\w|\s|-)*(\'|")?;', '', html)
+    return re.sub(r'font-(family|size):(\'|"|\w|\s|-|,|%|\.)*;', '', html)
