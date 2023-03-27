@@ -10,7 +10,7 @@ from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent
     QTextLength
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
-    QFileDialog, QLabel, QSlider, QButtonGroup, QPushButton, QRadioButton, QTabWidget
+    QFileDialog, QLabel, QSlider, QButtonGroup, QRadioButton, QTabWidget
 
 from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import button, qta_icon
@@ -511,7 +511,20 @@ class PageWidthSectionSettingWidget(SliderSectionWidget):
         self._editor.setWidthPercentage(value)
 
 
-DEFAULT_FONT_FAMILIES = ['Times New Roman', 'Helvetica', "Arial", "Courier New"]
+DEFAULT_FONT_FAMILIES = ['Times New Roman', 'Helvetica', 'Calibri', 'Futura', 'Garamond', 'Arial', 'Courier New']
+
+
+class FontRadioButton(QRadioButton):
+    def __init__(self, family: str, parent=None):
+        super(FontRadioButton, self).__init__(family, parent)
+        self._family = family
+        self.setCheckable(True)
+        font = self.font()
+        font.setFamily(family)
+        self.setFont(font)
+
+    def family(self) -> str:
+        return self._family
 
 
 class FontSectionSettingWidget(AbstractSettingsSectionWidget):
@@ -526,9 +539,8 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
         self._btnGroupFonts = QButtonGroup()
         self._btnGroupFonts.setExclusive(True)
 
-        for f in DEFAULT_FONT_FAMILIES:
-            btn = QRadioButton(f, self)
-            btn.setCheckable(True)
+        for family in DEFAULT_FONT_FAMILIES:
+            btn = FontRadioButton(family, self)
             self._btnGroupFonts.addButton(btn)
             self._fontContainer.layout().addWidget(btn)
 
@@ -539,16 +551,16 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
     def _activate(self):
         font_: QFont = self._editor.textEdit.font()
         for btn in self._btnGroupFonts.buttons():
-            if btn.text() == font_.family():
+            if btn.family() == font_.family():
                 btn.setChecked(True)
 
     def _deactivate(self):
         pass
 
-    def _changeFont(self, btn: QPushButton, toggled):
+    def _changeFont(self, btn: FontRadioButton, toggled):
         if toggled:
             font_: QFont = self._editor.textEdit.font()
-            font_.setFamily(btn.text())
+            font_.setFamily(btn.family())
             self._editor.textEdit.setFont(font_)
 
 
