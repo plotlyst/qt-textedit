@@ -1,3 +1,5 @@
+import re
+
 import qtawesome
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QTextCursor, QIcon
@@ -95,3 +97,7 @@ def qta_icon(name: str, color: str = 'black') -> QIcon:
     if name.startswith('md') or name.startswith('ri'):
         return qtawesome.icon(name, options=[{'scale_factor': 1.2}], color=color)
     return qtawesome.icon(name, color=color)
+
+
+def remove_font(html: str) -> str:
+    return re.sub('font-(family|size):(\'|")?(\w|\s|-)*(\'|")?;', '', html)

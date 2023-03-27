@@ -1,4 +1,3 @@
-import re
 from enum import Enum
 from typing import Dict, Optional, Any, Type
 
@@ -24,7 +23,7 @@ from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumbe
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
-    SHORT_ARROW_LEFT_RIGHT, qta_icon
+    SHORT_ARROW_LEFT_RIGHT, qta_icon, remove_font
 
 
 class DashInsertionMode(Enum):
@@ -243,9 +242,10 @@ class EnhancedTextEdit(QTextEdit):
         elif self._pasteAsOriginal:
             super(EnhancedTextEdit, self).insertFromMimeData(source)
         else:
-            html = source.html()
-            html = re.sub('font-family', '', html)
-            self.insertHtml(html)
+            if source.hasHtml():
+                self.insertHtml(remove_font(source.html()))
+            elif source.hasText():
+                self.insertPlainText(source.text())
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         super(EnhancedTextEdit, self).mouseMoveEvent(event)
