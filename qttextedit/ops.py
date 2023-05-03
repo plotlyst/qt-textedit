@@ -511,7 +511,7 @@ class PageWidthSectionSettingWidget(SliderSectionWidget):
         self._editor.setWidthPercentage(value)
 
 
-DEFAULT_FONT_FAMILIES = ['Times New Roman', 'Helvetica', 'Calibri', 'Futura', 'Garamond', 'Arial', 'Courier New']
+DEFAULT_FONT_FAMILIES = ['Times New Roman', 'Helvetica', 'Futura', 'Garamond', 'Arial', 'Courier New']
 
 
 class FontRadioButton(QRadioButton):
