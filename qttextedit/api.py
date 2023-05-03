@@ -3,9 +3,9 @@ from typing import Dict, Optional, Any, Type
 
 import qtanim
 import qtawesome
-from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent, transparent
+from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent, transparent, clear_layout, pointy
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal, QMargins
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat, QKeyEvent, \
     QColor
@@ -771,12 +771,16 @@ class TextEditorToolbar(QFrame):
                             }
                         ''')
         hbox(self)
+        self._linkedTextEdit: Optional[QTextEdit] = None
+        self._linkedTextEditor: Optional['RichTextEditor'] = None
         self._textEditorOperations: Dict[Any, TextEditorOperationButton] = {}
         self.btnGroupAlignment = QButtonGroup(self)
         self.btnGroupAlignment.setExclusive(True)
 
     def addTextEditorOperation(self, operationType: Type[TextEditorOperation]):
         operation, btn = self._initOperation(operationType)
+        if self._linkedTextEdit:
+            operation.activateOperation(self._linkedTextEdit, self._linkedTextEditor)
         self.layout().addWidget(btn)
 
     def insertTextEditorOperationBefore(self, reference: Type[TextEditorOperation],
@@ -793,6 +797,9 @@ class TextEditorToolbar(QFrame):
         _, btn = self._initOperation(operationType)
         self.layout().insertWidget(i + 1, btn)
 
+    def addWidget(self, widget):
+        self.layout().addWidget(widget)
+
     def addSeparator(self):
         self.layout().addWidget(vline())
 
@@ -806,7 +813,13 @@ class TextEditorToolbar(QFrame):
     def textEditorOperation(self, operationType: Type[TextEditorOperation]) -> TextEditorOperation:
         return self._getOperationButtonOrFail(operationType).op
 
+    def clear(self):
+        self._textEditorOperations.clear()
+        clear_layout(self)
+
     def activate(self, textEdit: QTextEdit, editor: Optional['RichTextEditor'] = None):
+        self._linkedTextEdit = textEdit
+        self._linkedTextEditor = editor
         for btn in self._textEditorOperations.values():
             btn.op.activateOperation(textEdit, editor)
 
