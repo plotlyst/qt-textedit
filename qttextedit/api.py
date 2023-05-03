@@ -1004,7 +1004,8 @@ class RichTextEditor(QWidget):
             margin = 0
 
         margin = margin // 2
-        self._textedit.setViewportMargins(margin, 0, margin, 0)
+        current_margins: QMargins = self._textedit.viewportMargins()
+        self._textedit.setViewportMargins(margin, current_margins.top(), margin, current_margins.bottom())
         margins(self._toolbar, left=margin)
 
     def _initTextEdit(self) -> EnhancedTextEdit:
