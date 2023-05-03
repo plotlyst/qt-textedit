@@ -735,9 +735,7 @@ class TextEditorOperationButton(QToolButton):
     def __init__(self, op: TextEditorOperation, parent=None):
         super(TextEditorOperationButton, self).__init__(parent)
         self.op: TextEditorOperation = op
-
-        self.setIconSize(QSize(18, 18))
-        self.setCursor(Qt.PointingHandCursor)
+        pointy(self)
 
         if isinstance(self.op, TextEditorOperationAction):
             self.setDefaultAction(self.op)
