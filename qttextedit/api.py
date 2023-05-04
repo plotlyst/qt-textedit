@@ -653,6 +653,13 @@ class EnhancedTextEdit(QTextEdit):
 
     def _deleteBlock(self, blockNumber: int):
         block: QTextBlock = self.document().findBlockByNumber(blockNumber)
+        if self.__blockUneditable(block):
+            return
+        cursor = QTextCursor(block)
+        cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
+        if self.__blockUneditable(cursor.block()):
+            return
+
         cursor = QTextCursor(block)
         cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
         cursor.beginEditBlock()
