@@ -523,6 +523,7 @@ class EnhancedTextEdit(QTextEdit):
     def _cursorPositionChanged(self):
         if not self._uneditableBlocksEnabled:
             return
+
         if self.textCursor().block().userState() == TextBlockState.UNEDITABLE.value:
             cursor = self.textCursor()
             self._editionState = _TextEditionState.DISALLOWED
@@ -534,6 +535,7 @@ class EnhancedTextEdit(QTextEdit):
             cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
             if cursor.block().userState() == TextBlockState.UNEDITABLE.value:
                 self._editionState = _TextEditionState.DEL_BLOCKED
+                return
         if self.textCursor().atBlockStart():
             cursor = self.textCursor()
             cursor.movePosition(QTextCursor.MoveOperation.PreviousBlock)
@@ -548,7 +550,6 @@ class EnhancedTextEdit(QTextEdit):
 
     def _selectionChanged(self):
         if not self.textCursor().hasSelection():
-            self._editionState = _TextEditionState.ALLOWED
             return
         if not self._uneditableBlocksEnabled:
             return

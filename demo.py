@@ -21,12 +21,14 @@ class MainWindow(QMainWindow):
         self.editor = RichTextEditor()
         self.editor.setCharacterWidth()
         self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
-        self.editor.textEdit.setAutoCapitalizationEnabled(True)
+        self.editor.textEdit.setAutoCapitalizationEnabled(False)
         self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
 
         self.editor.textEdit.setPlaceholderText('Write text')
         ps = self.editor.textEdit.font().pointSize()
         self.editor.textEdit.zoomIn(ps * 0.47)
+
+        self.insertNonEditableBlock()
 
         self.sourceViewed = QTextEdit()
         self.sourceViewed.setReadOnly(True)
