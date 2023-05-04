@@ -959,6 +959,8 @@ class RichTextEditor(QWidget):
             self._wdgFind.activate()
         elif event.key() == Qt.Key_Escape and self._wdgFind.isVisible():
             self._wdgFind.setHidden(True)
+        else:
+            super(RichTextEditor, self).keyPressEvent(event)
 
     def toolbar(self) -> TextEditorToolbar:
         return self._toolbar
