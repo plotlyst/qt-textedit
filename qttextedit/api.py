@@ -651,13 +651,13 @@ class EnhancedTextEdit(QTextEdit):
         self.textCursor().insertFragment(fragment)
         cursor.endEditBlock()
 
-    def _deleteBlock(self, blockNumber: int):
+    def _deleteBlock(self, blockNumber: int, force: bool = False):
         block: QTextBlock = self.document().findBlockByNumber(blockNumber)
-        if self.__blockUneditable(block):
+        if self.__blockUneditable(block) and not force:
             return
         cursor = QTextCursor(block)
         cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
-        if self.__blockUneditable(cursor.block()):
+        if self.__blockUneditable(cursor.block()) and not force:
             return
 
         cursor = QTextCursor(block)
