@@ -21,6 +21,8 @@ SHORT_ARROW_LEFT_RIGHT = u'\u21C4'
 OPEN_QUOTATIONS = ('"', LEFT_DOUBLE_QUOTATION, "«", "‹", "“")
 ENDING_PUNCTUATIONS = ('.', '?', '!')
 
+OBJECT_REPLACEMENT_CHARACTER = u'\uFFFC'
+
 
 def is_open_quotation(char: str) -> bool:
     return char in OPEN_QUOTATIONS
