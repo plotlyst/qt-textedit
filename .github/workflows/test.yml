@@ -19,9 +19,6 @@ jobs:
             os: ubuntu-20.04
           - python-version: '3.7'
             pyqt: 'PyQt5'
-            os: macos-10.15
-          - python-version: '3.7'
-            pyqt: 'PyQt5'
             os: macos-11
           - python-version: '3.7'
             pyqt: 'PyQt5'
