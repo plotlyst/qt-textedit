@@ -186,14 +186,18 @@ class EnhancedTextEdit(QTextEdit):
         action.setToolTip('Copy selected text')
         action = menu.addAction(qtawesome.icon('fa5s.paste'), 'Paste', self.paste)
         action.setToolTip('Paste from clipboard and adjust to the current style')
+        action.setDisabled(self.isReadOnly())
 
         menu.addSeparator()
         paste_submenu = menu.addMenu('Paste as...')
         paste_submenu.setToolTipsVisible(True)
+        paste_submenu.setDisabled(self.isReadOnly())
         action = paste_submenu.addAction('Paste as plain text', self.pasteAsPlainText)
         action.setToolTip('Paste as plain text without any formatting')
+        action.setDisabled(self.isReadOnly())
         action = paste_submenu.addAction('Paste with original style', self.pasteAsOriginalText)
         action.setToolTip('Paste with the original formatting')
+        action.setDisabled(self.isReadOnly())
 
         anchor = self.anchorAt(pos)
         if anchor:
