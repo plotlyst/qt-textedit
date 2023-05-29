@@ -383,7 +383,7 @@ class EnhancedTextEdit(QTextEdit):
                     self._sentenceAutoCapitalization and self._atSentenceStart(cursor)):
                 self.textCursor().insertText(event.text().upper())
                 return
-        if event.key() == Qt.Key_Return:
+        if event.key() == Qt.Key_Return and not event.modifiers():
             self._insertNewBlock(cursor)
             return
         if event.key() == Qt.Key_Period:
