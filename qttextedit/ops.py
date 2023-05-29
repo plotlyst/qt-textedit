@@ -336,11 +336,10 @@ class InsertBannerOperation(TextEditorOperationAction):
 
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
         frameFormat = QTextFrameFormat()
-        frameFormat.setBorder(2)
-        frameFormat.setLeftMargin(5)
-        frameFormat.setRightMargin(5)
+        frameFormat.setPadding(10)
         frameFormat.setTopMargin(1)
         frameFormat.setBottomMargin(1)
+        frameFormat.setBorder(1)
         frameFormat.setBorderStyle(QTextFrameFormat.BorderStyle.BorderStyle_Inset)
         frameFormat.setBorderBrush(QColor(self._borderColor))
         frameFormat.setBackground(QColor(self._bgColor))
@@ -349,32 +348,32 @@ class InsertBannerOperation(TextEditorOperationAction):
 
 class InsertRedBannerOperation(InsertBannerOperation):
     def __init__(self, parent=None):
-        super(InsertRedBannerOperation, self).__init__('#F0344A', '#FDE0E3', 'Red', parent)
+        super(InsertRedBannerOperation, self).__init__('#E30040', '#FFEDF0', 'Red', parent)
 
 
 class InsertGrayBannerOperation(InsertBannerOperation):
     def __init__(self, parent=None):
-        super(InsertGrayBannerOperation, self).__init__('#6C757D', '#EAEBED', 'Gray', parent)
+        super(InsertGrayBannerOperation, self).__init__('#313240', '#EEEFF0', 'Gray', parent)
 
 
 class InsertBlueBannerOperation(InsertBannerOperation):
     def __init__(self, parent=None):
-        super(InsertBlueBannerOperation, self).__init__('#00669D', '#D0EFFF', 'Blue', parent)
+        super(InsertBlueBannerOperation, self).__init__('#2076DF', '#EBF5FD', 'Blue', parent)
 
 
 class InsertGreenBannerOperation(InsertBannerOperation):
     def __init__(self, parent=None):
-        super(InsertGreenBannerOperation, self).__init__('#2D6A4F', '#C9E8DA', 'Green', parent)
+        super(InsertGreenBannerOperation, self).__init__('#009C48', '#E8F8F0', 'Green', parent)
 
 
 class InsertYellowBannerOperation(InsertBannerOperation):
     def __init__(self, parent=None):
-        super(InsertYellowBannerOperation, self).__init__('#EDB600', '#FFF7DB', 'Yellow', parent)
+        super(InsertYellowBannerOperation, self).__init__('#FDB80F', '#FDFCEB', 'Yellow', parent)
 
 
 class InsertPurpleBannerOperation(InsertBannerOperation):
     def __init__(self, parent=None):
-        super(InsertPurpleBannerOperation, self).__init__('#7B2CBF', '#ECDFF8', 'Purple', parent)
+        super(InsertPurpleBannerOperation, self).__init__('#8100EC', '#F4EDFE', 'Purple', parent)
 
 
 class InsertLinkOperation(TextEditorOperationAction):
