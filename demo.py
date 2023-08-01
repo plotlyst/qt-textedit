@@ -25,8 +25,7 @@ class MainWindow(QMainWindow):
         self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
 
         self.editor.textEdit.setPlaceholderText('Write text')
-        ps = self.editor.textEdit.font().pointSize()
-        self.editor.textEdit.zoomIn(ps * 0.47)
+        self.editor.textEdit.zoomIn(4)
 
         self.insertNonEditableBlock()
 

@@ -1017,7 +1017,7 @@ class RichTextEditor(QWidget):
         else:
             margin = 0
 
-        margin = margin // 2
+        margin = int(margin // 2)
         current_margins: QMargins = self._textedit.viewportMargins()
         self._textedit.setViewportMargins(margin, current_margins.top(), margin, current_margins.bottom())
         margins(self._toolbar, left=margin)
