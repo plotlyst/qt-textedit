@@ -534,12 +534,12 @@ class EnhancedTextEdit(QTextEdit):
             cursor.movePosition(QTextCursor.StartOfBlock)
             self.setTextCursor(cursor)
             return
+
         if self.textCursor().atBlockEnd():
             cursor = self.textCursor()
             cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
             if cursor.block().userState() == TextBlockState.UNEDITABLE.value:
                 self._editionState = _TextEditionState.DEL_BLOCKED
-                return
         if self.textCursor().atBlockStart():
             cursor = self.textCursor()
             cursor.movePosition(QTextCursor.MoveOperation.PreviousBlock)
