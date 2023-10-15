@@ -279,8 +279,8 @@ class EnhancedTextEdit(QTextEdit):
             self._btnTablePlusLeft.setVisible(True)
 
             self._btnTablePlusRight.setGeometry(
-                self.viewportMargins().left() + rect.x() + cell_width - self._currentHoveredTable.format().leftMargin() - 20,
-                rect.y() - 18, 16, 16)
+                int(self.viewportMargins().left() + rect.x() + cell_width - self._currentHoveredTable.format().leftMargin() - 20),
+                int(rect.y() - 18), 16, 16)
             self._btnTablePlusRight.setVisible(True)
 
         else:

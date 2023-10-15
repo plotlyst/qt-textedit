@@ -27,8 +27,6 @@ class MainWindow(QMainWindow):
         self.editor.textEdit.setPlaceholderText('Write text')
         self.editor.textEdit.zoomIn(4)
 
-        self.insertNonEditableBlock()
-
         self.sourceViewed = QTextEdit()
         self.sourceViewed.setReadOnly(True)
         self.sourceViewed.setAcceptRichText(False)
