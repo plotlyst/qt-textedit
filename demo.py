@@ -4,7 +4,7 @@ from qthandy import vbox
 from qtpy.QtWidgets import QMainWindow, QApplication, QWidget
 from qtpy.QtWidgets import QTextEdit
 
-from qttextedit import RichTextEditor, DashInsertionMode, TextBlockState
+from qttextedit import RichTextEditor, DashInsertionMode, TextBlockState, EnhancedTextEdit
 
 
 class MainWindow(QMainWindow):
@@ -27,15 +27,21 @@ class MainWindow(QMainWindow):
         self.editor.textEdit.setPlaceholderText('Write text')
         self.editor.textEdit.zoomIn(4)
 
-        self.sourceViewed = QTextEdit()
-        self.sourceViewed.setReadOnly(True)
-        self.sourceViewed.setAcceptRichText(False)
+        self.sourceViewed = EnhancedTextEdit()
+        # self.sourceViewed.setReadOnly(True)
+        # self.sourceViewed.setAcceptRichText(False)
 
         self.widget.layout().addWidget(self.editor)
         self.widget.layout().addWidget(self.sourceViewed)
 
-        self.editor.textEdit.textChanged.connect(lambda: self.sourceViewed.setPlainText(self.editor.textEdit.toHtml()))
+        # self.editor.textEdit.textChanged.connect(lambda: self.sourceViewed.setPlainText(self.editor.textEdit.toHtml()))
+        self.editor.textEdit.textChanged.connect(self._textChanged)
         self.editor.textEdit.setFocus()
+
+        # self.insertNonEditableBlock()
+        # self.insertNonEditableBlock()
+
+        self.editor.textEdit.content()
 
     def insertNonEditableBlock(self):
         self.editor.textEdit.setUneditableBlocksEnabled(True)
@@ -49,6 +55,10 @@ class MainWindow(QMainWindow):
     def zoom(self):
         ps = self.editor.textEdit.font().pointSize()
         self.editor.textEdit.zoomIn(ps * 0.1)
+
+    def _textChanged(self):
+        content = self.editor.textEdit.content()
+        self.sourceViewed.setContent(content)
 
 
 if __name__ == '__main__':

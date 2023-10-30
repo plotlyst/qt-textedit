@@ -1,5 +1,6 @@
+from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Optional, Any, Type
+from typing import Dict, Optional, Any, Type, List
 
 import qtanim
 import qtawesome
@@ -70,6 +71,12 @@ class _SideBarButton(QToolButton):
         ''')
         translucent(self)
         self.setIconSize(QSize(18, 18))
+
+
+@dataclass
+class BlockContent:
+    type: str
+    content: str
 
 
 class EnhancedTextEdit(QTextEdit):
@@ -172,6 +179,45 @@ class EnhancedTextEdit(QTextEdit):
 
     def setDocumentMargin(self, value: int):
         self.document().setDocumentMargin(value)
+
+    def content(self) -> List[BlockContent]:
+        print('CONTENTS:')
+        blockContents = []
+
+        cursor: QTextCursor = QTextCursor(self.document())
+        block: QTextBlock = self.document().begin()
+
+        for i in range(self.document().blockCount()):
+            block: QTextBlock = self.document().findBlockByNumber(i)
+        # while block.isValid():
+            cursor = QTextCursor(block)
+            cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
+            # cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock, QTextCursor.MoveMode.MoveAnchor)
+            # cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+            print('---------------------')
+            # print(cursor.currentList())
+            # if cursor.selectedText():
+            print(cursor.selectedText())
+            #     print(cursor.selection().toPlainText())
+            #     print(ord(cursor.selection().toPlainText()[0]))
+            #
+            # if cursor.currentList():
+            #     i = cursor.currentList().itemNumber(block)
+            #     print(cursor.currentList().itemText(block))
+            # else:
+            html = self._htmlBody(cursor.selection().toHtml())
+            print(html)
+            # block = block.next()
+            blockContent = BlockContent('', html)
+            blockContents.append(blockContent)
+
+        return blockContents
+
+    def setContent(self, content: List[BlockContent]):
+        self.clear()
+        for bc in content:
+            self.textCursor().insertHtml(bc.content)
+            self.textCursor().insertBlock(self._defaultBlockFormat)
 
     def createEnhancedContextMenu(self, pos: QPoint) -> QMenu:
         menu = QMenu()
@@ -597,6 +643,19 @@ class EnhancedTextEdit(QTextEdit):
             char_format: QTextCharFormat = pos_cursor.charFormat()
             char_format.setAnchorHref(anchor)
             pos_cursor.mergeCharFormat(char_format)
+
+    def _htmlBody(self, html: str) -> str:
+        body_index = html.find("<body>")
+
+        if body_index != -1:
+            cleaned_html = html[body_index + len("<body>"):]
+            end_body_index = cleaned_html.find("</body>")
+
+            if end_body_index != -1:
+                cleaned_html = cleaned_html[:end_body_index]
+            return cleaned_html
+        else:
+            return html
 
     def _atSentenceStart(self, cursor: QTextCursor) -> bool:
         if cursor.atBlockStart():
