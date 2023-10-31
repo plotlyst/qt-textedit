@@ -291,8 +291,11 @@ class EnhancedTextEdit(QTextEdit):
             if self._sidebarEnabled and self._blockFormatPosition != cursor.blockNumber():
                 self._blockFormatPosition = cursor.blockNumber()
 
-                self._btnPlus.setGeometry(self.viewportMargins().left(), rect.y(), 20, 20)
-                self._btnBlockFormat.setGeometry(self.viewportMargins().left() + 20, rect.y(), 20, 20)
+                cursor_height = self.cursorRect(cursor).height()
+                y_diff = (cursor_height - 20) // 2
+
+                self._btnPlus.setGeometry(self.viewportMargins().left(), rect.y() + y_diff, 20, 20)
+                self._btnBlockFormat.setGeometry(self.viewportMargins().left() + 20, rect.y() + y_diff, 20, 20)
                 self._btnPlus.setVisible(True)
                 self._btnBlockFormat.setVisible(True)
 
