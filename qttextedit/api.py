@@ -938,6 +938,8 @@ class TextFindWidget(QFrame):
 
 
 class RichTextEditor(QWidget):
+    settingsAttached = Signal()
+
     def __init__(self, parent=None):
         super(RichTextEditor, self).__init__(parent)
         vbox(self, 0, 0)
@@ -989,6 +991,7 @@ class RichTextEditor(QWidget):
             self._settings.detach()
         self._settings = widget
         widget.attach(self)
+        self.settingsAttached.emit()
 
     def widthPercentage(self) -> int:
         return self._widthPercentage
