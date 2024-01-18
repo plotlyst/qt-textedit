@@ -527,6 +527,7 @@ class FontRadioButton(QRadioButton):
 
 
 class FontSectionSettingWidget(AbstractSettingsSectionWidget):
+    fontSelected = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__('Font', parent)
@@ -546,6 +547,7 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
         self.layout().addWidget(self._fontContainer)
 
         self._btnGroupFonts.buttonToggled.connect(self._changeFont)
+        self._btnGroupFonts.buttonClicked.connect(self._fontClicked)
 
     def _activate(self):
         font_: QFont = self._editor.textEdit.font()
@@ -561,6 +563,9 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
             font_: QFont = self._editor.textEdit.font()
             font_.setFamily(btn.family())
             self._editor.textEdit.setFont(font_)
+
+    def _fontClicked(self, btn: FontRadioButton):
+        self.fontSelected.emit(btn.family())
 
 
 class FontSizeSectionSettingWidget(SliderSectionWidget):
