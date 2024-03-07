@@ -82,6 +82,7 @@ class EnhancedTextEdit(QTextEdit):
         self._sentenceAutoCapitalization: bool = False
         self._uneditableBlocksEnabled: bool = False
         self._sidebarEnabled: bool = True
+        self._commandsEnabled: bool = True
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
         self._editionState: _TextEditionState = _TextEditionState.ALLOWED
         self._blockFormatPosition: int = -1
@@ -169,6 +170,9 @@ class EnhancedTextEdit(QTextEdit):
 
     def setSidebarEnabled(self, value: bool):
         self._sidebarEnabled = value
+
+    def setCommandsEnabled(self, value: bool):
+        self._commandsEnabled = value
 
     def setDocumentMargin(self, value: int):
         self.document().setDocumentMargin(value)
@@ -448,7 +452,7 @@ class EnhancedTextEdit(QTextEdit):
                 self._editionState == _TextEditionState.BACKSPACE_BLOCKED or
                 self._editionState == _TextEditionState.REMOVAL_BLOCKED):
             return
-        if event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
+        if self._commandsEnabled and event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
             self._showCommands()
         super(EnhancedTextEdit, self).keyPressEvent(event)
 
