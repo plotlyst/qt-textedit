@@ -1,8 +1,9 @@
 import re
+from typing import Optional
 
 import qtawesome
 from qtpy.QtCore import QSize, Qt
-from qtpy.QtGui import QTextCursor, QIcon
+from qtpy.QtGui import QTextCursor, QIcon, QAction
 from qtpy.QtWidgets import QToolButton
 
 ELLIPSIS = u'\u2026'
@@ -103,3 +104,19 @@ def qta_icon(name: str, color: str = 'black') -> QIcon:
 
 def remove_font(html: str) -> str:
     return re.sub(r'font-(family|size):(\'|"|\w|\s|-|,|%|\.)*;', '', html)
+
+
+def q_action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, checkable: bool = False,
+           tooltip: str = '', enabled: bool = True) -> QAction:
+    _action = QAction(text)
+    if icon:
+        _action.setIcon(icon)
+    if slot:
+        _action.triggered.connect(slot)
+    if parent:
+        _action.setParent(parent)
+    _action.setCheckable(checkable)
+    _action.setToolTip(tooltip)
+    _action.setEnabled(enabled)
+
+    return _action

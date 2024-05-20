@@ -4,6 +4,7 @@ from typing import Dict, Optional, Any, Type
 import qtanim
 import qtawesome
 from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent, transparent, clear_layout, pointy
+from qtmenu import MenuWidget
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal, QMargins
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
@@ -23,7 +24,7 @@ from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumbe
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
-    SHORT_ARROW_LEFT_RIGHT, qta_icon, remove_font
+    SHORT_ARROW_LEFT_RIGHT, qta_icon, remove_font, q_action
 
 
 class DashInsertionMode(Enum):
@@ -107,12 +108,15 @@ class EnhancedTextEdit(QTextEdit):
         self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below', parent=self)
         self._btnPlus.setHidden(True)
         self._btnPlus.clicked.connect(lambda: self._insertBlock(self._blockFormatPosition, showCommands=True))
+        self._btnBlockFormat = _SideBarButton('ph.dots-six-vertical-bold', 'Click to open menu', parent=self)
+        self._btnBlockFormat.setHidden(True)
 
-        self._blockFormatMenu = QMenu()
-        self._blockFormatMenu.setToolTipsVisible(True)
-        self._blockFormatMenu.addAction(qta_icon('fa5.copy'), 'Duplicate',
-                                        lambda: self._duplicateBlock(self._blockFormatPosition))
-        self._convertIntoMenu = QMenu('Convert into')
+        self._blockFormatMenu = MenuWidget(self._btnBlockFormat)
+        self._blockFormatMenu.addAction(
+            q_action('Duplicate', qta_icon('fa5.copy'), lambda: self._duplicateBlock(self._blockFormatPosition)))
+        self._convertIntoMenu = MenuWidget()
+        self._convertIntoMenu.setTitle('Convert into')
+        self._convertIntoMenu.setIcon(qta_icon('ph.arrows-clockwise-fill'))
         for op_clazz in [TextOperation, Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
                          InsertNumberedListOperation]:
             action = op_clazz(self._convertIntoMenu)
@@ -121,12 +125,8 @@ class EnhancedTextEdit(QTextEdit):
 
         self._blockFormatMenu.addMenu(self._convertIntoMenu)
         self._blockFormatMenu.addSeparator()
-        self._blockFormatMenu.addAction(qta_icon('fa5s.trash-alt'), 'Delete',
-                                        lambda: self._deleteBlock(self._blockFormatPosition))
-
-        self._btnBlockFormat = _SideBarButton('ph.dots-six-vertical-bold', 'Click to open menu', parent=self)
-        self._btnBlockFormat.setHidden(True)
-        btn_popup_menu(self._btnBlockFormat, self._blockFormatMenu)
+        self._blockFormatMenu.addAction(
+            q_action('Delete', qta_icon('fa5s.trash-alt'), lambda: self._deleteBlock(self._blockFormatPosition)))
 
         self.document().setDocumentMargin(40)
 
@@ -178,42 +178,40 @@ class EnhancedTextEdit(QTextEdit):
     def setDocumentMargin(self, value: int):
         self.document().setDocumentMargin(value)
 
-    def createEnhancedContextMenu(self, pos: QPoint) -> QMenu:
-        menu = QMenu()
-        menu.setToolTipsVisible(True)
+    def createEnhancedContextMenu(self, pos: QPoint) -> MenuWidget:
+        menu = MenuWidget()
         menu.addSeparator()
         selected = bool(self.textCursor().selectedText())
-        action = menu.addAction(qtawesome.icon('fa5s.cut'), 'Cut', self.cut)
-        action.setEnabled(selected)
-        action.setToolTip('Cut selected text')
-        action = menu.addAction(qtawesome.icon('fa5s.copy'), 'Copy', self.copy)
-        action.setEnabled(selected)
-        action.setToolTip('Copy selected text')
-        action = menu.addAction(qtawesome.icon('fa5s.paste'), 'Paste', self.paste)
-        action.setToolTip('Paste from clipboard and adjust to the current style')
-        action.setDisabled(self.isReadOnly())
+        action = menu.addAction(
+            q_action('Cut', qta_icon('fa5s.cut'), self.cut, tooltip='Cut selected text', enabled=selected))
+        action = menu.addAction(
+            q_action('Copy', qta_icon('fa5s.copy'), self.copy, tooltip='Copy selected text', enabled=selected))
+        action = menu.addAction(q_action('Paste', qta_icon('fa5s.paste'), self.paste,
+                                         tooltip='Paste from clipboard and adjust to the current style',
+                                         enabled=not self.isReadOnly()))
 
         menu.addSeparator()
-        paste_submenu = menu.addMenu('Paste as...')
-        paste_submenu.setToolTipsVisible(True)
+        paste_submenu = MenuWidget()
+        paste_submenu.setTitle('Paste as...')
+        menu.addMenu(paste_submenu)
         paste_submenu.setDisabled(self.isReadOnly())
-        action = paste_submenu.addAction('Paste as plain text', self.pasteAsPlainText)
-        action.setToolTip('Paste as plain text without any formatting')
-        action.setDisabled(self.isReadOnly())
-        action = paste_submenu.addAction('Paste with original style', self.pasteAsOriginalText)
-        action.setToolTip('Paste with the original formatting')
-        action.setDisabled(self.isReadOnly())
+        action = paste_submenu.addAction(q_action('Paste as plain text', slot=self.pasteAsPlainText,
+                                                  tooltip='Paste as plain text without any formatting',
+                                                  enabled=not self.isReadOnly()))
+        action = paste_submenu.addAction(q_action('Paste with original style', slot=self.pasteAsOriginalText,
+                                                  tooltip='Paste with the original formatting',
+                                                  enabled=not self.isReadOnly()))
 
         anchor = self.anchorAt(pos)
         if anchor:
             menu.addSeparator()
-            menu.addAction(qta_icon('fa5s.link'), 'Edit link',
-                           lambda: self._editLink(self.cursorForPosition(pos)))
+            menu.addAction(
+                q_action('Edit link', qta_icon('fa5s.link'), lambda: self._editLink(self.cursorForPosition(pos))))
 
         if self._currentHoveredTable is not None:
             menu.addSeparator()
-            menu.addAction(qta_icon('mdi.table-row-remove', 'red'), 'Delete row', self._removeRow)
-            menu.addAction(qta_icon('mdi.table-column-remove', 'red'), 'Delete column', self._removeColumn)
+            menu.addAction(q_action('Delete row', qta_icon('mdi.table-row-remove', 'red'), self._removeRow))
+            menu.addAction(q_action('Delete column', qta_icon('mdi.table-column-remove', 'red'), self._removeColumn))
 
         return menu
 
