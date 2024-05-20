@@ -8,7 +8,7 @@ from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal, QMargins
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat, QKeyEvent, \
-    QColor
+    QColor, QWheelEvent
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton, QLineEdit
 
@@ -70,6 +70,7 @@ class _SideBarButton(QToolButton):
         ''')
         translucent(self)
         self.setIconSize(QSize(18, 18))
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
 
 class EnhancedTextEdit(QTextEdit):
@@ -254,6 +255,12 @@ class EnhancedTextEdit(QTextEdit):
                 self.insertHtml(remove_font(source.html()))
             elif source.hasText():
                 self.insertPlainText(source.text())
+
+    def wheelEvent(self, event: QWheelEvent):
+        super().wheelEvent(event)
+        if self.verticalScrollBar().isVisible():
+            self._btnPlus.setVisible(False)
+            self._btnBlockFormat.setVisible(False)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         super(EnhancedTextEdit, self).mouseMoveEvent(event)
