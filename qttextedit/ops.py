@@ -413,7 +413,7 @@ class ExportPdfOperation(TextEditorOperationAction):
     @busy
     def _print(self, filename: str, textEdit: QTextEdit):
         printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-        printer.setOutputFormat(QPrinter.PdfFormat)
+        printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
         printer.setOutputFileName(filename)
         printer.setDocName(self._title)
         textEdit.print(printer)
