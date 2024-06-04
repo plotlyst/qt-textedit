@@ -671,7 +671,7 @@ class EnhancedTextEdit(QTextEdit):
         else:
             cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
             if showCommands:
-                self._showCommands()
+                self._showCommands(self._btnPlus)
         self.ensureCursorVisible()
 
     def _duplicateBlock(self, blockNumber: int):
@@ -750,15 +750,14 @@ class EnhancedTextEdit(QTextEdit):
         format.setColumnWidthConstraints(constraints)
         table.setFormat(format)
 
-    def _showCommands(self):
+    def _showCommands(self, parent=None):
         def cleanUp():
             if not self.textCursor().atBlockStart():
                 self.textCursor().deletePreviousChar()
 
         rect = self.cursorRect()
 
-        menu = QMenu(self)
-        menu.setToolTipsVisible(True)
+        menu = MenuWidget()
         for op_clazz in [Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
                          InsertNumberedListOperation, InsertTableOperation, InsertDividerOperation,
                          InsertGrayBannerOperation,
@@ -770,7 +769,10 @@ class EnhancedTextEdit(QTextEdit):
             menu.addAction(action)
         menu.aboutToHide.connect(cleanUp)
 
-        menu.popup(self.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+        if parent:
+            menu.exec(self.viewport().mapToGlobal(parent.pos()))
+        else:
+            menu.exec(self.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
 
 class TextEditorOperationButton(QToolButton):
