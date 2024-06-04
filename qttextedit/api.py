@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, Optional, Any, Type
+from typing import Dict, Optional, Any, Type, List
 
 import qtanim
 import qtawesome
@@ -128,6 +128,13 @@ class EnhancedTextEdit(QTextEdit):
         self._blockFormatMenu.addAction(
             q_action('Delete', qta_icon('fa5s.trash-alt'), lambda: self._deleteBlock(self._blockFormatPosition)))
 
+        self._commandActions = [Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
+                                InsertNumberedListOperation, InsertTableOperation, InsertDividerOperation,
+                                InsertGrayBannerOperation,
+                                InsertRedBannerOperation,
+                                InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation,
+                                InsertPurpleBannerOperation]
+
         self.document().setDocumentMargin(40)
 
         self._adjustTabDistance()
@@ -177,6 +184,10 @@ class EnhancedTextEdit(QTextEdit):
 
     def setDocumentMargin(self, value: int):
         self.document().setDocumentMargin(value)
+
+    def setCommandOperations(self, operations: List[Type[TextEditorOperation]]):
+        self._commandActions.clear()
+        self._commandActions.extend(operations)
 
     def createEnhancedContextMenu(self, pos: QPoint) -> MenuWidget:
         menu = MenuWidget()
@@ -758,12 +769,7 @@ class EnhancedTextEdit(QTextEdit):
         rect = self.cursorRect()
 
         menu = MenuWidget()
-        for op_clazz in [Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
-                         InsertNumberedListOperation, InsertTableOperation, InsertDividerOperation,
-                         InsertGrayBannerOperation,
-                         InsertRedBannerOperation,
-                         InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation,
-                         InsertPurpleBannerOperation]:
+        for op_clazz in self._commandActions:
             action = op_clazz(menu)
             action.activateOperation(self)
             menu.addAction(action)
