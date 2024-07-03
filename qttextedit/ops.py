@@ -526,7 +526,7 @@ if sys.platform in ('win32', 'cygwin'):
     ]
 elif sys.platform == 'darwin':
     DEFAULT_FONT_FAMILIES = [
-        'San Francisco',  # sans-serif
+        'Helvetica',  # sans-serif
         'Times New Roman',  # serif
         'Courier',  # mono
         'Apple Chancery',  # cursive
