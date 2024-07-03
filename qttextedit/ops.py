@@ -528,7 +528,7 @@ elif sys.platform == 'darwin':
     DEFAULT_FONT_FAMILIES = [
         'Helvetica',  # sans-serif
         'Times New Roman',  # serif
-        'Courier',  # mono
+        'Courier New',  # mono
         'Apple Chancery',  # cursive
         'Papyrus',  # fantasy
     ]
