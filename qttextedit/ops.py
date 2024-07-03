@@ -1,3 +1,4 @@
+import sys
 from abc import abstractmethod
 from enum import Enum
 from functools import partial
@@ -510,7 +511,29 @@ class PageWidthSectionSettingWidget(SliderSectionWidget):
         self._editor.setWidthPercentage(value)
 
 
-DEFAULT_FONT_FAMILIES = ['Sans-serif', 'Serif', 'Monospace', 'Cursive']
+DEFAULT_FONT_FAMILIES = []
+if sys.platform in ('win32', 'cygwin'):
+    DEFAULT_FONT_FAMILIES = [
+        'Segoe UI',  # sans-serif
+        'Verdana',  # sans-serif
+        'Times New Roman',  # serif
+        'Georgia',  # serif
+        'Garamond',  # serif
+        'Courier New',  # mono
+        'Segoe Print',  # cursive
+        'Segoe Script',  # cursive
+        'Comic Sans MS',  # cursive
+    ]
+elif sys.platform == 'darwin':
+    DEFAULT_FONT_FAMILIES = [
+        'San Francisco',  # sans-serif
+        'Times New Roman',  # serif
+        'Courier',  # mono
+        'Apple Chancery',  # cursive
+        'Papyrus',  # fantasy
+    ]
+elif sys.platform.startswith('linux'):
+    DEFAULT_FONT_FAMILIES = ['Sans-serif', 'Serif', 'Monospace', 'Cursive']
 
 
 class FontRadioButton(QRadioButton):
