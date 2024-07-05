@@ -129,7 +129,7 @@ class EnhancedTextEdit(QTextEdit):
             q_action('Delete', qta_icon('fa5s.trash-alt'), lambda: self._deleteBlock(self._blockFormatPosition)))
 
         self._commandActions = [Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
-                                InsertNumberedListOperation, InsertTableOperation, InsertDividerOperation,
+                                InsertNumberedListOperation, InsertDividerOperation,
                                 InsertGrayBannerOperation,
                                 InsertRedBannerOperation,
                                 InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation,
@@ -911,8 +911,8 @@ class StandardTextEditorToolbar(TextEditorToolbar):
         self.addSeparator()
         self.addTextEditorOperation(InsertListOperation)
         self.addTextEditorOperation(InsertNumberedListOperation)
-        self.addSeparator()
-        self.addTextEditorOperation(InsertTableOperation)
+        # self.addSeparator()
+        # self.addTextEditorOperation(InsertTableOperation)
         self.addSeparator()
         self.addTextEditorOperation(InsertLinkOperation)
         self.addSpacer()
