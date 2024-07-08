@@ -5,6 +5,7 @@ from qtpy.QtWidgets import QMainWindow, QApplication, QWidget
 from qtpy.QtWidgets import QTextEdit
 
 from qttextedit import RichTextEditor, DashInsertionMode, TextBlockState
+from qttextedit.api import AutoCapitalizationMode
 
 
 class MainWindow(QMainWindow):
@@ -21,7 +22,7 @@ class MainWindow(QMainWindow):
         self.editor = RichTextEditor()
         self.editor.setCharacterWidth()
         self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
-        self.editor.textEdit.setAutoCapitalizationEnabled(False)
+        self.editor.textEdit.setAutoCapitalizationMode(AutoCapitalizationMode.SENTENCE)
         self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
 
         self.editor.textEdit.setPlaceholderText('Write text')

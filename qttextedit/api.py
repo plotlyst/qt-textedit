@@ -18,7 +18,7 @@ from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumbe
     TextEditorOperationWidgetAction, TextEditingSettingsOperation, TextEditorSettingsWidget, TextOperation, \
     Heading1Operation, Heading2Operation, Heading3Operation, InsertDividerOperation, InsertRedBannerOperation, \
     InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation, InsertPurpleBannerOperation, \
-    InsertGrayBannerOperation, InsertTableOperation, AlignmentOperation, FormatOperation, BoldOperation, \
+    InsertGrayBannerOperation, AlignmentOperation, FormatOperation, BoldOperation, \
     ItalicOperation, UnderlineOperation, StrikethroughOperation, ColorOperation, AlignLeftOperation, \
     AlignCenterOperation, AlignRightOperation, InsertLinkOperation, ExportPdfOperation, PrintOperation
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
@@ -31,6 +31,12 @@ class DashInsertionMode(Enum):
     NONE = 'none'
     INSERT_EN_DASH = 'en'
     INSERT_EM_DASH = 'em'
+
+
+class AutoCapitalizationMode(Enum):
+    NONE = 'none'
+    PARAGRAPH = 'paragraph'
+    SENTENCE = 'sentence'
 
 
 class TextBlockState(Enum):
@@ -80,11 +86,14 @@ class EnhancedTextEdit(QTextEdit):
         super(EnhancedTextEdit, self).__init__(parent)
         self._pasteAsPlain: bool = False
         self._pasteAsOriginal: bool = False
-        self._blockAutoCapitalization: bool = True
+
+        self._blockAutoCapitalization: bool = False
         self._sentenceAutoCapitalization: bool = False
+
         self._uneditableBlocksEnabled: bool = False
         self._sidebarEnabled: bool = True
         self._commandsEnabled: bool = True
+        self._autoCapitalizationMode: AutoCapitalizationMode = AutoCapitalizationMode.NONE
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
         self._editionState: _TextEditionState = _TextEditionState.ALLOWED
         self._blockFormatPosition: int = -1
@@ -143,21 +152,21 @@ class EnhancedTextEdit(QTextEdit):
         self.textChanged.connect(self._cursorPositionChanged)
         self.selectionChanged.connect(self._selectionChanged)
 
-    def blockAutoCapitalizationEnabled(self) -> bool:
-        return self._blockAutoCapitalization
+    def autoCapitalizationMode(self) -> AutoCapitalizationMode:
+        return self._autoCapitalizationMode
 
-    def setBlockAutoCapitalizationEnabled(self, enabled: bool):
-        self._blockAutoCapitalization = enabled
+    def setAutoCapitalizationMode(self, mode: AutoCapitalizationMode):
+        if mode == AutoCapitalizationMode.NONE:
+            self._blockAutoCapitalization = False
+            self._sentenceAutoCapitalization = False
+        elif mode == AutoCapitalizationMode.PARAGRAPH:
+            self._blockAutoCapitalization = True
+            self._sentenceAutoCapitalization = False
+        elif mode == AutoCapitalizationMode.SENTENCE:
+            self._blockAutoCapitalization = True
+            self._sentenceAutoCapitalization = True
 
-    def sentenceAutoCapitalizationEnabled(self) -> bool:
-        return self._sentenceAutoCapitalization
-
-    def setSentenceAutoCapitalizationEnabled(self, enabled: bool):
-        self._sentenceAutoCapitalization = enabled
-
-    def setAutoCapitalizationEnabled(self, enabled: bool):
-        self._blockAutoCapitalization = enabled
-        self._sentenceAutoCapitalization = enabled
+        self._autoCapitalizationMode = mode
 
     def dashInsertionMode(self) -> DashInsertionMode:
         return self._dashInsertionMode
