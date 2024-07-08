@@ -21,7 +21,7 @@ from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumbe
     InsertGrayBannerOperation, AlignmentOperation, FormatOperation, BoldOperation, \
     ItalicOperation, UnderlineOperation, StrikethroughOperation, ColorOperation, AlignLeftOperation, \
     AlignCenterOperation, AlignRightOperation, InsertLinkOperation, ExportPdfOperation, PrintOperation
-from qttextedit.util import select_anchor, select_previous_character, select_next_character, ELLIPSIS, EN_DASH, EM_DASH, \
+from qttextedit.util import select_anchor, select_previous_character, select_next_character, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
     SHORT_ARROW_LEFT_RIGHT, qta_icon, remove_font, q_action
@@ -959,9 +959,6 @@ class TextFindWidget(QFrame):
         self.layout().addWidget(self._icon)
         self.layout().addWidget(self._lineText)
         margins(self, right=10)
-        self.setStyleSheet('''TextFindWidget {
-                                background-color: white;
-                            }''')
 
         self._lineText.textChanged.connect(self.find.emit)
 
