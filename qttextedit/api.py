@@ -28,9 +28,9 @@ from qttextedit.util import select_anchor, select_previous_character, select_nex
 
 
 class DashInsertionMode(Enum):
-    NONE = 0
-    INSERT_EN_DASH = 1
-    INSERT_EM_DASH = 2
+    NONE = 'none'
+    INSERT_EN_DASH = 'en'
+    INSERT_EM_DASH = 'em'
 
 
 class TextBlockState(Enum):
