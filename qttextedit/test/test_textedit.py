@@ -1,6 +1,7 @@
 from qtpy.QtGui import QFont
 
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode
+from qttextedit.api import AutoCapitalizationMode
 from qttextedit.ops import BoldOperation, ItalicOperation, ColorOperation, UnderlineOperation, StrikethroughOperation
 from qttextedit.test.common import type_text, type_enter
 
@@ -25,19 +26,19 @@ def prepare_richtext_editor(qtbot) -> RichTextEditor:
 
 def test_auto_capitalization(qtbot):
     textedit = prepare_textedit(qtbot)
-    assert textedit.blockAutoCapitalizationEnabled()
-    assert not textedit.sentenceAutoCapitalizationEnabled()
+    assert textedit.autoCapitalizationMode() == AutoCapitalizationMode.NONE
 
+    textedit.setAutoCapitalizationMode(AutoCapitalizationMode.PARAGRAPH)
     type_text(qtbot, textedit, 'test. test')
     assert textedit.toPlainText() == 'Test. test'
 
     textedit.clear()
-    textedit.setSentenceAutoCapitalizationEnabled(True)
+    textedit.setAutoCapitalizationMode(AutoCapitalizationMode.SENTENCE)
     type_text(qtbot, textedit, 'test. test')
     assert textedit.toPlainText() == 'Test. Test'
 
     textedit.clear()
-    textedit.setAutoCapitalizationEnabled(False)
+    textedit.setAutoCapitalizationMode(AutoCapitalizationMode.NONE)
     type_text(qtbot, textedit, 'test. test')
     assert textedit.toPlainText() == 'test. test'
 
