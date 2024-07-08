@@ -416,12 +416,12 @@ class EnhancedTextEdit(QTextEdit):
         if event.key() == Qt.Key_Return and not event.modifiers():
             self._insertNewBlock(cursor)
             return
-        if event.key() == Qt.Key_Period:
-            moved_cursor = select_previous_character(cursor, amount=2)
-            if moved_cursor.selectedText() == '..':
-                moved_cursor.removeSelectedText()
-                cursor.insertText(ELLIPSIS)
-                return
+        # if event.key() == Qt.Key_Period:
+        #     moved_cursor = select_previous_character(cursor, amount=2)
+        #     if moved_cursor.selectedText() == '..':
+        #         moved_cursor.removeSelectedText()
+        #         cursor.insertText(ELLIPSIS)
+        #         return
         if event.key() == Qt.Key_Minus and self._dashInsertionMode != DashInsertionMode.NONE:
             moved_cursor = select_previous_character(cursor)
             if moved_cursor.selectedText() == '-':
