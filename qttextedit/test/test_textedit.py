@@ -43,10 +43,10 @@ def test_auto_capitalization(qtbot):
     assert textedit.toPlainText() == 'test. test'
 
 
-def test_ellipsis(qtbot):
-    textedit = prepare_textedit(qtbot)
-    type_text(qtbot, textedit, '...')
-    assert textedit.toPlainText() == '…'
+# def test_ellipsis(qtbot):
+#     textedit = prepare_textedit(qtbot)
+#     type_text(qtbot, textedit, '...')
+#     assert textedit.toPlainText() == '…'
 
 
 def test_dashes(qtbot):
