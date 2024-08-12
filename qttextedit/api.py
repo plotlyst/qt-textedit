@@ -3,7 +3,9 @@ from typing import Dict, Optional, Any, Type, List
 
 import qtanim
 import qtawesome
-from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent, transparent, clear_layout, pointy
+from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, translucent, transparent, clear_layout, pointy, \
+    decr_font, italic
+from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal, QMargins
@@ -11,7 +13,7 @@ from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFor
     QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat, QKeyEvent, \
     QColor, QWheelEvent, QTextFrame
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
-    QInputDialog, QToolButton, QLineEdit
+    QInputDialog, QToolButton, QLineEdit, QPushButton
 
 from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumberedListOperation, \
     TextEditorOperationAction, TextEditorOperationMenu, \
@@ -24,7 +26,7 @@ from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumbe
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
-    SHORT_ARROW_LEFT_RIGHT, qta_icon, remove_font, q_action
+    SHORT_ARROW_LEFT_RIGHT, qta_icon, remove_font, q_action, CloseButton
 
 
 class DashInsertionMode(Enum):
@@ -943,11 +945,15 @@ class TextEditorSettingsButton(TextEditorOperationButton):
 class TextFindWidget(QFrame):
     find = Signal(str)
     findNext = Signal(str)
+    replace = Signal(str)
+    replaceAll = Signal(str)
     closed = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        hbox(self)
+        vbox(self)
+        self.wdgFind = QWidget()
+        hbox(self.wdgFind, 0)
         self._icon = QToolButton()
         transparent(self._icon)
         self._icon.setIcon(qta_icon('mdi.magnify'))
@@ -955,12 +961,61 @@ class TextFindWidget(QFrame):
         self._lineText.setPlaceholderText('Find...')
         self._lineText.setClearButtonEnabled(True)
         self._lineText.setMaximumWidth(150)
-        self.layout().addWidget(spacer())
-        self.layout().addWidget(self._icon)
-        self.layout().addWidget(self._lineText)
-        margins(self, right=10)
+        self._btnFindNext = QPushButton('Find next')
+        self._btnFindNext.clicked.connect(self._findNext)
+        self._btnFindNext.setDisabled(True)
+        self._btnFindNext.installEventFilter(
+            DisabledClickEventFilter(self._btnFindNext, lambda: qtanim.shake(self._lineText)))
 
-        self._lineText.textChanged.connect(self.find.emit)
+        self._btnClose = CloseButton()
+        self._btnClose.clicked.connect(self.closed)
+
+        self.wdgFind.layout().addWidget(self._icon)
+        self.wdgFind.layout().addWidget(self._lineText)
+        self.wdgFind.layout().addWidget(self._btnFindNext)
+        self.wdgFind.layout().addWidget(spacer())
+        self.wdgFind.layout().addWidget(self._btnClose, alignment=Qt.AlignmentFlag.AlignTop)
+
+        self.wdgReplace = QWidget()
+        self._lineTextReplace = QLineEdit()
+        self._lineTextReplace.setPlaceholderText('Replace...')
+        self._lineTextReplace.setClearButtonEnabled(True)
+        self._lineTextReplace.setMaximumWidth(150)
+        hbox(self.wdgReplace, 0)
+        self._iconReplace = QToolButton()
+        transparent(self._iconReplace)
+        self._iconReplace.setIcon(qta_icon('mdi.find-replace'))
+        self._btnReplace = QPushButton('Replace')
+        self._btnReplace.setDisabled(True)
+        self._btnReplaceAll = QPushButton('Replace all')
+        self._btnReplaceAll.setDisabled(True)
+        self._btnReplace.installEventFilter(
+            DisabledClickEventFilter(self._btnReplace, lambda: qtanim.shake(self._lineText)))
+        self._btnReplaceAll.installEventFilter(
+            DisabledClickEventFilter(self._btnReplace, lambda: qtanim.shake(self._lineText)))
+        self.wdgReplace.layout().addWidget(self._iconReplace)
+        self.wdgReplace.layout().addWidget(self._lineTextReplace)
+        self.wdgReplace.layout().addWidget(self._btnReplace)
+        self.wdgReplace.layout().addWidget(self._btnReplaceAll)
+        self.wdgReplace.layout().addWidget(spacer())
+
+        self._btnActivateReplace = QPushButton('Replace...')
+        self._btnActivateReplace.setToolTip('Show Replace field (Ctrl+R)')
+        pointy(self._btnActivateReplace)
+        self._btnActivateReplace.installEventFilter(OpacityEventFilter(self._btnActivateReplace))
+        decr_font(self._btnActivateReplace, 2)
+        transparent(self._btnActivateReplace)
+        italic(self._btnActivateReplace)
+
+        margins(self, left=15)
+        self.layout().addWidget(self.wdgFind)
+        self.layout().addWidget(self.wdgReplace)
+        self.layout().addWidget(self._btnActivateReplace, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self._lineText.textChanged.connect(self._termChanged)
+        self._btnReplace.clicked.connect(self._replace)
+        self._btnReplaceAll.clicked.connect(self._replaceAll)
+        self._btnActivateReplace.clicked.connect(self._activateReplace)
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key_Return and self._lineText.text():
@@ -968,8 +1023,27 @@ class TextFindWidget(QFrame):
         elif event.key() == Qt.Key_Escape:
             self.closed.emit()
 
-    def activate(self):
+    def lineEditSearch(self) -> QLineEdit:
+        return self._lineText
+
+    def lineEditReplace(self) -> QLineEdit:
+        return self._lineTextReplace
+
+    def buttonNext(self) -> QPushButton:
+        return self._btnFindNext
+
+    def buttonReplace(self) -> QPushButton:
+        return self._btnReplace
+
+    def buttonReplaceAll(self) -> QPushButton:
+        return self._btnReplaceAll
+
+    def activate(self, replace: bool = False):
         self._lineText.setFocus()
+        if replace:
+            self._activateReplace()
+        else:
+            self._resetReplace()
 
     def showZeroFind(self):
         qtanim.glow(self._lineText, duration=300)
@@ -978,6 +1052,30 @@ class TextFindWidget(QFrame):
     def showFindOver(self):
         qtanim.glow(self._lineText, color=QColor('#ffb703'))
         qtanim.glow(self._icon, color=QColor('#ffb703'))
+
+    def _activateReplace(self):
+        self.wdgReplace.setVisible(True)
+        self._btnActivateReplace.setHidden(True)
+
+    def _resetReplace(self):
+        self.wdgReplace.setHidden(True)
+        self._lineTextReplace.clear()
+        self._btnActivateReplace.setVisible(True)
+
+    def _termChanged(self, term: str):
+        self._btnFindNext.setEnabled(len(term) > 0)
+        self._btnReplace.setEnabled(len(term) > 0)
+        self._btnReplaceAll.setEnabled(len(term) > 0)
+        self.find.emit(term)
+
+    def _findNext(self):
+        self.findNext.emit(self._lineText.text())
+
+    def _replace(self):
+        self.replace.emit(self._lineTextReplace.text())
+
+    def _replaceAll(self):
+        self.replaceAll.emit(self._lineTextReplace.text())
 
 
 class RichTextEditor(QWidget):
@@ -994,10 +1092,13 @@ class RichTextEditor(QWidget):
         self._wdgFind = TextFindWidget(self)
         self._wdgFind.setHidden(True)
         self._findCursor: Optional[QTextCursor] = None
+        self._findTerm: str = ''
 
         self._textedit = self._initTextEdit()
         self._wdgFind.find.connect(self._find)
         self._wdgFind.findNext.connect(self._findNext)
+        self._wdgFind.replace.connect(self._replace)
+        self._wdgFind.replaceAll.connect(self._replaceAll)
         self._wdgFind.closed.connect(lambda: self._wdgFind.setHidden(True))
 
         self.layout().addWidget(self._toolbar)
@@ -1015,6 +1116,9 @@ class RichTextEditor(QWidget):
         if event.key() == Qt.Key_F and event.modifiers() & Qt.ControlModifier:
             self._wdgFind.setVisible(True)
             self._wdgFind.activate()
+        elif event.key() == Qt.Key_R and event.modifiers() & Qt.ControlModifier:
+            self._wdgFind.setVisible(True)
+            self._wdgFind.activate(replace=True)
         elif event.key() == Qt.Key_Escape and self._wdgFind.isVisible():
             self._wdgFind.setHidden(True)
         else:
@@ -1073,6 +1177,7 @@ class RichTextEditor(QWidget):
         return EnhancedTextEdit(self)
 
     def _find(self, text: str):
+        self._findTerm = text
         if not text:
             self._findCursor = None
             return
@@ -1100,3 +1205,12 @@ class RichTextEditor(QWidget):
             self._findCursor = match
             self._textedit.setTextCursor(self._findCursor)
             self._textedit.ensureCursorVisible()
+
+    def _replace(self, replacedWith: str):
+        if self._findCursor and self._findCursor.selectedText():
+            self._findCursor.insertText(replacedWith)
+            self._findNext(self._findTerm)
+
+    def _replaceAll(self, replacedWith: str):
+        while self._findCursor and self._findCursor.selectedText():
+            self._replace(replacedWith)

@@ -2,7 +2,8 @@ import re
 from typing import Optional
 
 import qtawesome
-from qtpy.QtCore import QSize, Qt
+from qthandy import pointy, transparent
+from qtpy.QtCore import QSize, Qt, QEvent
 from qtpy.QtGui import QTextCursor, QIcon, QAction
 from qtpy.QtWidgets import QToolButton
 
@@ -107,7 +108,7 @@ def remove_font(html: str) -> str:
 
 
 def q_action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, checkable: bool = False,
-           tooltip: str = '', enabled: bool = True) -> QAction:
+             tooltip: str = '', enabled: bool = True) -> QAction:
     _action = QAction(text)
     if icon:
         _action.setIcon(icon)
@@ -120,3 +121,25 @@ def q_action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, ch
     _action.setEnabled(enabled)
 
     return _action
+
+
+class CloseButton(QToolButton):
+    def __init__(self, parent=None, colorOff: str = 'grey', colorOn='black', colorHover='darkgrey'):
+        super().__init__(parent)
+        self._colorOff = colorOff
+        self._colorHover = colorHover
+        self.setIcon(qta_icon('ei.remove', self._colorOff))
+        pointy(self)
+        self.installEventFilter(self)
+        self.setIconSize(QSize(14, 14))
+        transparent(self)
+
+        self.pressed.connect(lambda: self.setIcon(qta_icon('ei.remove', colorOn)))
+        self.released.connect(lambda: self.setIcon(qta_icon('ei.remove', colorOff)))
+
+    def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
+        if event.type() == QEvent.Type.Enter:
+            self.setIcon(qta_icon('ei.remove', self._colorHover))
+        elif event.type() == QEvent.Type.Leave:
+            self.setIcon(qta_icon('ei.remove', self._colorOff))
+        return super().eventFilter(watched, event)
