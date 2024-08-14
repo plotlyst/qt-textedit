@@ -103,18 +103,18 @@ class EnhancedTextEdit(QTextEdit):
         self._currentHoveredTable: Optional[QTextTable] = None
         self._currentHoveredTableCell: Optional[QTextTableCell] = None
 
-        self._btnTablePlusAbove = _SideBarButton('fa5s.plus', 'Insert a new row above', parent=self)
-        self._btnTablePlusAbove.setHidden(True)
-        self._btnTablePlusBelow = _SideBarButton('fa5s.plus', 'Insert a new row below', parent=self)
-        self._btnTablePlusBelow.setHidden(True)
-        self._btnTablePlusAbove.clicked.connect(self._insertRowAbove)
-        self._btnTablePlusBelow.clicked.connect(self._insertRowBelow)
-        self._btnTablePlusLeft = _SideBarButton('fa5s.plus', 'Insert a new column to the left', parent=self)
-        self._btnTablePlusLeft.setHidden(True)
-        self._btnTablePlusRight = _SideBarButton('fa5s.plus', 'Insert a new column to the right', parent=self)
-        self._btnTablePlusRight.setHidden(True)
-        self._btnTablePlusLeft.clicked.connect(self._insertColumnLeft)
-        self._btnTablePlusRight.clicked.connect(self._insertColumnRight)
+        # self._btnTablePlusAbove = _SideBarButton('fa5s.plus', 'Insert a new row above', parent=self)
+        # self._btnTablePlusAbove.setHidden(True)
+        # self._btnTablePlusBelow = _SideBarButton('fa5s.plus', 'Insert a new row below', parent=self)
+        # self._btnTablePlusBelow.setHidden(True)
+        # self._btnTablePlusAbove.clicked.connect(self._insertRowAbove)
+        # self._btnTablePlusBelow.clicked.connect(self._insertRowBelow)
+        # self._btnTablePlusLeft = _SideBarButton('fa5s.plus', 'Insert a new column to the left', parent=self)
+        # self._btnTablePlusLeft.setHidden(True)
+        # self._btnTablePlusRight = _SideBarButton('fa5s.plus', 'Insert a new column to the right', parent=self)
+        # self._btnTablePlusRight.setHidden(True)
+        # self._btnTablePlusLeft.clicked.connect(self._insertColumnLeft)
+        # self._btnTablePlusRight.clicked.connect(self._insertColumnRight)
 
         self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below', parent=self)
         self._btnPlus.setHidden(True)
@@ -294,31 +294,31 @@ class EnhancedTextEdit(QTextEdit):
             self._btnPlus.setHidden(True)
             self._btnBlockFormat.setHidden(True)
 
-            self._btnTablePlusAbove.setGeometry(self.viewportMargins().left() + rect.x() - 16, rect.y() - 10, 16, 16)
-            self._btnTablePlusAbove.setVisible(True)
-            beginningCursor.movePosition(QTextCursor.EndOfBlock)
-            self._btnTablePlusBelow.setGeometry(self.viewportMargins().left() + rect.x() - 16,
-                                                self.cursorRect(beginningCursor).y() + rect.height() - 8,
-                                                16, 16)
-            self._btnTablePlusBelow.setVisible(True)
-
-            constraint: QTextLength = self._currentHoveredTable.format().columnWidthConstraints()[
-                self._currentHoveredTableCell.column()]
-            cell_width = self.document().size().width() * constraint.rawValue() / 100
-
-            self._btnTablePlusLeft.setGeometry(self.viewportMargins().left() + rect.x() - 8, rect.y() - 18, 16, 16)
-            self._btnTablePlusLeft.setVisible(True)
-
-            self._btnTablePlusRight.setGeometry(
-                int(self.viewportMargins().left() + rect.x() + cell_width - self._currentHoveredTable.format().leftMargin() - 20),
-                int(rect.y() - 18), 16, 16)
-            self._btnTablePlusRight.setVisible(True)
+            # self._btnTablePlusAbove.setGeometry(self.viewportMargins().left() + rect.x() - 16, rect.y() - 10, 16, 16)
+            # self._btnTablePlusAbove.setVisible(True)
+            # beginningCursor.movePosition(QTextCursor.EndOfBlock)
+            # self._btnTablePlusBelow.setGeometry(self.viewportMargins().left() + rect.x() - 16,
+            #                                     self.cursorRect(beginningCursor).y() + rect.height() - 8,
+            #                                     16, 16)
+            # self._btnTablePlusBelow.setVisible(True)
+            #
+            # constraint: QTextLength = self._currentHoveredTable.format().columnWidthConstraints()[
+            #     self._currentHoveredTableCell.column()]
+            # cell_width = self.document().size().width() * constraint.rawValue() / 100
+            #
+            # self._btnTablePlusLeft.setGeometry(self.viewportMargins().left() + rect.x() - 8, rect.y() - 18, 16, 16)
+            # self._btnTablePlusLeft.setVisible(True)
+            #
+            # self._btnTablePlusRight.setGeometry(
+            #     int(self.viewportMargins().left() + rect.x() + cell_width - self._currentHoveredTable.format().leftMargin() - 20),
+            #     int(rect.y() - 18), 16, 16)
+            # self._btnTablePlusRight.setVisible(True)
 
         else:
-            self._btnTablePlusAbove.setHidden(True)
-            self._btnTablePlusBelow.setHidden(True)
-            self._btnTablePlusLeft.setHidden(True)
-            self._btnTablePlusRight.setHidden(True)
+            # self._btnTablePlusAbove.setHidden(True)
+            # self._btnTablePlusBelow.setHidden(True)
+            # self._btnTablePlusLeft.setHidden(True)
+            # self._btnTablePlusRight.setHidden(True)
             if self._sidebarEnabled and self._blockFormatPosition != cursor.blockNumber():
                 self._blockFormatPosition = cursor.blockNumber()
 
