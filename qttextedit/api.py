@@ -123,21 +123,7 @@ class EnhancedTextEdit(QTextEdit):
         self._btnBlockFormat.setHidden(True)
 
         self._blockFormatMenu = MenuWidget(self._btnBlockFormat)
-        self._blockFormatMenu.addAction(
-            q_action('Duplicate', qta_icon('fa5.copy'), lambda: self._duplicateBlock(self._blockFormatPosition)))
-        self._convertIntoMenu = MenuWidget()
-        self._convertIntoMenu.setTitle('Convert into')
-        self._convertIntoMenu.setIcon(qta_icon('ph.arrows-clockwise-fill'))
-        for op_clazz in [TextOperation, Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
-                         InsertNumberedListOperation]:
-            action = op_clazz(self._convertIntoMenu)
-            self._convertIntoMenu.addAction(action)
-            action.activateOperation(self)
-
-        self._blockFormatMenu.addMenu(self._convertIntoMenu)
-        self._blockFormatMenu.addSeparator()
-        self._blockFormatMenu.addAction(
-            q_action('Delete', qta_icon('fa5s.trash-alt'), lambda: self._deleteBlock(self._blockFormatPosition)))
+        self._blockFormatMenu.aboutToShow.connect(self._showFormatMenu)
 
         self._commandActions = [Heading1Operation, Heading2Operation, Heading3Operation, InsertListOperation,
                                 InsertNumberedListOperation, InsertDividerOperation,
@@ -357,10 +343,10 @@ class EnhancedTextEdit(QTextEdit):
         super(EnhancedTextEdit, self).leaveEvent(event)
         self._btnPlus.setHidden(True)
         self._btnBlockFormat.setHidden(True)
-        self._btnTablePlusAbove.setHidden(True)
-        self._btnTablePlusBelow.setHidden(True)
-        self._btnTablePlusLeft.setHidden(True)
-        self._btnTablePlusRight.setHidden(True)
+        # self._btnTablePlusAbove.setHidden(True)
+        # self._btnTablePlusBelow.setHidden(True)
+        # self._btnTablePlusLeft.setHidden(True)
+        # self._btnTablePlusRight.setHidden(True)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
@@ -560,6 +546,24 @@ class EnhancedTextEdit(QTextEdit):
         cursor.clearSelection()
         self.setTextCursor(cursor)
         cursor.endEditBlock()
+
+    def _showFormatMenu(self):
+        if not self._blockFormatMenu.actions():
+            self._blockFormatMenu.addAction(
+                q_action('Duplicate', qta_icon('fa5.copy'), lambda: self._duplicateBlock(self._blockFormatPosition)))
+            self._convertIntoMenu = MenuWidget()
+            self._convertIntoMenu.setTitle('Convert into')
+            self._convertIntoMenu.setIcon(qta_icon('ph.arrows-clockwise-fill'))
+            for op_clazz in [TextOperation, Heading1Operation, Heading2Operation, Heading3Operation,
+                             InsertListOperation,
+                             InsertNumberedListOperation]:
+                action = op_clazz(self._convertIntoMenu)
+                self._convertIntoMenu.addAction(action)
+                action.activateOperation(self)
+            self._blockFormatMenu.addMenu(self._convertIntoMenu)
+            self._blockFormatMenu.addSeparator()
+            self._blockFormatMenu.addAction(
+                q_action('Delete', qta_icon('fa5s.trash-alt'), lambda: self._deleteBlock(self._blockFormatPosition)))
 
     def _reformatFrames(self):
         root: QTextFrame = self.document().rootFrame()

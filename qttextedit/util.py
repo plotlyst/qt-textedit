@@ -1,4 +1,5 @@
 import re
+from timeit import default_timer as timer
 from typing import Optional
 
 import qtawesome
@@ -143,3 +144,25 @@ class CloseButton(QToolButton):
         elif event.type() == QEvent.Type.Leave:
             self.setIcon(qta_icon('ei.remove', self._colorOff))
         return super().eventFilter(watched, event)
+
+
+class Timer:
+    def __init__(self, prefix: str = 'Elapsed', auto_start: bool = True):
+        self._prefix = prefix
+        self._elapsed = 0
+        self._start = 0
+
+        if auto_start:
+            self.start()
+
+    def start(self):
+        self._start = timer()
+
+    def end(self, suffix: str = '') -> float:
+        end = timer()
+        self._elapsed = end - self._start
+        if suffix:
+            suffix = f'[{suffix}]'
+        print(f'{self._prefix}: {self._elapsed} {suffix}')
+
+        return self._elapsed
