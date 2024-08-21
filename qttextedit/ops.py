@@ -441,7 +441,8 @@ class PrintOperation(TextEditorOperationAction):
 class TextEditorSettingsSection(Enum):
     FONT = 'font'
     FONT_SIZE = 'font_size'
-    WIDTH = 'width'
+    PAGE_WIDTH = 'page_width'
+    TEXT_WIDTH = 'text_width'
     LINE_SPACE = 'line_space'
 
 
@@ -499,7 +500,7 @@ class SliderSectionWidget(AbstractSettingsSectionWidget):
 
 class PageWidthSectionSettingWidget(SliderSectionWidget):
     def __init__(self, parent=None):
-        super(PageWidthSectionSettingWidget, self).__init__('Page Width', 20, 100, parent)
+        super().__init__('Page Width', 20, 100, parent)
 
     def _activate(self):
         w = self._editor.widthPercentage()
@@ -510,6 +511,20 @@ class PageWidthSectionSettingWidget(SliderSectionWidget):
         if self._editor is None:
             return
         self._editor.setWidthPercentage(value)
+
+
+class TextWidthSectionSettingWidget(SliderSectionWidget):
+    def __init__(self, parent=None):
+        super().__init__('Text Width', 40, 80, parent)
+
+    def _activate(self):
+        self._slider.setValue(self._editor.characterWidth())
+        self._slider.valueChanged.connect(self._valueChanged)
+
+    def _valueChanged(self, value: int):
+        if self._editor is None:
+            return
+        self._editor.setCharacterWidth(value)
 
 
 DEFAULT_FONT_FAMILIES = []
@@ -624,7 +639,9 @@ class TextEditorSettingsWidget(QTabWidget):
         self._sections: Dict[TextEditorSettingsSection, AbstractSettingsSectionWidget] = {}
         self._addDefaultSection(TextEditorSettingsSection.FONT)
         self._addDefaultSection(TextEditorSettingsSection.FONT_SIZE)
-        self._addDefaultSection(TextEditorSettingsSection.WIDTH)
+        self._addDefaultSection(TextEditorSettingsSection.PAGE_WIDTH)
+        self._addDefaultSection(TextEditorSettingsSection.TEXT_WIDTH)
+        self.setSectionVisible(TextEditorSettingsSection.TEXT_WIDTH, False)
         self._defaultTab.layout().addWidget(vspacer())
 
     def attach(self, editor):
@@ -653,8 +670,10 @@ class TextEditorSettingsWidget(QTabWidget):
             wdg = FontSizeSectionSettingWidget(self)
         elif section == TextEditorSettingsSection.FONT:
             wdg = FontSectionSettingWidget(self)
-        elif section == TextEditorSettingsSection.WIDTH:
+        elif section == TextEditorSettingsSection.PAGE_WIDTH:
             wdg = PageWidthSectionSettingWidget(self)
+        elif section == TextEditorSettingsSection.TEXT_WIDTH:
+            wdg = TextWidthSectionSettingWidget(self)
         else:
             raise ValueError('Unsupported Section type %s', section)
         if self._editor:

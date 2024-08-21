@@ -23,11 +23,11 @@ def prepare_richtext_editor(qtbot):
 
 def test_page_width(qtbot):
     widget, editor, settings = prepare_richtext_editor(qtbot)
-    settings.setSectionVisible(TextEditorSettingsSection.WIDTH, False)
+    settings.setSectionVisible(TextEditorSettingsSection.PAGE_WIDTH, False)
     type_text(qtbot, editor, 'Test text')
 
     assert editor.widthPercentage() == 0
-    wdg = settings.section(TextEditorSettingsSection.WIDTH)
+    wdg = settings.section(TextEditorSettingsSection.PAGE_WIDTH)
     assert wdg.value() == 100
     wdg.setValue(50)
     assert editor.widthPercentage() == 50
@@ -53,7 +53,7 @@ def test_separate_settings_btn(qtbot):
     widget.layout().addWidget(btn)
     editor.attachSettingsWidget(btn.settingsWidget())
 
-    wdg = btn.settingsWidget().section(TextEditorSettingsSection.WIDTH)
+    wdg = btn.settingsWidget().section(TextEditorSettingsSection.PAGE_WIDTH)
     assert wdg.value() == 100
     wdg.setValue(50)
     assert editor.widthPercentage() == 50
