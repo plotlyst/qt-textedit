@@ -88,6 +88,7 @@ class EnhancedTextEdit(QTextEdit):
         super(EnhancedTextEdit, self).__init__(parent)
         self._pasteAsPlain: bool = False
         self._pasteAsOriginal: bool = False
+        self._pasteAsOriginalEnabled: bool = True
 
         self._blockAutoCapitalization: bool = False
         self._sentenceAutoCapitalization: bool = False
@@ -206,9 +207,10 @@ class EnhancedTextEdit(QTextEdit):
         paste_submenu.addAction(q_action('Paste as plain text', slot=self.pasteAsPlainText,
                                          tooltip='Paste as plain text without any formatting',
                                          enabled=not self.isReadOnly()))
-        paste_submenu.addAction(q_action('Paste with original style', slot=self.pasteAsOriginalText,
-                                         tooltip='Paste with the original formatting',
-                                         enabled=not self.isReadOnly()))
+        if self._pasteAsOriginalEnabled:
+            paste_submenu.addAction(q_action('Paste with original style', slot=self.pasteAsOriginalText,
+                                             tooltip='Paste with the original formatting',
+                                             enabled=not self.isReadOnly()))
 
         anchor = self.anchorAt(pos)
         if anchor:
