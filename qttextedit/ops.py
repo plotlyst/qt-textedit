@@ -590,6 +590,8 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
 
     def _fontClicked(self, btn: FontRadioButton):
         self.fontSelected.emit(btn.family())
+        if self._editor.characterWidth():
+            self._editor.setCharacterWidth(self._editor.characterWidth())
 
 
 class FontSizeSectionSettingWidget(SliderSectionWidget):
@@ -607,6 +609,8 @@ class FontSizeSectionSettingWidget(SliderSectionWidget):
         font = self._editor.textEdit.font()
         font.setPointSize(value)
         self._editor.textEdit.setFont(font)
+        if self._editor.characterWidth():
+            self._editor.setCharacterWidth(self._editor.characterWidth())
 
 
 class TextEditorSettingsWidget(QTabWidget):

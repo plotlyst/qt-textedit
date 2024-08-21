@@ -1100,6 +1100,7 @@ class RichTextEditor(QWidget):
         vbox(self, 0, 0)
         self._widthPercentage: int = 0
         self._maxContentWidth: int = -1
+        self._characterWidth: int = 0
         self._settings: Optional[TextEditorSettingsWidget] = None
 
         self._toolbar = StandardTextEditorToolbar(self)
@@ -1157,13 +1158,14 @@ class RichTextEditor(QWidget):
     def widthPercentage(self) -> int:
         return self._widthPercentage
 
-    def setCharacterWidth(self, count: int = 80):
-        metrics = QtGui.QFontMetricsF(self._textedit.font())
-        self._maxContentWidth = metrics.boundingRect('M' * count).width()
-        self._resize()
-
     def characterWidth(self) -> int:
-        return self._maxContentWidth
+        return self._characterWidth
+
+    def setCharacterWidth(self, count: int = 80):
+        self._characterWidth = count
+        metrics = QtGui.QFontMetricsF(self._textedit.font())
+        self._maxContentWidth = metrics.boundingRect('M' * self._characterWidth).width()
+        self._resize()
 
     def setWidthPercentage(self, percentage: int):
         if 0 < percentage <= 100:
