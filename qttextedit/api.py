@@ -11,7 +11,7 @@ from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal, QMargins
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat, QKeyEvent, \
-    QColor, QWheelEvent, QTextFrame
+    QColor, QWheelEvent, QTextFrame, QTextDocument
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton, QLineEdit, QPushButton
 
@@ -26,7 +26,7 @@ from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumbe
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
-    SHORT_ARROW_LEFT_RIGHT, qta_icon, remove_font, q_action, CloseButton
+    SHORT_ARROW_LEFT_RIGHT, qta_icon, q_action, CloseButton
 
 
 class DashInsertionMode(Enum):
@@ -249,6 +249,10 @@ class EnhancedTextEdit(QTextEdit):
             return
         super(EnhancedTextEdit, self).cut()
 
+    def insertMarkdown(self, text: str):
+        cursor = self.textCursor()
+        cursor.insertMarkdown(text)
+
     def insertFromMimeData(self, source: QMimeData) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
             return
@@ -258,7 +262,9 @@ class EnhancedTextEdit(QTextEdit):
             super(EnhancedTextEdit, self).insertFromMimeData(source)
         else:
             if source.hasHtml():
-                self.insertHtml(remove_font(source.html()))
+                doc = QTextDocument()
+                doc.setHtml(source.html())
+                self.insertMarkdown(doc.toMarkdown())
             elif source.hasText():
                 self.insertPlainText(source.text())
 
