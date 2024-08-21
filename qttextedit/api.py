@@ -404,6 +404,8 @@ class EnhancedTextEdit(QTextEdit):
             self.setFontWeight(QFont.Bold if self.fontWeight() == QFont.Normal else QFont.Normal)
         if event.key() == Qt.Key_U and event.modifiers() & Qt.ControlModifier:
             self.setFontUnderline(not self.fontUnderline())
+        if event.key() == Qt.Key.Key_V and event.modifiers() & Qt.ControlModifier and event.modifiers() & Qt.ShiftModifier:
+            self.pasteAsPlainText()
         if event.text().isalpha():
             if (self._blockAutoCapitalization and cursor.atBlockStart()) or (
                     self._sentenceAutoCapitalization and self._atSentenceStart(cursor)):
