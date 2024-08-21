@@ -11,7 +11,7 @@ from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal, QMargins
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat, QKeyEvent, \
-    QColor, QWheelEvent, QTextFrame, QTextDocument
+    QColor, QWheelEvent, QTextFrame, QTextDocument, QFocusEvent
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton, QLineEdit, QPushButton
 
@@ -82,6 +82,15 @@ class _SideBarButton(QToolButton):
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
 
+class PopupBase(QFrame):
+
+    def aboutToShow(self):
+        pass
+
+    def activate(self):
+        pass
+
+
 class EnhancedTextEdit(QTextEdit):
 
     def __init__(self, parent=None):
@@ -132,6 +141,7 @@ class EnhancedTextEdit(QTextEdit):
                                 InsertRedBannerOperation,
                                 InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation,
                                 InsertPurpleBannerOperation]
+        self._popupWidget: Optional[QWidget] = None
 
         self.document().setDocumentMargin(40)
 
@@ -186,6 +196,9 @@ class EnhancedTextEdit(QTextEdit):
     def setCommandOperations(self, operations: List[Type[TextEditorOperation]]):
         self._commandActions.clear()
         self._commandActions.extend(operations)
+
+    def setPopupWidget(self, widget: QWidget):
+        self._popupWidget = widget
 
     def createEnhancedContextMenu(self, pos: QPoint) -> MenuWidget:
         menu = MenuWidget()
@@ -337,6 +350,14 @@ class EnhancedTextEdit(QTextEdit):
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         super(EnhancedTextEdit, self).mouseReleaseEvent(event)
 
+        if self._popupWidget:
+            if self.textCursor().selectedText():
+                if self._popupWidget.parent() is None:
+                    self._popupWidget.setParent(QApplication.activeWindow())
+                self._popup(self._popupWidget, event.pos())
+            elif self._popupWidget.isVisible():
+                self._popupWidget.hide()
+
         anchor = self.anchorAt(event.pos())
         if anchor and not self.textCursor().selectedText():
             QDesktopServices.openUrl(QUrl(anchor))
@@ -355,6 +376,10 @@ class EnhancedTextEdit(QTextEdit):
         # self._btnTablePlusBelow.setHidden(True)
         # self._btnTablePlusLeft.setHidden(True)
         # self._btnTablePlusRight.setHidden(True)
+
+    def focusOutEvent(self, event: QFocusEvent):
+        if self._popupWidget and self._popupWidget.isVisible():
+            self._popupWidget.hide()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
@@ -591,6 +616,8 @@ class EnhancedTextEdit(QTextEdit):
         self.setTabStopDistance(QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
 
     def _cursorPositionChanged(self):
+        if self._popupWidget and self._popupWidget.isVisible():
+            self._popupWidget.hide()
         if not self._uneditableBlocksEnabled:
             return
 
@@ -804,6 +831,20 @@ class EnhancedTextEdit(QTextEdit):
             menu.exec(self.viewport().mapToGlobal(parent.pos()))
         else:
             menu.exec(self.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+
+    def _popup(self, wdg: PopupBase, pos: QPoint):
+        ml = self.viewportMargins().left()
+        tl = self.viewportMargins().top()
+        cursor: QTextCursor = self.cursorForPosition(pos)
+        beginningCursor = QTextCursor(cursor.block())
+        rect = self.cursorRect(beginningCursor)
+        pos = QPoint(pos.x(), rect.y())
+        global_pos: QPoint = self.mapToGlobal(pos) - QPoint(-ml,
+                                                            wdg.sizeHint().height() + 40 - tl) - QApplication.activeWindow().pos()
+        wdg.setGeometry(global_pos.x(), global_pos.y(), wdg.sizeHint().width(),
+                        wdg.sizeHint().height())
+
+        qtanim.fade_in(wdg, teardown=wdg.activate)
 
 
 class TextEditorOperationButton(QToolButton):
