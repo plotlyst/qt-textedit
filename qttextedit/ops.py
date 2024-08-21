@@ -478,6 +478,7 @@ class SliderSectionWidget(AbstractSettingsSectionWidget):
         super(SliderSectionWidget, self).__init__(name, parent)
         self._slider = QSlider(Qt.Horizontal)
         self._slider.setCursor(Qt.PointingHandCursor)
+        self._slider.setMaximumWidth(200)
         self._slider.setMinimum(min_)
         self._slider.setMaximum(max_)
         self.layout().addWidget(self._slider)
