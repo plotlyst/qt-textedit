@@ -190,25 +190,25 @@ class EnhancedTextEdit(QTextEdit):
         menu = MenuWidget()
         menu.addSeparator()
         selected = bool(self.textCursor().selectedText())
-        action = menu.addAction(
+        menu.addAction(
             q_action('Cut', qta_icon('fa5s.cut'), self.cut, tooltip='Cut selected text', enabled=selected))
-        action = menu.addAction(
+        menu.addAction(
             q_action('Copy', qta_icon('fa5s.copy'), self.copy, tooltip='Copy selected text', enabled=selected))
-        action = menu.addAction(q_action('Paste', qta_icon('fa5s.paste'), self.paste,
-                                         tooltip='Paste from clipboard and adjust to the current style',
-                                         enabled=not self.isReadOnly()))
+        menu.addAction(q_action('Paste', qta_icon('fa5s.paste'), self.paste,
+                                tooltip='Paste from clipboard and adjust to the current style',
+                                enabled=not self.isReadOnly()))
 
         menu.addSeparator()
         paste_submenu = MenuWidget()
         paste_submenu.setTitle('Paste as...')
         menu.addMenu(paste_submenu)
         paste_submenu.setDisabled(self.isReadOnly())
-        action = paste_submenu.addAction(q_action('Paste as plain text', slot=self.pasteAsPlainText,
-                                                  tooltip='Paste as plain text without any formatting',
-                                                  enabled=not self.isReadOnly()))
-        action = paste_submenu.addAction(q_action('Paste with original style', slot=self.pasteAsOriginalText,
-                                                  tooltip='Paste with the original formatting',
-                                                  enabled=not self.isReadOnly()))
+        paste_submenu.addAction(q_action('Paste as plain text', slot=self.pasteAsPlainText,
+                                         tooltip='Paste as plain text without any formatting',
+                                         enabled=not self.isReadOnly()))
+        paste_submenu.addAction(q_action('Paste with original style', slot=self.pasteAsOriginalText,
+                                         tooltip='Paste with the original formatting',
+                                         enabled=not self.isReadOnly()))
 
         anchor = self.anchorAt(pos)
         if anchor:

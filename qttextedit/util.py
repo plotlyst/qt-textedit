@@ -4,7 +4,7 @@ from typing import Optional
 
 import qtawesome
 from qthandy import pointy, transparent
-from qtpy.QtCore import QSize, Qt, QEvent
+from qtpy.QtCore import QSize, Qt, QEvent, QObject
 from qtpy.QtGui import QTextCursor, QIcon, QAction
 from qtpy.QtWidgets import QToolButton
 
@@ -138,7 +138,7 @@ class CloseButton(QToolButton):
         self.pressed.connect(lambda: self.setIcon(qta_icon('ei.remove', colorOn)))
         self.released.connect(lambda: self.setIcon(qta_icon('ei.remove', colorOff)))
 
-    def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.Enter:
             self.setIcon(qta_icon('ei.remove', self._colorHover))
         elif event.type() == QEvent.Type.Leave:
