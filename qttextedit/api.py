@@ -84,10 +84,10 @@ class _SideBarButton(QToolButton):
 
 class PopupBase(QFrame):
 
-    def aboutToShow(self):
+    def beforeShown(self):
         pass
 
-    def activate(self):
+    def afterShown(self):
         pass
 
 
@@ -836,15 +836,14 @@ class EnhancedTextEdit(QTextEdit):
         ml = self.viewportMargins().left()
         tl = self.viewportMargins().top()
         cursor: QTextCursor = self.cursorForPosition(pos)
-        beginningCursor = QTextCursor(cursor.block())
-        rect = self.cursorRect(beginningCursor)
+        rect = self.cursorRect(cursor)
         pos = QPoint(pos.x(), rect.y())
         global_pos: QPoint = self.mapToGlobal(pos) - QPoint(-ml,
                                                             wdg.sizeHint().height() + 40 - tl) - QApplication.activeWindow().pos()
         wdg.setGeometry(global_pos.x(), global_pos.y(), wdg.sizeHint().width(),
                         wdg.sizeHint().height())
-
-        qtanim.fade_in(wdg, teardown=wdg.activate)
+        wdg.beforeShown()
+        qtanim.fade_in(wdg, teardown=wdg.afterShown)
 
 
 class TextEditorOperationButton(QToolButton):
