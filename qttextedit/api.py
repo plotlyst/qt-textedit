@@ -939,8 +939,10 @@ class TextEditorToolbar(QFrame):
             btn.op.activateOperation(textEdit, editor)
 
     def updateFormat(self, textEdit: QTextEdit):
+        self.btnGroupAlignment.setExclusive(False)
         for btn in self._textEditorOperations.values():
             btn.op.updateFormat(textEdit)
+        self.btnGroupAlignment.setExclusive(True)
 
     def _initOperation(self, operationType: Type[TextEditorOperation]):
         operation = operationType()

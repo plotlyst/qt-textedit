@@ -40,6 +40,7 @@ class TextEditorOperationAction(QAction, TextEditorOperation):
         if shortcut:
             self.setShortcut(shortcut)
         self.setCheckable(checkable)
+        self._locked = False
 
     @abstractmethod
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
@@ -234,14 +235,26 @@ class ColorOperation(TextEditorOperationWidgetAction):
 class AlignmentOperation(TextEditorOperationAction):
 
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
-        self.triggered.connect(lambda: textEdit.setAlignment(self.alignment()))
+        self.triggered.connect(partial(self._triggered, textEdit))
 
     def updateFormat(self, textEdit: QTextEdit):
-        self.setChecked(textEdit.alignment() == self.alignment())
+        self._locked = True
+        if textEdit.alignment() & self.alignment():
+            self.setChecked(True)
+        else:
+            self.setChecked(False)
+        self._locked = False
 
     @abstractmethod
     def alignment(self):
         pass
+
+    def _triggered(self, textEdit: QTextEdit, checked: bool):
+        if self._locked:
+            return
+        if not checked:
+            return
+        textEdit.setAlignment(self.alignment())
 
 
 class AlignLeftOperation(AlignmentOperation):
@@ -257,7 +270,7 @@ class AlignCenterOperation(AlignmentOperation):
         super(AlignCenterOperation, self).__init__('fa5s.align-center', 'Align center', checkable=True, parent=parent)
 
     def alignment(self):
-        return Qt.AlignCenter
+        return Qt.AlignHCenter
 
 
 class AlignRightOperation(AlignmentOperation):
