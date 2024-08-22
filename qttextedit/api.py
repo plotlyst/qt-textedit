@@ -378,6 +378,7 @@ class EnhancedTextEdit(QTextEdit):
         # self._btnTablePlusRight.setHidden(True)
 
     def focusOutEvent(self, event: QFocusEvent):
+        super().focusOutEvent(event)
         if self._popupWidget and self._popupWidget.isVisible():
             self._popupWidget.hide()
 
