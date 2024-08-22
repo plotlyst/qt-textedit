@@ -471,26 +471,10 @@ class EnhancedTextEdit(QTextEdit):
                 cursor.insertText(SHORT_ARROW_LEFT_RIGHT)
                 return
         if event.key() == Qt.Key_Apostrophe:
-            if has_character_left(cursor):
-                self.textCursor().insertText(RIGHT_SINGLE_QUOTATION)
-            elif has_character_right(cursor):
-                self.textCursor().insertText(LEFT_SINGLE_QUOTATION)
-            else:
-                self.textCursor().insertText(LEFT_SINGLE_QUOTATION)
-                self.textCursor().insertText(RIGHT_SINGLE_QUOTATION)
-                cursor.movePosition(QTextCursor.PreviousCharacter)
-                self.setTextCursor(cursor)
+            self._insertQuote(cursor, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION)
             return
         if event.key() == Qt.Key_QuoteDbl:
-            if has_character_left(cursor):
-                self.textCursor().insertText(RIGHT_DOUBLE_QUOTATION)
-            elif has_character_right(cursor):
-                self.textCursor().insertText(LEFT_DOUBLE_QUOTATION)
-            else:
-                self.textCursor().insertText(LEFT_DOUBLE_QUOTATION)
-                self.textCursor().insertText(RIGHT_DOUBLE_QUOTATION)
-                cursor.movePosition(QTextCursor.PreviousCharacter)
-                self.setTextCursor(cursor)
+            self._insertQuote(cursor, LEFT_DOUBLE_QUOTATION, RIGHT_DOUBLE_QUOTATION)
             return
         if event.key() == Qt.Key_Delete and (
                 self._editionState == _TextEditionState.DEL_BLOCKED or
@@ -764,6 +748,20 @@ class EnhancedTextEdit(QTextEdit):
         if block.isValid():
             cursor.deleteChar()
         cursor.endEditBlock()
+
+    def _insertQuote(self, cursor: QTextCursor, left: str, right: str):
+        if cursor.hasSelection():
+            selected_text = cursor.selectedText()
+            cursor.insertText(left + selected_text + right)
+        elif has_character_left(cursor):
+            self.textCursor().insertText(right)
+        elif has_character_right(cursor):
+            self.textCursor().insertText(left)
+        else:
+            self.textCursor().insertText(left)
+            self.textCursor().insertText(right)
+            cursor.movePosition(QTextCursor.PreviousCharacter)
+            self.setTextCursor(cursor)
 
     def _insertRowAbove(self):
         if self._currentHoveredTableCell is None:
