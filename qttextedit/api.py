@@ -1143,7 +1143,7 @@ class RichTextEditor(QWidget):
         self._characterWidth: int = 0
         self._settings: Optional[TextEditorSettingsWidget] = None
 
-        self._toolbar = StandardTextEditorToolbar(self)
+        # self._toolbar = StandardTextEditorToolbar(self)
         self._wdgFind = TextFindWidget(self)
         self._wdgFind.setHidden(True)
         self._findCursor: Optional[QTextCursor] = None
@@ -1156,12 +1156,12 @@ class RichTextEditor(QWidget):
         self._wdgFind.replaceAll.connect(self._replaceAll)
         self._wdgFind.closed.connect(lambda: self._wdgFind.setHidden(True))
 
-        self.layout().addWidget(self._toolbar)
+        # self.layout().addWidget(self._toolbar)
         self.layout().addWidget(self._wdgFind)
         self.layout().addWidget(self._textedit)
 
-        self._toolbar.activate(self._textedit, self)
-        self._textedit.cursorPositionChanged.connect(lambda: self._toolbar.updateFormat(self._textedit))
+        # self._toolbar.activate(self._textedit, self)
+        # self._textedit.cursorPositionChanged.connect(lambda: self._toolbar.updateFormat(self._textedit))
 
     @property
     def textEdit(self):
@@ -1179,11 +1179,11 @@ class RichTextEditor(QWidget):
         else:
             super(RichTextEditor, self).keyPressEvent(event)
 
-    def toolbar(self) -> TextEditorToolbar:
-        return self._toolbar
+    # def toolbar(self) -> TextEditorToolbar:
+    #     return self._toolbar
 
-    def setToolbar(self, toolbar: TextEditorToolbar):
-        self._toolbar = toolbar
+    # def setToolbar(self, toolbar: TextEditorToolbar):
+    #     self._toolbar = toolbar
 
     def settingsWidget(self) -> Optional[TextEditorSettingsWidget]:
         return self._settings
@@ -1227,7 +1227,7 @@ class RichTextEditor(QWidget):
         margin = int(margin // 2)
         current_margins: QMargins = self._textedit.viewportMargins()
         self._textedit.setViewportMargins(margin, current_margins.top(), margin, current_margins.bottom())
-        margins(self._toolbar, left=margin)
+        # margins(self._toolbar, left=margin)
 
     def _initTextEdit(self) -> EnhancedTextEdit:
         return EnhancedTextEdit(self)
