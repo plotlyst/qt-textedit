@@ -432,7 +432,7 @@ class EnhancedTextEdit(QTextEdit):
         if event.key() == Qt.Key.Key_V and event.modifiers() & Qt.ControlModifier and event.modifiers() & Qt.ShiftModifier:
             self.pasteAsPlainText()
         if event.text().isalpha():
-            if (self._blockAutoCapitalization and cursor.atBlockStart()) or (
+            if (self._blockAutoCapitalization and cursor.atBlockStart() and not cursor.block().text()) or (
                     self._sentenceAutoCapitalization and self._atSentenceStart(cursor)):
                 self.textCursor().insertText(event.text().upper())
                 return
@@ -693,10 +693,10 @@ class EnhancedTextEdit(QTextEdit):
 
     def _atSentenceStart(self, cursor: QTextCursor) -> bool:
         if cursor.atBlockStart():
+            if cursor.block().text():
+                return False
             return True
         moved_cursor = select_previous_character(cursor)
-        if moved_cursor.selectedText() == '.':
-            return True
         if not cursor.atBlockEnd():
             right_moved_cursor = select_next_character(cursor)
             if right_moved_cursor.selectedText().isalpha():
