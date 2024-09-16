@@ -104,6 +104,7 @@ class EnhancedTextEdit(QTextEdit):
 
         self._uneditableBlocksEnabled: bool = False
         self._sidebarEnabled: bool = True
+        self._sidebarMenuEnabled: bool = True
         self._commandsEnabled: bool = True
         self._autoCapitalizationMode: AutoCapitalizationMode = AutoCapitalizationMode.NONE
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
@@ -186,6 +187,9 @@ class EnhancedTextEdit(QTextEdit):
 
     def setSidebarEnabled(self, value: bool):
         self._sidebarEnabled = value
+
+    def setSidebarMenuEnabled(self, value: bool):
+        self._sidebarMenuEnabled = value
 
     def setCommandsEnabled(self, value: bool):
         self._commandsEnabled = value
@@ -330,10 +334,15 @@ class EnhancedTextEdit(QTextEdit):
                 self._blockFormatPosition = cursor.blockNumber()
 
                 y_diff = (rect.height() - 20) // 2 + self.viewportMargins().top()
-                self._btnPlus.setGeometry(self.viewportMargins().left(), rect.y() + y_diff, 20, 20)
-                self._btnBlockFormat.setGeometry(self.viewportMargins().left() + 20, rect.y() + y_diff, 20, 20)
+                first_x = 40 if self._sidebarMenuEnabled else 20
+                doc_margin = int(self.document().documentMargin())
+                self._btnPlus.setGeometry(self.viewportMargins().left() - first_x + doc_margin, rect.y() + y_diff, 20,
+                                          20)
                 self._btnPlus.setVisible(True)
-                self._btnBlockFormat.setVisible(True)
+                if self._sidebarMenuEnabled:
+                    self._btnBlockFormat.setGeometry(self.viewportMargins().left() - first_x + 20 + doc_margin,
+                                                     rect.y() + y_diff, 20, 20)
+                    self._btnBlockFormat.setVisible(True)
 
         if cursor.atBlockStart() or cursor.atBlockEnd():
             QApplication.restoreOverrideCursor()
@@ -365,8 +374,8 @@ class EnhancedTextEdit(QTextEdit):
     def enterEvent(self, event: QEvent) -> None:
         super(EnhancedTextEdit, self).enterEvent(event)
         if self._blockFormatPosition >= 0:
-            self._btnPlus.setVisible(True)
-            self._btnBlockFormat.setVisible(True)
+            self._btnPlus.setVisible(self._sidebarEnabled)
+            self._btnBlockFormat.setVisible(self._sidebarMenuEnabled)
 
     def leaveEvent(self, event: QEvent) -> None:
         super(EnhancedTextEdit, self).leaveEvent(event)
