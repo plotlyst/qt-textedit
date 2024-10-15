@@ -528,7 +528,7 @@ class PageWidthSectionSettingWidget(SliderSectionWidget):
 
 class TextWidthSectionSettingWidget(SliderSectionWidget):
     def __init__(self, parent=None):
-        super().__init__('Text Width', 40, 80, parent)
+        super().__init__('Text Width', 30, 80, parent)
 
     def _activate(self):
         self._slider.setValue(self._editor.characterWidth())
@@ -624,7 +624,7 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
 
 class FontSizeSectionSettingWidget(SliderSectionWidget):
     def __init__(self, parent=None):
-        super(FontSizeSectionSettingWidget, self).__init__('Font Size', 10, 20, parent)
+        super(FontSizeSectionSettingWidget, self).__init__('Font Size', 10, 28, parent)
 
     def _activate(self):
         size = self._editor.textEdit.font().pointSize()
