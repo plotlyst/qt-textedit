@@ -558,7 +558,7 @@ class EnhancedTextEdit(QTextEdit):
     def setHeading(self, heading: int):
         cursor: QTextCursor = self.textCursor()
         cursor.beginEditBlock()
-        cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
+        cursor.select(QTextCursor.SelectionType.LineUnderCursor)
         self.setTextCursor(cursor)
 
         blockFormat: QTextBlockFormat = cursor.blockFormat()
