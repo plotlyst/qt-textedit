@@ -527,6 +527,8 @@ class PageWidthSectionSettingWidget(SliderSectionWidget):
 
 
 class TextWidthSectionSettingWidget(SliderSectionWidget):
+    widthChanged = Signal(int)
+
     def __init__(self, parent=None):
         super().__init__('Text Width', 30, 80, parent)
 
@@ -538,6 +540,7 @@ class TextWidthSectionSettingWidget(SliderSectionWidget):
         if self._editor is None:
             return
         self._editor.setCharacterWidth(value)
+        self.widthChanged.emit(value)
 
 
 DEFAULT_FONT_FAMILIES = []
@@ -623,6 +626,8 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
 
 
 class FontSizeSectionSettingWidget(SliderSectionWidget):
+    sizeChanged = Signal(int)
+
     def __init__(self, parent=None):
         super(FontSizeSectionSettingWidget, self).__init__('Font Size', 10, 28, parent)
 
@@ -639,6 +644,8 @@ class FontSizeSectionSettingWidget(SliderSectionWidget):
         self._editor.textEdit.setFont(font)
         if self._editor.characterWidth():
             self._editor.setCharacterWidth(self._editor.characterWidth())
+
+        self.sizeChanged.emit(value)
 
 
 class TextEditorSettingsWidget(QTabWidget):
