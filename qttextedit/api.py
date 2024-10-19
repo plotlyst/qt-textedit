@@ -464,6 +464,14 @@ class EnhancedTextEdit(QTextEdit):
                 elif self._dashInsertionMode == DashInsertionMode.INSERT_EM_DASH:
                     cursor.insertText(EM_DASH)
                 return
+            elif moved_cursor.selectedText() == EN_DASH and self._dashInsertionMode == DashInsertionMode.INSERT_EN_DASH:
+                cursor.deletePreviousChar()
+                cursor.insertText(EM_DASH)
+                return
+            elif moved_cursor.selectedText() == EM_DASH and self._dashInsertionMode == DashInsertionMode.INSERT_EM_DASH:
+                cursor.deletePreviousChar()
+                cursor.insertText(EN_DASH)
+                return
         if event.key() == Qt.Key_Greater:
             moved_cursor = select_previous_character(cursor, 2)
             if moved_cursor.selectedText() == '<-':
