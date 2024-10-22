@@ -585,6 +585,11 @@ class EnhancedTextEdit(QTextEdit):
         cursor.endEditBlock()
 
     def _showFormatMenu(self):
+        block = self.document().findBlockByNumber(self._blockFormatPosition)
+        cursor = QTextCursor(block)
+        self.setTextCursor(cursor)
+        self.ensureCursorVisible()
+
         if not self._blockFormatMenu.actions():
             self._blockFormatMenu.addAction(
                 q_action('Duplicate', qta_icon('fa5.copy'), lambda: self._duplicateBlock(self._blockFormatPosition)))
