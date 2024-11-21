@@ -356,7 +356,7 @@ class InsertBannerOperation(TextEditorOperationAction):
         frameFormat.setBorderStyle(QTextFrameFormat.BorderStyle.BorderStyle_Outset)
         frameFormat.setBorderBrush(QColor(self._borderColor))
         frameFormat.setBackground(QColor(self._bgColor))
-        frameFormat.setCellPadding(10)
+        frameFormat.setCellPadding(15)
         frameFormat.setCellSpacing(0)
         frameFormat.setColumnWidthConstraints([QTextLength(QTextLength.PercentageLength, 100)])
 
