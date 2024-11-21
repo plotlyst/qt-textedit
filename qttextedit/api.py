@@ -717,9 +717,17 @@ class EnhancedTextEdit(QTextEdit):
         elif cursor.block().textList():
             cursor.insertBlock(cursor.blockFormat(), QTextCharFormat())
         else:
-            cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
-            if showCommands:
-                self._showCommands(self._btnPlus)
+            if not showCommands and not cursor.atBlockEnd() and cursor.blockFormat().headingLevel():
+                heading = cursor.blockFormat().headingLevel()
+                self.setHeading(0)
+                prevCursor = QTextCursor(cursor)
+                cursor.insertBlock(self._defaultBlockFormat)
+                self.setHeading(heading)
+                self.setTextCursor(prevCursor)
+            else:
+                cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
+                if showCommands:
+                    self._showCommands(self._btnPlus)
         self.ensureCursorVisible()
 
     def _duplicateBlock(self, blockNumber: int):
