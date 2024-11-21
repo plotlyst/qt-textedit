@@ -12,7 +12,6 @@ from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
     QFileDialog, QLabel, QSlider, QButtonGroup, QRadioButton, QTabWidget
-
 from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import button, qta_icon
 
@@ -349,15 +348,19 @@ class InsertBannerOperation(TextEditorOperationAction):
         self._bgColor = bgColor
 
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
-        frameFormat = QTextFrameFormat()
-        frameFormat.setPadding(10)
-        frameFormat.setTopMargin(1)
-        frameFormat.setBottomMargin(1)
-        frameFormat.setBorder(1)
-        frameFormat.setBorderStyle(QTextFrameFormat.BorderStyle.BorderStyle_Inset)
+        frameFormat = QTextTableFormat()
+        frameFormat.setPadding(0)
+        frameFormat.setMargin(10)
+        frameFormat.setBorder(0)
+        frameFormat.setBorderCollapse(False)
+        frameFormat.setBorderStyle(QTextFrameFormat.BorderStyle.BorderStyle_Outset)
         frameFormat.setBorderBrush(QColor(self._borderColor))
         frameFormat.setBackground(QColor(self._bgColor))
-        self.triggered.connect(lambda: textEdit.textCursor().insertFrame(frameFormat))
+        frameFormat.setCellPadding(10)
+        frameFormat.setCellSpacing(0)
+        frameFormat.setColumnWidthConstraints([QTextLength(QTextLength.PercentageLength, 100)])
+
+        self.triggered.connect(lambda: textEdit.textCursor().insertTable(1, 1, frameFormat))
 
 
 class InsertRedBannerOperation(InsertBannerOperation):
