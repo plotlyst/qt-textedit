@@ -724,10 +724,16 @@ class EnhancedTextEdit(QTextEdit):
                 cursor.insertBlock(self._defaultBlockFormat)
                 self.setHeading(heading)
                 self.setTextCursor(prevCursor)
+            elif not self.alignment() & Qt.AlignmentFlag.AlignLeft:
+                if cursor.block().text():
+                    cursor.insertBlock(cursor.blockFormat(), cursor.charFormat())
+                else:
+                    self.setAlignment(Qt.AlignmentFlag.AlignLeft)
             else:
                 cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
-                if showCommands:
-                    self._showCommands(self._btnPlus)
+
+            if showCommands:
+                self._showCommands(self._btnPlus)
         self.ensureCursorVisible()
 
     def _duplicateBlock(self, blockNumber: int):
