@@ -440,6 +440,9 @@ class EnhancedTextEdit(QTextEdit):
             self.setFontUnderline(not self.fontUnderline())
         if event.key() == Qt.Key.Key_V and event.modifiers() & Qt.ControlModifier and event.modifiers() & Qt.ShiftModifier:
             self.pasteAsPlainText()
+        if event.key() == Qt.Key_D and event.modifiers() & Qt.ControlModifier:
+            self._duplicateBlock(self.textCursor().blockNumber())
+            return
         if event.text().isalpha():
             if (self._blockAutoCapitalization and cursor.atBlockStart() and not cursor.block().text()) or (
                     self._sentenceAutoCapitalization and self._atSentenceStart(cursor)):
