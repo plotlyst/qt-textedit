@@ -11,10 +11,9 @@ from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal, QMargins
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat, QKeyEvent, \
-    QColor, QWheelEvent, QTextFrame, QTextDocument, QFocusEvent
+    QColor, QWheelEvent, QTextDocument, QFocusEvent
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton, QLineEdit, QPushButton
-
 from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumberedListOperation, \
     TextEditorOperationAction, TextEditorOperationMenu, \
     TextEditorOperationWidgetAction, TextEditingSettingsOperation, TextEditorSettingsWidget, TextOperation, \
@@ -551,14 +550,6 @@ class EnhancedTextEdit(QTextEdit):
         format.clearForeground()
         self.textCursor().setCharFormat(format)
 
-    def setText(self, text: str):
-        super().setText(text)
-        self._reformatFrames()
-
-    def setHtml(self, text: str):
-        super().setHtml(text)
-        self._reformatFrames()
-
     def setHeading(self, heading: int):
         cursor: QTextCursor = self.textCursor()
         cursor.beginEditBlock()
@@ -602,18 +593,6 @@ class EnhancedTextEdit(QTextEdit):
             self._blockFormatMenu.addSeparator()
             self._blockFormatMenu.addAction(
                 q_action('Delete', qta_icon('fa5s.trash-alt'), lambda: self._deleteBlock(self._blockFormatPosition)))
-
-    def _reformatFrames(self):
-        root: QTextFrame = self.document().rootFrame()
-        for frame in root.childFrames():
-            if isinstance(frame, QTextTable):
-                continue
-            frameFormat = frame.frameFormat()
-            frameFormat.setPadding(10)
-            frameFormat.setTopMargin(1)
-            frameFormat.setBottomMargin(1)
-            frameFormat.setBorder(1)
-            frame.setFrameFormat(frameFormat)
 
     def _adjustTabDistance(self):
         self.setTabStopDistance(QtGui.QFontMetricsF(self.font()).horizontalAdvance(' ') * 4)
