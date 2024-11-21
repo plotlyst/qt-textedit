@@ -126,7 +126,7 @@ class EnhancedTextEdit(QTextEdit):
         # self._btnTablePlusLeft.clicked.connect(self._insertColumnLeft)
         # self._btnTablePlusRight.clicked.connect(self._insertColumnRight)
 
-        self._btnPlus = _SideBarButton('fa5s.plus', 'Click to add a block below', parent=self)
+        self._btnPlus = _SideBarButton('ph.plus-light', 'Click to add a block below', parent=self)
         self._btnPlus.setHidden(True)
         self._btnPlus.clicked.connect(lambda: self._insertBlock(self._blockFormatPosition, showCommands=True))
         self._btnBlockFormat = _SideBarButton('ph.dots-six-vertical-bold', 'Click to open menu', parent=self)
