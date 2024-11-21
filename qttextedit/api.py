@@ -731,6 +731,9 @@ class EnhancedTextEdit(QTextEdit):
         cursor.beginEditBlock()
         self._insertBlock(blockNumber)
         self.textCursor().insertFragment(fragment)
+        heading = block.blockFormat().headingLevel()
+        if heading > 0:
+            self.setHeading(heading)
         cursor.endEditBlock()
 
     def _deleteBlock(self, blockNumber: int, force: bool = False):
