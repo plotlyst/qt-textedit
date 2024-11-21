@@ -502,22 +502,18 @@ class EnhancedTextEdit(QTextEdit):
                 self._editionState == _TextEditionState.BACKSPACE_BLOCKED or
                 self._editionState == _TextEditionState.REMOVAL_BLOCKED):
             return
+        if event.key() == Qt.Key_Backspace and cursor.currentFrame() and isinstance(cursor.currentFrame(),
+                                                                                    QTextTable):
+            frame: QTextTable = cursor.currentFrame()
+            if not cursor.block().text() and frame.columns() == 1 and frame.rows() == 1:
+                cursor.setPosition(frame.firstCursorPosition().position() - 1, QTextCursor.MoveAnchor)
+                cursor.setPosition(frame.lastCursorPosition().position() + 1, QTextCursor.KeepAnchor)
+                if len(cursor.selectedText()) <= 2:
+                    cursor.removeSelectedText()
+                    return
         if self._commandsEnabled and event.key() == Qt.Key_Slash and self.textCursor().atBlockStart():
             self._showCommands()
         super(EnhancedTextEdit, self).keyPressEvent(event)
-
-    # def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
-    #     super(EnhancedTextEdit, self).mouseDoubleClickEvent(event)
-    #     text = self.textCursor().selectedText()
-    #     if text:
-    #         x = event.pos().x() - self._quickFormatPopup.width() // 2
-    #         if x < 0:
-    #             x = 0
-    #         y = event.pos().y() + self.fontPointSize()
-    #         self._quickFormatPopup.setGeometry(x, y,
-    #                                            self._quickFormatPopup.width(),
-    #                                            self._quickFormatPopup.height())
-    #         qtanim.fade_in(self._quickFormatPopup, duration=150)
 
     def setBlockFormat(self, lineSpacing: int = 100, textIndent: int = 0, margin_left: int = 0, margin_top: int = 0,
                        margin_right: int = 0, margin_bottom: int = 0):
