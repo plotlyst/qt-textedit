@@ -854,6 +854,7 @@ class TextEditorOperationButton(QToolButton):
             btn_popup_menu(self, self.op)
             self.setIcon(self.op.icon())
             self.setToolTip(self.op.toolTip())
+            self.op.iconChanged.connect(self.setIcon)
         elif isinstance(self.op, TextEditorOperationWidgetAction):
             menu = QMenu(self)
             menu.addAction(self.op)

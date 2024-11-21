@@ -8,7 +8,7 @@ import qtawesome
 from qthandy import busy, vbox, line, bold, flow, margins, vspacer
 from qtpy.QtCore import Qt, QSize, Signal, QTimer
 from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent, QTextFrameFormat, QTextTableFormat, \
-    QTextLength
+    QTextLength, QIcon
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
     QFileDialog, QLabel, QSlider, QButtonGroup, QRadioButton, QTabWidget
@@ -58,6 +58,7 @@ class TextEditorOperationWidgetAction(QWidgetAction, TextEditorOperation):
 
 
 class TextEditorOperationMenu(QMenu, TextEditorOperation):
+    iconChanged = Signal(QIcon)
     def __init__(self, icon: str, tooltip: str = '', parent=None):
         super(TextEditorOperationMenu, self).__init__(parent)
         self.setToolTip(tooltip)
@@ -78,6 +79,15 @@ class FormatOperation(TextEditorOperationMenu):
             action.activateOperation(textEdit, editor)
             self.addAction(action)
         self.addSeparator()
+
+    def updateFormat(self, textEdit: QTextEdit):
+        heading = textEdit.textCursor().blockFormat().headingLevel()
+        if heading == 0:
+            icon = qta_icon('mdi.format-text')
+        else:
+            icon = qta_icon(f'mdi.format-header-{heading}')
+
+        self.iconChanged.emit(icon)
 
 
 class TextOperation(TextEditorOperationAction):
