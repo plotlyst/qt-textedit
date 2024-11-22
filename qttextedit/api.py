@@ -198,6 +198,8 @@ class EnhancedTextEdit(QTextEdit):
 
     def setBlockPlaceholderEnabled(self, value: bool):
         self._blockPlaceholderEnabled = value
+        if self._blockPlaceholderEnabled:
+            self.setPlaceholderText('')
 
     def setDocumentMargin(self, value: int):
         self.document().setDocumentMargin(value)
