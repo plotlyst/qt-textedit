@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         self.editor.textEdit.setAutoCapitalizationMode(AutoCapitalizationMode.SENTENCE)
         self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
 
-        self.editor.textEdit.setPlaceholderText('Write text')
+        self.editor.textEdit.setBlockPlaceholderEnabled(True)
         self.editor.textEdit.zoomIn(4)
 
         self.sourceViewed = QTextEdit()

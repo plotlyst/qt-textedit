@@ -8,7 +8,7 @@ from qthandy import vbox, hbox, spacer, vline, btn_popup_menu, margins, transluc
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 from qtpy import QtGui
-from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal, QMargins
+from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal, QMargins, QRect
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat, QKeyEvent, \
     QColor, QWheelEvent, QTextDocument, QFocusEvent
@@ -112,6 +112,9 @@ class EnhancedTextEdit(QTextEdit):
         self._defaultBlockFormat = QTextBlockFormat()
         self._currentHoveredTable: Optional[QTextTable] = None
         self._currentHoveredTableCell: Optional[QTextTableCell] = None
+        self._lastPaintedCursorRect = QRect(0, 0, 0, 0)
+        self._placeholderColor = QColor("#5E6C84")
+        self._blockPlaceholderEnabled: bool = False
 
         # self._btnTablePlusAbove = _SideBarButton('fa5s.plus', 'Insert a new row above', parent=self)
         # self._btnTablePlusAbove.setHidden(True)
@@ -192,6 +195,9 @@ class EnhancedTextEdit(QTextEdit):
 
     def setCommandsEnabled(self, value: bool):
         self._commandsEnabled = value
+
+    def setBlockPlaceholderEnabled(self, value: bool):
+        self._blockPlaceholderEnabled = value
 
     def setDocumentMargin(self, value: int):
         self.document().setDocumentMargin(value)
@@ -389,6 +395,47 @@ class EnhancedTextEdit(QTextEdit):
         super().focusOutEvent(event)
         if self._popupWidget and self._popupWidget.isVisible():
             self._popupWidget.hide()
+
+    def paintEvent(self, e: QtGui.QPaintEvent) -> None:
+        if self._blockPlaceholderEnabled and self._lastPaintedCursorRect != self.cursorRect(self.textCursor()):
+            self._lastPaintedCursorRect = self.cursorRect(self.textCursor())
+            self.viewport().update()
+        super().paintEvent(e)
+
+        if not self._blockPlaceholderEnabled:
+            return
+
+        block = self.textCursor().block()
+        if block.text() != "":
+            return
+
+        placeholderFont = self.font()
+        if block.textList():
+            placeholder = 'List'
+        elif block.blockFormat().headingLevel():
+            heading = block.blockFormat().headingLevel()
+            placeholder = f'Heading {heading}'
+            if heading == 1:
+                placeholderFont.setPointSizeF(placeholderFont.pointSize() * 2)
+            elif heading == 2:
+                placeholderFont.setPointSizeF(placeholderFont.pointSize() * 1.5)
+            elif heading == 3:
+                placeholderFont.setPointSizeF(placeholderFont.pointSize() * 1.2)
+            placeholderFont.setWeight(QtGui.QFont.Weight.Bold)
+        else:
+            alignment = self.alignment()
+            if alignment & Qt.AlignmentFlag.AlignCenter:
+                placeholder = "Centered"
+            elif alignment & Qt.AlignmentFlag.AlignRight:
+                return
+            else:
+                placeholder = "Begin writing, or type '/' for commands"
+
+        painter = QtGui.QPainter(self.viewport())
+        painter.setPen(self._placeholderColor)
+        painter.setFont(placeholderFont)
+        font_metrics = QtGui.QFontMetrics(placeholderFont)
+        painter.drawText(self._lastPaintedCursorRect.bottomLeft() - QPoint(0, font_metrics.descent()), placeholder)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
