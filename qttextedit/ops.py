@@ -360,6 +360,11 @@ class InsertBannerOperation(TextEditorOperationAction):
         self._bgColor = bgColor
 
     def activateOperation(self, textEdit: QTextEdit, editor: Optional[QWidget] = None):
+        def insertBanner():
+            table = textEdit.textCursor().insertTable(1, 1, frameFormat)
+            cursor = table.cellAt(0, 0).firstCursorPosition()
+            textEdit.setTextCursor(cursor)
+
         frameFormat = QTextTableFormat()
         frameFormat.setPadding(0)
         frameFormat.setMargin(10)
@@ -372,7 +377,7 @@ class InsertBannerOperation(TextEditorOperationAction):
         frameFormat.setCellSpacing(0)
         frameFormat.setColumnWidthConstraints([QTextLength(QTextLength.PercentageLength, 100)])
 
-        self.triggered.connect(lambda: textEdit.textCursor().insertTable(1, 1, frameFormat))
+        self.triggered.connect(insertBanner)
 
 
 class InsertRedBannerOperation(InsertBannerOperation):
