@@ -891,6 +891,7 @@ class EnhancedTextEdit(QTextEdit):
             action.activateOperation(self)
             menu.addAction(action)
         menu.aboutToHide.connect(cleanUp)
+        menu.setKeyNavigationEnabled(True)
 
         if parent:
             menu.exec(self.viewport().mapToGlobal(parent.pos()))
