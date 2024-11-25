@@ -12,6 +12,7 @@ from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
     QFileDialog, QLabel, QSlider, QButtonGroup, QRadioButton, QTabWidget
+
 from qttextedit.diag import LinkCreationDialog
 from qttextedit.util import button, qta_icon
 
@@ -59,6 +60,7 @@ class TextEditorOperationWidgetAction(QWidgetAction, TextEditorOperation):
 
 class TextEditorOperationMenu(QMenu, TextEditorOperation):
     iconChanged = Signal(QIcon)
+
     def __init__(self, icon: str, tooltip: str = '', parent=None):
         super(TextEditorOperationMenu, self).__init__(parent)
         self.setToolTip(tooltip)
