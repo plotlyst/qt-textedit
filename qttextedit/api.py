@@ -1212,7 +1212,7 @@ class RichTextEditor(QWidget):
         self._characterWidth: int = 0
         self._settings: Optional[TextEditorSettingsWidget] = None
 
-        self._toolbar = StandardTextEditorToolbar(self)
+        self._toolbar = self._initToolbar()
         self._wdgFind = TextFindWidget(self)
         self._wdgFind.setHidden(True)
         self._findCursor: Optional[QTextCursor] = None
@@ -1297,6 +1297,9 @@ class RichTextEditor(QWidget):
         current_margins: QMargins = self._textedit.viewportMargins()
         self._textedit.setViewportMargins(margin, current_margins.top(), margin, current_margins.bottom())
         # margins(self._toolbar, left=margin)
+
+    def _initToolbar(self) -> TextEditorToolbar:
+        return StandardTextEditorToolbar(self)
 
     def _initTextEdit(self) -> EnhancedTextEdit:
         return EnhancedTextEdit(self)
