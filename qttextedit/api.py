@@ -14,6 +14,7 @@ from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFor
     QColor, QWheelEvent, QTextDocument, QFocusEvent
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton, QLineEdit, QPushButton
+
 from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumberedListOperation, \
     TextEditorOperationAction, TextEditorOperationMenu, \
     TextEditorOperationWidgetAction, TextEditingSettingsOperation, TextEditorSettingsWidget, TextOperation, \
@@ -83,6 +84,15 @@ class _SideBarButton(QToolButton):
 
 class PopupBase(QFrame):
 
+    def freeze(self):
+        pass
+
+    def unfreeze(self):
+        pass
+
+    def isFrozen(self):
+        pass
+
     def beforeShown(self):
         pass
 
@@ -144,7 +154,7 @@ class EnhancedTextEdit(QTextEdit):
                                 InsertRedBannerOperation,
                                 InsertBlueBannerOperation, InsertGreenBannerOperation, InsertYellowBannerOperation,
                                 InsertPurpleBannerOperation]
-        self._popupWidget: Optional[QWidget] = None
+        self._popupWidget: Optional[PopupBase] = None
 
         self.document().setDocumentMargin(40)
 
@@ -395,7 +405,7 @@ class EnhancedTextEdit(QTextEdit):
 
     def focusOutEvent(self, event: QFocusEvent):
         super().focusOutEvent(event)
-        if self._popupWidget and self._popupWidget.isVisible():
+        if self._popupWidget and self._popupWidget.isVisible() and not self._popupWidget.isFrozen():
             self._popupWidget.hide()
 
     def paintEvent(self, e: QtGui.QPaintEvent) -> None:
@@ -959,11 +969,13 @@ class TextEditorToolbar(QFrame):
         self.btnGroupAlignment = QButtonGroup(self)
         self.btnGroupAlignment.setExclusive(True)
 
-    def addTextEditorOperation(self, operationType: Type[TextEditorOperation]):
+    def addTextEditorOperation(self, operationType: Type[TextEditorOperation]) -> TextEditorOperationButton:
         operation, btn = self._initOperation(operationType)
         if self._linkedTextEdit:
             operation.activateOperation(self._linkedTextEdit, self._linkedTextEditor)
         self.layout().addWidget(btn)
+
+        return btn
 
     def insertTextEditorOperationBefore(self, reference: Type[TextEditorOperation],
                                         operationType: Type[TextEditorOperation]):
