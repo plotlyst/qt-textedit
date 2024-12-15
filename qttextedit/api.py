@@ -287,7 +287,28 @@ class EnhancedTextEdit(QTextEdit):
 
     def insertMarkdown(self, text: str):
         cursor = self.textCursor()
-        cursor.insertMarkdown(text)
+
+        cursor.beginEditBlock()
+
+        try:
+            start_pos = cursor.position()
+            cursor.insertMarkdown(text)
+            end_pos = cursor.position()
+
+            cursor.setPosition(start_pos)
+            cursor.setPosition(end_pos, QTextCursor.KeepAnchor)
+
+            block = cursor.block()
+            while block.isValid() and block.position() < end_pos:
+                cursor.setPosition(block.position())
+                cursor.select(QTextCursor.BlockUnderCursor)
+                cursor.mergeBlockFormat(self._defaultBlockFormat)
+                block = block.next()
+
+            cursor.clearSelection()
+            self.setTextCursor(cursor)
+        finally:
+            cursor.endEditBlock()
 
     def insertFromMimeData(self, source: QMimeData) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
