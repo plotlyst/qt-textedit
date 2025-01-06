@@ -824,7 +824,7 @@ class EnhancedTextEdit(QTextEdit):
 
         cursor.beginEditBlock()
         self._insertBlock(blockNumber)
-        self.textCursor().insertFragment(fragment)
+        self.textCursor().insertMarkdown(fragment.toMarkdown())
         heading = block.blockFormat().headingLevel()
         if heading > 0:
             self.setHeading(heading)
