@@ -321,7 +321,7 @@ class EnhancedTextEdit(QTextEdit):
             if source.hasHtml():
                 doc = QTextDocument()
                 doc.setHtml(source.html())
-                self.insertMarkdown(doc.toMarkdown())
+                self.insertMarkdown(doc.toMarkdown().rstrip('\n'))
             elif source.hasText():
                 self.insertPlainText(source.text())
 
