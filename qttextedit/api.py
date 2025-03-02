@@ -284,30 +284,33 @@ class EnhancedTextEdit(QTextEdit):
             return
         super(EnhancedTextEdit, self).cut()
 
-    def insertMarkdown(self, text: str):
-        cursor = self.textCursor()
+    def insertDocument(self, doc: QTextDocument):
+        def _preprocessMarkdown(md: str) -> str:
+            lines = md.split('\n')
+            if len(lines) < 2:
+                return md
+            for i in range(len(lines)):
+                if lines[i].strip() == '***':
+                    lines[i] = '<span>***</span>'
+                elif lines[i].strip() == '###':
+                    lines[i] = '<span>###</span>'
+            return '\n'.join(lines)
+
+        cursor: QTextCursor = self.textCursor()
 
         cursor.beginEditBlock()
+        start_pos = cursor.position()
 
-        try:
-            start_pos = cursor.position()
-            cursor.insertMarkdown(text)
-            end_pos = cursor.position()
+        md = doc.toMarkdown().rstrip('\n')
+        md = _preprocessMarkdown(md)
+        cursor.insertMarkdown(md)
 
-            cursor.setPosition(start_pos)
-            cursor.setPosition(end_pos, QTextCursor.KeepAnchor)
+        end_pos = cursor.position()
+        cursor.setPosition(start_pos, QTextCursor.MoveAnchor)
+        cursor.setPosition(end_pos, QTextCursor.KeepAnchor)
+        cursor.mergeBlockFormat(self._defaultBlockFormat)
 
-            block = cursor.block()
-            while block.isValid() and block.position() < end_pos:
-                cursor.setPosition(block.position())
-                cursor.select(QTextCursor.BlockUnderCursor)
-                cursor.mergeBlockFormat(self._defaultBlockFormat)
-                block = block.next()
-
-            cursor.clearSelection()
-            self.setTextCursor(cursor)
-        finally:
-            cursor.endEditBlock()
+        cursor.endEditBlock()
 
     def insertFromMimeData(self, source: QMimeData) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
@@ -320,9 +323,11 @@ class EnhancedTextEdit(QTextEdit):
             if source.hasHtml():
                 doc = QTextDocument()
                 doc.setHtml(source.html())
-                self.insertMarkdown(doc.toMarkdown().rstrip('\n'))
+                self.insertDocument(doc)
             elif source.hasText():
                 self.insertPlainText(source.text())
+            else:
+                super(EnhancedTextEdit, self).insertFromMimeData(source)
 
     def wheelEvent(self, event: QWheelEvent):
         super().wheelEvent(event)
@@ -614,8 +619,6 @@ class EnhancedTextEdit(QTextEdit):
         self._defaultBlockFormat = blockFmt
 
         cursor = self.textCursor()
-        cursor.clearSelection()
-        cursor.select(QTextCursor.Document)
         cursor.mergeBlockFormat(blockFmt)
 
     def setStrikethrough(self, strikethrough: bool):
