@@ -437,9 +437,8 @@ class EnhancedTextEdit(QTextEdit):
         self._defaultPlaceholder = placeholderText
 
     def paintEvent(self, e: QtGui.QPaintEvent) -> None:
-        if (
-                self._blockPlaceholderEnabled or self.textCursor().blockNumber() == 0) and self._lastPaintedCursorRect != self.cursorRect(
-            self.textCursor()):
+        if ((self._blockPlaceholderEnabled or self.textCursor().blockNumber() == 0)
+                and self._lastPaintedCursorRect != self.cursorRect(self.textCursor())):
             self._lastPaintedCursorRect = self.cursorRect(self.textCursor())
             self.viewport().update()
         super().paintEvent(e)

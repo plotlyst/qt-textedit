@@ -9,18 +9,18 @@ jobs:
       matrix:
         pyqt: [ 'PyQt5', 'PyQt6==6.4.2 PyQt6-Qt6==6.4.2', 'PySide2', 'PySide6==6.4.2' ]
         os: [ ubuntu-20.04 ]
-        python-version: [ '3.8', '3.13' ]
+        python-version: [ '3.8', '3.10' ]
         include:
           - python-version: '3.8'
             pyqt: 'PyQt5'
             os: ubuntu-20.04
-          - python-version: '3.13'
+          - python-version: '3.10'
             pyqt: 'PyQt5'
             os: ubuntu-20.04
           - python-version: '3.8'
             pyqt: 'PyQt5'
             os: macos-13
-          - python-version: '3.13'
+          - python-version: '3.10'
             pyqt: 'PyQt6==6.4.2'
             os: macos-13
     runs-on: ${{ matrix.os }}
