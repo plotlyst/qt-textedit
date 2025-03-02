@@ -11,8 +11,7 @@ from qttextedit.api import AutoCapitalizationMode
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-
-        self.resize(500, 500)
+        self.resize(1000, 800)
 
         self.widget = QWidget(self)
         self.setCentralWidget(self.widget)
@@ -24,9 +23,11 @@ class MainWindow(QMainWindow):
         self.editor.textEdit.setAutoFormatting(QTextEdit.AutoAll)
         self.editor.textEdit.setAutoCapitalizationMode(AutoCapitalizationMode.SENTENCE)
         self.editor.textEdit.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
+        self.editor.textEdit.setBlockFormat(150, textIndent=20)
 
-        self.editor.textEdit.setBlockPlaceholderEnabled(True)
-        self.editor.textEdit.zoomIn(4)
+        # self.editor.textEdit.setBlockPlaceholderEnabled(True)
+        self.editor.textEdit.setPlaceholderText('Placeholder')
+        self.editor.textEdit.zoomIn(2)
 
         self.sourceViewed = QTextEdit()
         self.sourceViewed.setReadOnly(True)

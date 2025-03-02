@@ -125,6 +125,7 @@ class EnhancedTextEdit(QTextEdit):
         self._lastPaintedCursorRect = QRect(0, 0, 0, 0)
         self._placeholderColor = QColor("#5E6C84")
         self._blockPlaceholderEnabled: bool = False
+        self._defaultPlaceholder = "Begin writing, or type '/' for commands"
 
         # self._btnTablePlusAbove = _SideBarButton('fa5s.plus', 'Insert a new row above', parent=self)
         # self._btnTablePlusAbove.setHidden(True)
@@ -208,8 +209,6 @@ class EnhancedTextEdit(QTextEdit):
 
     def setBlockPlaceholderEnabled(self, value: bool):
         self._blockPlaceholderEnabled = value
-        if self._blockPlaceholderEnabled:
-            self.setPlaceholderText('')
 
     def setDocumentMargin(self, value: int):
         self.document().setDocumentMargin(value)
@@ -429,13 +428,18 @@ class EnhancedTextEdit(QTextEdit):
         if self._popupWidget and self._popupWidget.isVisible() and not self._popupWidget.isFrozen():
             self._popupWidget.hide()
 
+    def setPlaceholderText(self, placeholderText: str) -> None:
+        self._defaultPlaceholder = placeholderText
+
     def paintEvent(self, e: QtGui.QPaintEvent) -> None:
-        if self._blockPlaceholderEnabled and self._lastPaintedCursorRect != self.cursorRect(self.textCursor()):
+        if (
+                self._blockPlaceholderEnabled or self.textCursor().blockNumber() == 0) and self._lastPaintedCursorRect != self.cursorRect(
+            self.textCursor()):
             self._lastPaintedCursorRect = self.cursorRect(self.textCursor())
             self.viewport().update()
         super().paintEvent(e)
 
-        if not self._blockPlaceholderEnabled:
+        if not self._blockPlaceholderEnabled and self.textCursor().blockNumber() > 0:
             return
 
         block = self.textCursor().block()
@@ -462,7 +466,7 @@ class EnhancedTextEdit(QTextEdit):
             elif alignment & Qt.AlignmentFlag.AlignRight:
                 return
             else:
-                placeholder = "Begin writing, or type '/' for commands"
+                placeholder = self._defaultPlaceholder
 
         painter = QtGui.QPainter(self.viewport())
         painter.setPen(self._placeholderColor)
