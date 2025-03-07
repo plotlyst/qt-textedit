@@ -11,7 +11,7 @@ from qtpy import QtGui
 from qtpy.QtCore import Qt, QMimeData, QSize, QUrl, QBuffer, QIODevice, QPoint, QEvent, Signal, QMargins, QRect
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices, QFont, QTextBlockFormat, QTextCursor, QTextList, \
     QTextCharFormat, QTextFormat, QTextBlock, QTextTable, QTextTableCell, QTextLength, QTextTableFormat, QKeyEvent, \
-    QColor, QWheelEvent, QTextDocument, QFocusEvent
+    QColor, QWheelEvent, QTextDocument, QFocusEvent, QKeySequence
 from qtpy.QtWidgets import QMenu, QWidget, QApplication, QFrame, QButtonGroup, QTextEdit, \
     QInputDialog, QToolButton, QLineEdit, QPushButton
 
@@ -287,7 +287,9 @@ class EnhancedTextEdit(QTextEdit):
     def cut(self):
         if self._editionState == _TextEditionState.DISALLOWED:
             return
+        self._textIsBeingPasted = True
         super(EnhancedTextEdit, self).cut()
+        self._textIsBeingPasted = False
 
     def insertDocument(self, doc: QTextDocument):
         def _preprocessMarkdown(md: str) -> str:
@@ -530,6 +532,11 @@ class EnhancedTextEdit(QTextEdit):
                         cursor.createList(new_format)
                         cursor.endEditBlock()
                 return
+        if event.matches(QKeySequence.Cut):
+            self._textIsBeingPasted = True
+            super().keyPressEvent(event)
+            self._textIsBeingPasted = False
+            return
         if event.key() == Qt.Key_I and event.modifiers() & Qt.ControlModifier:
             self.setFontItalic(not self.fontItalic())
         if event.key() == Qt.Key_B and event.modifiers() & Qt.ControlModifier:
