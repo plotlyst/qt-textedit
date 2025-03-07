@@ -108,6 +108,8 @@ class EnhancedTextEdit(QTextEdit):
         self._pasteAsOriginal: bool = False
         self._pasteAsOriginalEnabled: bool = True
 
+        self._textIsBeingPasted: bool = False
+
         self._blockAutoCapitalization: bool = False
         self._sentenceAutoCapitalization: bool = False
 
@@ -262,6 +264,9 @@ class EnhancedTextEdit(QTextEdit):
         menu = self.createEnhancedContextMenu(event.pos())
         menu.exec(event.globalPos())
 
+    def isTextBeingPasted(self) -> bool:
+        return self._textIsBeingPasted
+
     def pasteAsPlainText(self):
         previous = self._pasteAsPlain
         self._pasteAsPlain = True
@@ -315,6 +320,9 @@ class EnhancedTextEdit(QTextEdit):
     def insertFromMimeData(self, source: QMimeData) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
             return
+
+        self._textIsBeingPasted = True
+
         if self._pasteAsPlain:
             self.insertPlainText(source.text())
         elif self._pasteAsOriginal:
@@ -328,6 +336,8 @@ class EnhancedTextEdit(QTextEdit):
                 self.insertPlainText(source.text())
             else:
                 super(EnhancedTextEdit, self).insertFromMimeData(source)
+
+        self._textIsBeingPasted = False
 
     def wheelEvent(self, event: QWheelEvent):
         super().wheelEvent(event)
