@@ -224,7 +224,6 @@ class EnhancedTextEdit(QTextEdit):
 
     def createEnhancedContextMenu(self, pos: QPoint) -> MenuWidget:
         menu = MenuWidget()
-        menu.addSeparator()
         selected = bool(self.textCursor().selectedText())
         menu.addAction(
             q_action('Cut', qta_icon('fa5s.cut'), self.cut, tooltip='Cut selected text', enabled=selected))
