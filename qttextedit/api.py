@@ -26,13 +26,18 @@ from qttextedit.ops import TextEditorOperation, InsertListOperation, InsertNumbe
 from qttextedit.util import select_anchor, select_previous_character, select_next_character, EN_DASH, EM_DASH, \
     is_open_quotation, is_ending_punctuation, has_character_left, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION, \
     has_character_right, RIGHT_DOUBLE_QUOTATION, LEFT_DOUBLE_QUOTATION, LONG_ARROW_LEFT_RIGHT, HEAVY_ARROW_RIGHT, \
-    SHORT_ARROW_LEFT_RIGHT, qta_icon, q_action, CloseButton
+    SHORT_ARROW_LEFT_RIGHT, qta_icon, q_action, CloseButton, ELLIPSIS
 
 
 class DashInsertionMode(Enum):
     NONE = 'none'
     INSERT_EN_DASH = 'en'
     INSERT_EM_DASH = 'em'
+
+
+class EllipsisInsertionMode(Enum):
+    NONE = 'none'
+    INSERT_ELLIPSIS = 'ellipsis'
 
 
 class AutoCapitalizationMode(Enum):
@@ -119,7 +124,10 @@ class EnhancedTextEdit(QTextEdit):
         self._commandsEnabled: bool = True
         self._autoCapitalizationMode: AutoCapitalizationMode = AutoCapitalizationMode.NONE
         self._dashInsertionMode: DashInsertionMode = DashInsertionMode.NONE
+        self._ellipsisInsertionMode: EllipsisInsertionMode = EllipsisInsertionMode.NONE
+        self._periodInsertionEnabled: bool = True
         self._editionState: _TextEditionState = _TextEditionState.ALLOWED
+        self._smartQuotesEnabled: bool = True
         self._blockFormatPosition: int = -1
         self._defaultBlockFormat = QTextBlockFormat()
         self._currentHoveredTable: Optional[QTextTable] = None
@@ -189,8 +197,26 @@ class EnhancedTextEdit(QTextEdit):
     def setDashInsertionMode(self, mode: DashInsertionMode):
         self._dashInsertionMode = mode
 
+    def ellipsisInsertionMode(self) -> EllipsisInsertionMode:
+        return self._ellipsisInsertionMode
+
+    def setEllipsisInsertionMode(self, mode: EllipsisInsertionMode):
+        self._ellipsisInsertionMode = mode
+
     def uneditableBlocksEnabled(self) -> bool:
         return self._uneditableBlocksEnabled
+
+    def smartQuotesEnabled(self) -> bool:
+        return self._smartQuotesEnabled
+
+    def setSmartQuotesEnabled(self, enabled: bool):
+        self._smartQuotesEnabled = enabled
+
+    def periodInsertionEnabled(self) -> bool:
+        return self._periodInsertionEnabled
+
+    def setPeriodInsertionEnabled(self, enabled: bool):
+        self._periodInsertionEnabled = enabled
 
     def setUneditableBlocksEnabled(self, enabled: bool):
         self._uneditableBlocksEnabled = enabled
@@ -555,12 +581,18 @@ class EnhancedTextEdit(QTextEdit):
         if event.key() == Qt.Key_Return and not event.modifiers():
             self._insertNewBlock(cursor)
             return
-        # if event.key() == Qt.Key_Period:
-        #     moved_cursor = select_previous_character(cursor, amount=2)
-        #     if moved_cursor.selectedText() == '..':
-        #         moved_cursor.removeSelectedText()
-        #         cursor.insertText(ELLIPSIS)
-        #         return
+        if cursor.atBlockEnd() and event.key() == Qt.Key.Key_Space and self._periodInsertionEnabled:
+            moved_cursor = select_previous_character(cursor)
+            if moved_cursor.selectedText() == ' ':
+                self.textCursor().deletePreviousChar()
+                self.textCursor().insertText('.')
+        if event.key() == Qt.Key_Period and self._ellipsisInsertionMode != EllipsisInsertionMode.NONE:
+            moved_cursor = select_previous_character(cursor, amount=2)
+            if moved_cursor.selectedText() == '..':
+                moved_cursor.removeSelectedText()
+                cursor.insertText(ELLIPSIS)
+                # cursor.insertText(f'.{NBSP}.{NBSP}.')
+                return
         if event.key() == Qt.Key_Minus and self._dashInsertionMode != DashInsertionMode.NONE:
             moved_cursor = select_previous_character(cursor)
             if moved_cursor.selectedText() == '-':
@@ -594,10 +626,10 @@ class EnhancedTextEdit(QTextEdit):
                 cursor.deletePreviousChar()
                 cursor.insertText(SHORT_ARROW_LEFT_RIGHT)
                 return
-        if event.key() == Qt.Key_Apostrophe:
+        if event.key() == Qt.Key_Apostrophe and self._smartQuotesEnabled:
             self._insertQuote(cursor, LEFT_SINGLE_QUOTATION, RIGHT_SINGLE_QUOTATION)
             return
-        if event.key() == Qt.Key_QuoteDbl:
+        if event.key() == Qt.Key_QuoteDbl and self._smartQuotesEnabled:
             self._insertQuote(cursor, LEFT_DOUBLE_QUOTATION, RIGHT_DOUBLE_QUOTATION)
             return
         if event.key() == Qt.Key_Delete and (

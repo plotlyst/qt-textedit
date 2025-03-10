@@ -11,6 +11,7 @@ from qtpy.QtWidgets import QToolButton
 ELLIPSIS = u'\u2026'
 EN_DASH = u'\u2013'
 EM_DASH = u'\u2014'
+NBSP = u'\u00A0'
 
 LEFT_SINGLE_QUOTATION = u'\u2018'
 RIGHT_SINGLE_QUOTATION = u'\u2019'
