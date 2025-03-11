@@ -357,7 +357,9 @@ class EnhancedTextEdit(QTextEdit):
         else:
             if source.hasHtml():
                 doc = QTextDocument()
-                doc.setHtml(source.html())
+                html = source.html().replace('<!--StartFragment-->', '')
+                html = html.replace('<!--EndFragment-->', '')
+                doc.setHtml(html)
                 self.insertDocument(doc)
             elif source.hasText():
                 self.insertPlainText(source.text())
