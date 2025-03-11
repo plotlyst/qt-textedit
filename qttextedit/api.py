@@ -670,6 +670,14 @@ class EnhancedTextEdit(QTextEdit):
         cursor = self.textCursor()
         cursor.mergeBlockFormat(blockFmt)
 
+    def applyBlockFormat(self):
+        block = self.document().begin()
+        while block.isValid():
+            cursor = QTextCursor(block)
+            cursor.mergeBlockFormat(self._defaultBlockFormat)
+
+            block = block.next()
+
     def setStrikethrough(self, strikethrough: bool):
         font = self.currentFont()
         font.setStrikeOut(strikethrough)
