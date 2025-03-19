@@ -672,9 +672,14 @@ class EnhancedTextEdit(QTextEdit):
 
     def applyBlockFormat(self):
         block = self.document().begin()
+        first_parag_block_format = QTextBlockFormat(self._defaultBlockFormat)
+        first_parag_block_format.setTextIndent(0)
         while block.isValid():
             cursor = QTextCursor(block)
-            cursor.mergeBlockFormat(self._defaultBlockFormat)
+            if block.blockNumber() == 0:
+                cursor.mergeBlockFormat(first_parag_block_format)
+            else:
+                cursor.mergeBlockFormat(self._defaultBlockFormat)
 
             block = block.next()
 
