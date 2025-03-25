@@ -147,10 +147,6 @@ class CloseButton(QToolButton):
         return super().eventFilter(watched, event)
 
 
-def truncate_string(text: str, length: int = 12):
-    return (text[:length] + '...') if len(text) > length else text
-
-
 class Timer:
     def __init__(self, prefix: str = 'Elapsed', auto_start: bool = True):
         self._prefix = prefix

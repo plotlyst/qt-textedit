@@ -14,7 +14,7 @@ from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayo
     QFileDialog, QLabel, QSlider, QButtonGroup, QRadioButton, QTabWidget, QApplication
 
 from qttextedit.diag import LinkCreationDialog
-from qttextedit.util import button, qta_icon, truncate_string
+from qttextedit.util import button, qta_icon
 
 
 class TextEditorOperation:
@@ -590,19 +590,20 @@ elif sys.platform.startswith('linux'):
 
 class FontRadioButton(QRadioButton):
     def __init__(self, family: str, parent=None):
-        super(FontRadioButton, self).__init__(truncate_string(family), parent)
+        super(FontRadioButton, self).__init__(family, parent)
         self._family = family
         self.setCheckable(True)
         font = self.font()
         font.setFamily(family)
         self.setFont(font)
+        self.setMaximumWidth(180)
 
     def family(self) -> str:
         return self._family
 
     def setFamily(self, family: str):
         self._family = family
-        self.setText(truncate_string(family))
+        self.setText(family)
         font = self.font()
         font.setFamily(family)
         self.setFont(font)
