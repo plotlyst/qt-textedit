@@ -11,10 +11,10 @@ from qtpy.QtGui import QFont, QKeySequence, QTextListFormat, QColor, QMouseEvent
     QTextLength, QIcon
 from qtpy.QtPrintSupport import QPrinter, QPrintDialog
 from qtpy.QtWidgets import QMenu, QToolButton, QTextEdit, QSizePolicy, QGridLayout, QWidget, QAction, QWidgetAction, \
-    QFileDialog, QLabel, QSlider, QButtonGroup, QRadioButton, QTabWidget
+    QFileDialog, QLabel, QSlider, QButtonGroup, QRadioButton, QTabWidget, QApplication
 
 from qttextedit.diag import LinkCreationDialog
-from qttextedit.util import button, qta_icon
+from qttextedit.util import button, qta_icon, truncate_string
 
 
 class TextEditorOperation:
@@ -590,7 +590,7 @@ elif sys.platform.startswith('linux'):
 
 class FontRadioButton(QRadioButton):
     def __init__(self, family: str, parent=None):
-        super(FontRadioButton, self).__init__(family, parent)
+        super(FontRadioButton, self).__init__(truncate_string(family), parent)
         self._family = family
         self.setCheckable(True)
         font = self.font()
@@ -599,6 +599,14 @@ class FontRadioButton(QRadioButton):
 
     def family(self) -> str:
         return self._family
+
+    def setFamily(self, family: str):
+        self._family = family
+        self.setText(truncate_string(family))
+        font = self.font()
+        font.setFamily(family)
+        self.setFont(font)
+        self.setToolTip(family)
 
 
 class FontSectionSettingWidget(AbstractSettingsSectionWidget):
@@ -613,6 +621,10 @@ class FontSectionSettingWidget(AbstractSettingsSectionWidget):
 
         self._btnGroupFonts = QButtonGroup()
         self._btnGroupFonts.setExclusive(True)
+
+        self._customFontButton = FontRadioButton(QApplication.font().family())
+        self._btnGroupFonts.addButton(self._customFontButton)
+        self._fontContainer.layout().addWidget(self._customFontButton)
 
         for family in DEFAULT_FONT_FAMILIES:
             btn = FontRadioButton(family, self)
