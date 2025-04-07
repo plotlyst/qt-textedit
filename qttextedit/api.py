@@ -515,7 +515,11 @@ class EnhancedTextEdit(QTextEdit):
         painter.setPen(self._placeholderColor)
         painter.setFont(placeholderFont)
         font_metrics = QtGui.QFontMetrics(placeholderFont)
-        painter.drawText(self._lastPaintedCursorRect.bottomLeft() - QPoint(0, font_metrics.descent()), placeholder)
+
+        text_rect = QRect(self._lastPaintedCursorRect.bottomLeft(), self.viewport().rect().bottomRight())
+        text_rect.setTop(text_rect.top() - font_metrics.ascent())
+
+        painter.drawText(text_rect, Qt.TextFlag.TextWordWrap, placeholder)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if self._editionState == _TextEditionState.DISALLOWED:
