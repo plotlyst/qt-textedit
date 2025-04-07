@@ -475,6 +475,9 @@ class EnhancedTextEdit(QTextEdit):
     def setPlaceholderText(self, placeholderText: str) -> None:
         self._defaultPlaceholder = placeholderText
 
+    def setPlaceholderTextColor(self, color: QColor):
+        self._placeholderColor = color
+
     def paintEvent(self, e: QtGui.QPaintEvent) -> None:
         if ((self._blockPlaceholderEnabled or self.textCursor().blockNumber() == 0)
                 and self._lastPaintedCursorRect != self.cursorRect(self.textCursor())):
@@ -514,11 +517,8 @@ class EnhancedTextEdit(QTextEdit):
         painter = QtGui.QPainter(self.viewport())
         painter.setPen(self._placeholderColor)
         painter.setFont(placeholderFont)
-        font_metrics = QtGui.QFontMetrics(placeholderFont)
 
-        text_rect = QRect(self._lastPaintedCursorRect.bottomLeft(), self.viewport().rect().bottomRight())
-        text_rect.setTop(text_rect.top() - font_metrics.ascent())
-
+        text_rect = QRect(self._lastPaintedCursorRect.topLeft(), self.viewport().rect().bottomRight())
         painter.drawText(text_rect, Qt.TextFlag.TextWordWrap, placeholder)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
