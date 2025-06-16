@@ -882,6 +882,11 @@ class EnhancedTextEdit(QTextEdit):
                     cursor.insertBlock(cursor.blockFormat(), cursor.charFormat())
                 else:
                     self.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            elif cursor.currentTable() and cursor.currentTable().rows() == 1 and not cursor.block().text():
+                cursor.deletePreviousChar()
+                cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
+                cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
+                self.setTextCursor(cursor)
             else:
                 cursor.insertBlock(self._defaultBlockFormat, QTextCharFormat())
 
