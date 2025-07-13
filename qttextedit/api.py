@@ -508,7 +508,7 @@ class EnhancedTextEdit(QTextEdit):
         else:
             alignment = self.alignment()
             if alignment & Qt.AlignmentFlag.AlignCenter:
-                placeholder = "Centered"
+                placeholder = self._centeredPlaceholder()
             elif alignment & Qt.AlignmentFlag.AlignRight:
                 return
             else:
@@ -726,6 +726,9 @@ class EnhancedTextEdit(QTextEdit):
         cursor.clearSelection()
         self.setTextCursor(cursor)
         cursor.endEditBlock()
+
+    def _centeredPlaceholder(self) -> str:
+        return 'Centered'
 
     def _showFormatMenu(self):
         block = self.document().findBlockByNumber(self._blockFormatPosition)
